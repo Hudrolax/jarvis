@@ -357,6 +357,7 @@ class CArduino():
 
     def LoadConfig(self,first_load = True):
         answer = None
+        global Run
         self.pins = []
         try:
             f = open(self.config_path, 'r')
@@ -403,9 +404,9 @@ class CArduino():
             except:
                 answer = 'config load faild'
                 if first_load:
-                    sys.exit()
+                    Run = False
         except:
-            sys.exit()
+            Run = False
             # f = open(self.config_path, 'w')
             # f.write('# pin line: pin <arduino pin number> <name> <input/output> <description> <blocked> <convertible terms>' + '\n')
             # f.write('pin 13 led output ledpin false' + '\n')
