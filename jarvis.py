@@ -15,7 +15,7 @@ import requests
 from RPi import GPIO
 import copy
 
-path = '/home/pi/'
+path = '/home/pi/jarvis'
 arduino_config_name = 'config.txt'
 arduino_pinstate = 'arduino_pinstate.txt'
 good_proxylist = 'good_proxylist.txt'
