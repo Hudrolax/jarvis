@@ -1,3 +1,5 @@
+# Sergey Nazarov 26.03.2020
+
 import serial
 import serial.tools.list_ports
 from time import sleep
