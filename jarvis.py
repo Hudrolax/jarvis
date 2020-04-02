@@ -176,7 +176,7 @@ class CArduino():
         for p in self.pins:
             if str(type(_pin)) == "<class 'str'>":
                 _pin = _pin.lower()
-                if p.name.lower() == _pin or str(p.num) == _pin:
+                if p.name.lower() == _pin or str(p.num) == _pin or p.description.lower() == _pin:
                     return p
             elif str(type(_pin)) == "<class 'int'>":
                 if p.num == _pin:
@@ -1049,6 +1049,16 @@ def CommandProcessing(cmd,telegramuser,message):
                     answer += '\n'
                 answer += '\n'
 
+                answer += "Насосы "
+                pumpsPin = arduino.pin("насосы")
+                if pumpsPin != None:
+                    if pumpsPin.state:
+                        answer += "включены"
+                    else:
+                        answer += "ВЫКЛЮЧЕНЫ"
+                else:
+                    answer += "<не могу найти пин насосов  по description 'насосы'>"
+                answer += '\n'
                 ACNet = 'есть'
                 if not arduino.ACCExist:
                     ACNet = 'НЕТ'
@@ -1100,7 +1110,7 @@ def ReglamentWork():
                     SendToTelegramId(user.ID,'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
             arduino.DCVolLowAlertSended = True
 
-        # Реакция пинов на заряд аккумулятора без входного напряжения
+        # Реакция пинов на разряд аккумулятора без входного напряжения
         if not arduino.ACCExist:
             for p in arduino.pins:
                 if p.output and not p.BCODReaction and arduino.DCVoltageInPercent <= p.BCOD:
@@ -1110,7 +1120,8 @@ def ReglamentWork():
         else:
             for p in arduino.pins:
                 if p.output and p.BCODReaction and arduino.DCVoltageInPercent > p.BCOD:
-                    p.BCODReaction = False 
+                    p.BCODReaction = False
+                    arduino.SetPin(p,p.prevstate) # Вернем состояние пинов на последнее
 
         ReglamentWorkTimer = 100
     else:
