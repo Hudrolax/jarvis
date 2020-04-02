@@ -1094,19 +1094,19 @@ def ReglamentWork():
         # Сообщим, что пропало напряжение на входе
         if not arduino.ACCExist and not arduino.ACAlertSended:
             for user in telegram_users:
-                if user.level == 0 or user.level == 3 or True: 
+                if True or user.level == 0 or user.level == 3: 
                     SendToTelegramId(user.ID,'Отключилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = True
         elif arduino.ACCExist and arduino.ACAlertSended:
             for user in telegram_users:
-                if user.level == 0 or user.level == 3 or True:
+                if True or user.level == 0 or user.level == 3:
                     SendToTelegramId(user.ID,'Ура! Появилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = False
 
         # Сообщить, что напряжение аккумулятора низкое
         if arduino.DCVoltageInPercent <=20 and not arduino.DCVolLowAlertSended:
             for user in telegram_users:
-                if user.level == 0 or user.level == 3 or True:
+                if True or user.level == 0 or user.level == 3:
                     SendToTelegramId(user.ID,'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
             arduino.DCVolLowAlertSended = True
 
@@ -1116,7 +1116,10 @@ def ReglamentWork():
                 if p.output and not p.BCODReaction and arduino.DCVoltageInPercent <= p.BCOD:
                     arduino.SetPin(p,0)
                     print(f'Отключил {p.description} по разряду аккумулятора')
-                    p.BCODReaction = True   
+                    p.BCODReaction = True
+                    for user in telegram_users:
+                        if user.level == 0:
+                            SendToTelegramId(user.ID,f'Отключил {p.description} по разряду аккумулятора\n')   
         else:
             for p in arduino.pins:
                 if p.output and p.BCODReaction and arduino.DCVoltageInPercent > p.BCOD:
