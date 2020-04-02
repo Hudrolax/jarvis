@@ -363,6 +363,7 @@ class CArduino():
             f = open(self.config_path, 'r')
             try:
                 file_text = f.read()
+                f.close()
                 array = file_text.split('\n')
                 for a in array:
                     line = a.split(' ')
@@ -417,8 +418,6 @@ class CArduino():
             # f.write('telegram_user admin 586035868' + '\n')
             # self.pins = [dPin(True,13,'led','ledpin')]
             # answer = f'config.txt not found. I create new {self.config_path}.'
-        finally:
-            f.close()
         print(answer)
         return answer
     def SaveConfig(self):
