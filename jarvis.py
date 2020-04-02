@@ -569,7 +569,6 @@ def TelegramBot():
 # Telegram bot
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
-    global config_path
     global inputQueue
     global TelegrammAnswerQueue
 
@@ -598,7 +597,7 @@ def get_text_messages(message):
         bot.reply_to(message, "Ваш ID: %s" % message.from_user.id)
     elif message.text == 'getconfig':
         if _user != None:
-            doc = open(config_path, 'rb')
+            doc = open(arduino.config_path, 'rb')
             bot.send_document(message.from_user.id, doc)
         else:
             bot.reply_to(message, "Кто ты чудовище?")   
