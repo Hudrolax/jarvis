@@ -718,7 +718,8 @@ def CommandProcessing(cmd,telegramuser,message):
                     answer += 'Включил свет на втором этаже.\n'
                 else:
                     answer += AccessError()    
-            elif 'свет' in cmd_list: 
+            else:
+            #elif 'свет' in cmd_list: 
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None: 
                     # Добавим личный флаг пользователя
                     findlist = copy.deepcopy(cmd_list)
@@ -796,7 +797,8 @@ def CommandProcessing(cmd,telegramuser,message):
                     answer += 'Выключил свет на втором этаже.\n'
                 else:
                     answer += AccessError()
-            elif 'свет' in cmd_list:
+            else:
+            #elif 'свет' in cmd_list:
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                     findlist = copy.deepcopy(cmd_list)
                     if telegramuser != None:
