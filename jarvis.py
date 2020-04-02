@@ -15,7 +15,7 @@ import requests
 from RPi import GPIO
 import copy
 
-path = '/home/pi/jarvis'
+path = '/home/pi/jarvis/'
 arduino_config_name = 'config.txt'
 arduino_pinstate = 'arduino_pinstate.txt'
 good_proxylist = 'good_proxylist.txt'
@@ -407,6 +407,7 @@ class CArduino():
                 if first_load:
                     Run = False
         except:
+            print("Can't load config")
             Run = False
             # f = open(self.config_path, 'w')
             # f.write('# pin line: pin <arduino pin number> <name> <input/output> <description> <blocked> <convertible terms>' + '\n')
