@@ -527,11 +527,17 @@ def read_kbd_input(inputQueue):
             continue
 
 def SendToTelegramId(_id,message):
-    bot.send_message(_id, message)
+    try:
+        bot.send_message(_id, message)
+    except:
+        print(f'error send to telegramm id {_id}')
 
 def SendToAllTelegram(message):
     for user in telegram_users:
-        SendToTelegramId(user.ID, message)
+        try:
+            SendToTelegramId(user.ID, message)
+        except:
+            print('error send to all telegram ID')
 
 def TelegramBot():
     global Run
@@ -556,8 +562,8 @@ def TelegramBot():
             continue
         for prox in contarr:
             if prox != '':
-                apihelper.proxy = {'https': prox}
                 try:
+                    apihelper.proxy = {'https': prox}
                     append_goodproxy(prox)
                     print('Try connect to Telegramm...')
                     bot.polling(none_stop=True)
