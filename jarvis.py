@@ -1118,7 +1118,7 @@ def ReglamentWork():
                     print(f'Отключил {p.description} по разряду аккумулятора')
                     p.BCODReaction = True
                     for user in telegram_users:
-                        if user.level == 0:
+                        if user.level <= 1:
                             SendToTelegramId(user.ID,f'Отключил {p.description} по разряду аккумулятора\n')   
         else:
             for p in arduino.pins:
