@@ -245,7 +245,7 @@ class CArduino():
             self.DCVolArray.pop(0)
             self.DCVolArray.append(voltage_now)
             self.DCVol = round(ArrayMA(self.DCVolArray),2)
-            percent = round(MapFunc(self.DCVol,21.1,25,0,100),0)
+            percent = round(MapFunc(self.DCVol,22,25,0,100),0)
             if percent > 100:
                 percent = 100
             elif percent < 0:
