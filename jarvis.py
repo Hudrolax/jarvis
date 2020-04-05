@@ -1100,12 +1100,14 @@ def ReglamentWork():
         # Сообщим, что пропало напряжение на входе
         if not arduino.ACCExist and not arduino.ACAlertSended:
             for user in telegram_users:
-                if True or user.level == 0 or user.level == 3: 
+                if user.level == 0:
+                #if True or user.level == 0 or user.level == 3: 
                     SendToTelegramId(user.ID,'Отключилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = True
         elif arduino.ACCExist and arduino.ACAlertSended:
             for user in telegram_users:
-                if True or user.level == 0 or user.level == 3:
+                #if True or user.level == 0 or user.level == 3:
+                if user.level == 0:
                     SendToTelegramId(user.ID,'Ура! Появилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = False
 
