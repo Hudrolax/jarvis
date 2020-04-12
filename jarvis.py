@@ -905,7 +905,12 @@ def CommandProcessing(cmd,telegramuser,message):
             else:
                 answer += AccessError()
         elif 'заблокируй' in cmd_list or 'заблокирую' in cmd_list:
-            if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
+            if "все" in cmd_list and "выключатели" in cmd_list:
+                for p in arduino.pins:
+                    if not p.output:
+                        p.blocked = True;
+                answer += f'Заблокировал все выключатели\n'
+            elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 WinnerPin = arduino.FindByAuction(cmd_list,True)
                 if WinnerPin == None:
                     answer += 'Не понятно, что нужно заблокировать. Уточни команду.\n'
@@ -920,7 +925,12 @@ def CommandProcessing(cmd,telegramuser,message):
             else:
                 answer += AccessError()
         elif 'разблокируй' in cmd_list or 'разблокирую' in cmd_list:
-            if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
+            if "все" in cmd_list and "выключатели" in cmd_list:
+                for p in arduino.pins:
+                    if not p.output:
+                        p.blocked = False;
+                answer += f'Заблокировал все выключатели\n'
+            elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 WinnerPin = arduino.FindByAuction(cmd_list,True)
                 if WinnerPin == None:
                     answer += 'Не понятно, что нужно разблокировать. Уточни команду.\n'
