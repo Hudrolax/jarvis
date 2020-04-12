@@ -241,11 +241,11 @@ class CArduino():
                 self.PinReaction(p)
         if self.DCCheckTimer <= 0:
             val = self.write('A',1,0)
-            voltage_now = round(MapFunc(val,0,1023,0,40.2),2)
+            voltage_now = round(MapFunc(val,0,1023,0,40.1),2)
             self.DCVolArray.pop(0)
             self.DCVolArray.append(voltage_now)
             self.DCVol = round(ArrayMA(self.DCVolArray),2)
-            percent = round(MapFunc(self.DCVol,22,25,0,100),0)
+            percent = round(MapFunc(self.DCVol,22,27,0,100),0)
             if percent > 100:
                 percent = 100
             elif percent < 0:
