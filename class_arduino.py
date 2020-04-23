@@ -38,14 +38,14 @@ class Arduino:
         print(f"can't find pin {_pin}")
         return None
 
-    def set_pin(self, _pin, state):
+    def set_pin(self, _pin, __state):
         if str(type(_pin)) == "<class 'list'>":
             print("Error (set_pin): _pin is <class 'list'>")
             return None
-        if state:
-            state = 1
-        elif not state:
-            state = 0
+        if __state:
+            __state = 1
+        elif not __state:
+            __state = 0
         if str(type(_pin)) == "<class 'int'>":
             p = self.pin(_pin)
         elif str(type(_pin)) == "<class 'str'>":
@@ -54,20 +54,22 @@ class Arduino:
         else:
             p = _pin
             _pin = _pin.num
-
-        p.prevstate = p.state
+        try:
+            p.prevstate = p.state
+        except:
+            print(p)
         answer = None
-        if state == 1:
+        if __state == 1:
             while answer != 3001 or answer is None:
-                answer = self.write('P', _pin, state)
+                answer = self.write('P', _pin, __state)
                 # print(f'set_pin get answer {answer}')
-        elif state == 0:
+        elif __state == 0:
             while answer != 3000 or answer is None:
-                answer = self.write('P', _pin, state)
+                answer = self.write('P', _pin, __state)
                 # print(f'set_pin get answer {answer}')
         else:
             while answer != 3001 and answer != 3000 or answer is None:
-                answer = self.write('P', _pin, state)
+                answer = self.write('P', _pin, __state)
                 # print(f'set_pin get answer {answer}')
 
         if answer is not None:
