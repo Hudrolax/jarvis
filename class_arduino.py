@@ -35,7 +35,7 @@ class Arduino:
             elif str(type(_pin)) == "<class 'int'>":
                 if p.num == _pin:
                     return p
-
+        print(f"can't find pin {_pin}")
         return None
 
     def set_pin(self, _pin, state):

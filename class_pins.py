@@ -17,3 +17,6 @@ class Pins:
         self.LastRevTime = datetime(2005, 7, 14, 12, 30)
         self.bcod = _bcod
         self.bcod_reaction = False
+
+    def __str__(self):
+        return self.name
