@@ -756,7 +756,7 @@ if __name__ == "__main__":
 
     # init arduino
     arduino = class_arduino.Arduino(path + arduino_config_name, path + arduino_pinstate)
-    arduino.LoadConfig()
+    arduino.LoadConfig(telegram_users)
 
     # Start keyboart queue thread
     inputQueue = queue.Queue()
