@@ -15,6 +15,7 @@ import copy
 import class_arduino
 import gfunctions as gf
 
+version = "1.01"
 path = '/home/pi/jarvis/'
 arduino_config_name = 'config.txt'
 arduino_pinstate = 'arduino_pinstate.txt'
@@ -644,6 +645,7 @@ def CommandProcessing(cmd, telegramuser, message):
         elif cmd == 'state' or cmd == 'status' or 'статус' in cmd_list:
             if telegramuser != None and telegramuser.level <= 3 or telegramuser == None:
                 uptime = gf.difference_between_date(StartTime, datetime.now())
+                answer += 'ver. '+version+'   '
                 answer += f'uptime {uptime}\n'
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                     answer += 'Включенный свет:\n'
