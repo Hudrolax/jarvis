@@ -664,7 +664,7 @@ def CommandProcessing(cmd, telegramuser, message):
 
                 answer += "Насосы "
                 pumpsPin = arduino.pin("насосы")
-                if pumpsPin != None:
+                if pumpsPin is not None:
                     if pumpsPin.state:
                         answer += "включены"
                     else:
