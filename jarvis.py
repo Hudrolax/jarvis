@@ -13,6 +13,7 @@ import telebot
 from RPi import GPIO
 import copy
 import class_arduino
+import class_watchdog
 import gfunctions as gf
 
 version = "1.01"
@@ -749,7 +750,7 @@ def ReglamentWork():
 # ****** MAIN ******
 if __name__ == "__main__":
     # init watchdog
-    watchdog = CWatchDog('/dev/ttyACM0')
+    watchdog = class_watchdog.CWatchDog('/dev/ttyACM0')
     WDThread = threading.Thread(target=PingWatchdog, args=(watchdog,), daemon=True)
     WDThread.start()
 
