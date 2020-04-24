@@ -7,12 +7,10 @@ import telegram_bot
 
 
 class Arduino:
-    def __init__(self, config_path, pinstate_file, pins=None):
-        if pins is None:
-            pins = []
+    def __init__(self, config_path: str, pinstate_file: str):
         self.port = ''
         self.initialized = False
-        self.pins = pins
+        self.pins = []
         self.config_path = config_path
         self.pinstate_file = pinstate_file
         self.DCVolArray = [27 for i in range(20)]
@@ -28,7 +26,6 @@ class Arduino:
 
     def pin(self, __pin):
         for p in self.pins:
-            print(p.name)
             if str(type(__pin)) == "<class 'str'>":
                 __pin = __pin.lower()
                 if p.name.lower() == __pin or str(p.num) == __pin or p.description.lower() == __pin:
@@ -36,8 +33,7 @@ class Arduino:
             elif str(type(__pin)) == "<class 'int'>":
                 if p.num == __pin:
                     return p
-        print(f"can't find pin {__pin}")
-        return None
+        raise RuntimeError(f'Не найден пин {__pin}')
 
     def set_pin(self, _pin, __state):
         if str(type(_pin)) == "<class 'list'>":
@@ -215,7 +211,6 @@ class Arduino:
 
     def LoadConfig(self, _telegram_users, first_load=True):
         answer = None
-        global Run
         self.pins = []
         try:
             f = open(self.config_path, 'r')
@@ -261,12 +256,9 @@ class Arduino:
                 else:
                     print('Не могу подобрать пин уличного освещения!')
             except:
-                answer = 'config load faild'
-                if first_load:
-                    Run = False
+                raise RuntimeError('config load faild')
         except:
-            print("Can't load config")
-            Run = False
+            raise RuntimeError("Can't load config")
 
         print(answer)
         return answer
