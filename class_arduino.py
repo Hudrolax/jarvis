@@ -34,7 +34,7 @@ class Arduino:
             elif str(type(__pin)) == "<class 'int'>":
                 if p.num == __pin:
                     return p
-        raise RuntimeError(f'Не найден пин {__pin}')
+        return None
 
     def set_pin(self, _pin, __state):
         if str(type(_pin)) == "<class 'list'>":
@@ -235,7 +235,7 @@ class Arduino:
                 if len(line) > 5:
                     for i in range(6, len(line)):
                         _CT.append(line[i])
-                if not self.pin(_num) in self.pins:
+                if self.pin(_num) not in self.pins:
                     self.pins.append(Pins(_output, int(_num), _BCOD, _name, _description, _CT))
             elif line[0] == 'bind':
                 _pin = self.pin(line[1])
