@@ -2,7 +2,7 @@ from datetime import datetime
 from time import sleep
 import serial
 import gfunctions as gf
-import class_pins
+from class_pins import Pins
 import telegram_bot
 
 
@@ -210,58 +210,51 @@ class Arduino:
                 self.load_pinstate()
 
     def LoadConfig(self, _telegram_users, first_load=True):
-        answer = None
+        __answer = None
         self.pins = []
         try:
-            f = open(self.config_path, 'r')
-            try:
+            with open(self.config_path) as f:
                 file_text = f.read()
-                f.close()
-                array = file_text.split('\n')
-                for a in array:
-                    line = a.split(' ')
-                    if line[0] == 'pin':
-                        _num = line[1]
-                        _name = line[2]
-                        _output = False
-                        if line[3] == 'output':
-                            _output = True
-                        _description = line[4]
-                        _BCOD = 0
-                        try:
-                            _BCOD = int(line[5])
-                        except:
-                            print(f'cant load BCOD from config for pin {_name}')
-                        _CT = []
-                        if len(line) > 5:
-                            for i in range(6, len(line)):
-                                _CT.append(line[i])
-                        if not self.pin(_num) in self.pins:
-                            self.pins.append(class_pins.Pins(_output, int(_num), _BCOD, _name, _description, _CT))
-                    elif line[0] == 'bind':
-                        _pin = self.pin(line[1])
-                        if _pin != None:
-                            for i in range(2, len(line)):
-                                _pin2 = self.pin(line[i])
-                                if _pin2 != None:
-                                    if not _pin2 in _pin.binds:
-                                        _pin.binds.append(_pin2)
-                    elif line[0] == 'telegram_user':
-                        _telegram_users.append(telegram_bot.TelegramUserClass(line[1], line[2], int(line[3])))
-
-                answer = 'config loaded!'
-                lightpin = self.FindByAuction('свет на улице')
-                if str(type(lightpin)) != "<class 'list'>" and lightpin != None:
-                    self.OutDoorLightPin = self.FindByAuction('свет на улице')
-                else:
-                    print('Не могу подобрать пин уличного освещения!')
-            except:
-                raise RuntimeError('config load faild')
         except:
             raise RuntimeError("Can't load config")
 
-        print(answer)
-        return answer
+        array = file_text.split('\n')
+        for a in array:
+            line = a.split(' ')
+            if line[0] == 'pin':
+                _num = line[1]
+                _name = line[2]
+                _output = False
+                if line[3] == 'output':
+                    _output = True
+                _description = line[4]
+                _BCOD = int(line[5])
+
+                _CT = []
+                if len(line) > 5:
+                    for i in range(6, len(line)):
+                        _CT.append(line[i])
+                if not self.pin(_num) in self.pins:
+                    self.pins.append(Pins(_output, int(_num), _BCOD, _name, _description, _CT))
+            elif line[0] == 'bind':
+                _pin = self.pin(line[1])
+                if _pin is not None:
+                    for i in range(2, len(line)):
+                        _pin2 = self.pin(line[i])
+                        if _pin2 is not None:
+                            if _pin2 not in _pin.binds:
+                                _pin.binds.append(_pin2)
+            elif line[0] == 'telegram_user':
+                _telegram_users.append(telegram_bot.TelegramUserClass(line[1], line[2], int(line[3])))
+
+            __answer = 'config loaded!'
+            lightpin = self.FindByAuction('свет на улице')
+            if str(type(lightpin)) != "<class 'list'>" and lightpin is not None:
+                self.OutDoorLightPin = self.FindByAuction('свет на улице')
+            else:
+                print('Не могу подобрать пин уличного освещения!')
+        print(__answer)
+        return __answer
 
     def SaveConfig(self, _telegram_users):
         try:
