@@ -303,7 +303,7 @@ class Arduino:
             _wordlist = cmd
         wordlist = []
         for w in _wordlist:
-            if w not in __not_important_words:
+            if w not in self.__not_important_words:
                 wordlist.append(w)
         PinAuction = []
         for p in self.pins:
