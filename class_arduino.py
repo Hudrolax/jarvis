@@ -7,7 +7,7 @@ import telegram_bot
 
 
 class Arduino:
-    def __init__(self, config_path: str, pinstate_file: str):
+    def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
         self.port = ''
         self.initialized = False
         self.pins = []
@@ -23,6 +23,7 @@ class Arduino:
         self.ACNonExistStartTimer = datetime.now()
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
+        self.__not_important_words = not_important_words
 
     def pin(self, __pin):
         for p in self.pins:
@@ -294,7 +295,7 @@ class Arduino:
             answer = 'error save config'
         return answer
 
-    def FindByAuction(self, cmd, not_important_words, allpins=False):
+    def FindByAuction(self, cmd, allpins=False):
         if str(type(cmd)) != "<class 'list'>":
             cmd = str(cmd)
             _wordlist = cmd.split(' ')
@@ -302,7 +303,7 @@ class Arduino:
             _wordlist = cmd
         wordlist = []
         for w in _wordlist:
-            if w not in not_important_words:
+            if w not in __not_important_words:
                 wordlist.append(w)
         PinAuction = []
         for p in self.pins:

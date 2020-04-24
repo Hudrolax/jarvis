@@ -755,7 +755,7 @@ if __name__ == "__main__":
     WDThread.start()
 
     # init arduino
-    arduino = class_arduino.Arduino(path + arduino_config_name, path + arduino_pinstate)
+    arduino = class_arduino.Arduino(path + arduino_config_name, path + arduino_pinstate, NotImportantWords)
     arduino.LoadConfig(telegram_users)
 
     # Start keyboart queue thread
