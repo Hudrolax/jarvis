@@ -26,16 +26,17 @@ class Arduino:
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
 
-    def pin(self, _pin):
+    def pin(self, __pin):
         for p in self.pins:
-            if str(type(_pin)) == "<class 'str'>":
-                _pin = _pin.lower()
-                if p.name.lower() == _pin or str(p.num) == _pin or p.description.lower() == _pin:
+            print(p.name)
+            if str(type(__pin)) == "<class 'str'>":
+                __pin = __pin.lower()
+                if p.name.lower() == __pin or str(p.num) == __pin or p.description.lower() == __pin:
                     return p
-            elif str(type(_pin)) == "<class 'int'>":
-                if p.num == _pin:
+            elif str(type(__pin)) == "<class 'int'>":
+                if p.num == __pin:
                     return p
-        print(f"can't find pin {_pin}")
+        print(f"can't find pin {__pin}")
         return None
 
     def set_pin(self, _pin, __state):
@@ -58,6 +59,7 @@ class Arduino:
             p.prevstate = p.state
         except:
             print(p)
+
         answer = None
         if __state == 1:
             while answer != 3001 or answer is None:
