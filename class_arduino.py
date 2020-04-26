@@ -10,7 +10,7 @@ import pickle
 
 class Arduino:
     def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
-        self.port = ''
+        self.port = None
         self.initialized = False
         self.pins = []
         self.config_path = config_path
@@ -185,33 +185,49 @@ class Arduino:
         except:
             print('error load pinstate')
 
+    def check_initialisation(self):
+        a = self.write('I', 666, 1)
+        if a == 666:
+            self.initialized = True
+            self.check_input_pins(True)
+            try:
+                with open('serial.pickle', 'wb') as f:
+                    pickle.dump(self.port, f)
+            except:
+                pass
+
     def initialize(self):
+        def prepare_serial(__port):
+            try:
+                __port.reset_output_buffer()
+                __port.reset_input_buffer()
+                __port.baudrate = 57600
+                __port.timeout = 1
+                __port.write_timeout = 1
+                return True
+            except:
+                return False
+
         while not self.initialized:
-            ports = list(serial.tools.list_ports.comports())
-            for p in ports:
-                # try:
-                #     with open('serial.pickle', 'rb') as f:
-                #         self.port = ports.append(pickle.load(f))
-                # except:
-                comport = p.device
-                print('Try to find Arduino in ' + comport)
-                self.port = serial.Serial(comport, 57600, timeout=1)
-                self.port.reset_output_buffer()
-                self.port.reset_input_buffer()
-                self.port.baudrate = 57600
-                self.port.timeout = 1
-                self.port.write_timeout = 1
-                sleep(3)
-                a = self.write('I', 666, 1)
-                if a == 666:
-                    self.initialized = True
-                    self.check_input_pins(True)
-                    try:
-                        with open('serial.pickle', 'wb') as f:
-                            pickle.dump(self.port, f)
-                    except:
-                        pass
-                    break
+            try:
+                print('Try to load the Serial from serial.pickle')
+                with open('serial.pickle', 'rb') as f:
+                    self.port = pickle.load(f)
+                    if prepare_serial(self.serial):
+                        self.check_initialisation()
+                print('Success load serial ')
+            except:
+                print('Faild to load Serial from serial.pickle')
+                ports = list(serial.tools.list_ports.comports())
+                for p in ports:
+                    comport = p.device
+                    print('Try to find Arduino in ' + comport)
+                    self.port = serial.Serial(comport, 57600, timeout=1)
+                    if prepare_serial(self.port):
+                        sleep(3)
+                        self.check_initialisation()
+                        if self.initialized:
+                            break
             if not self.initialized:
                 print('I have not found the Arduino...')
                 print("Sorry, but i can't work whithout Arduino subcontroller :(")
