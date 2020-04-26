@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import sleep
 import serial
+import serial.tools.list_ports
 import gfunctions as gf
 from class_pins import Pins
 import telegram_bot
