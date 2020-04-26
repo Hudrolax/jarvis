@@ -189,13 +189,13 @@ class Arduino:
         while not self.initialized:
             ports = list(serial.tools.list_ports.comports())
             for p in ports:
-                try:
-                    with open('serial.pickle', 'rb') as f:
-                        self.port = ports.append(pickle.load(f))
-                except:
-                    comport = p.device
-                    print('Try to find Arduino in ' + comport)
-                    self.port = serial.Serial(comport, 57600, timeout=1)
+                # try:
+                #     with open('serial.pickle', 'rb') as f:
+                #         self.port = ports.append(pickle.load(f))
+                # except:
+                comport = p.device
+                print('Try to find Arduino in ' + comport)
+                self.port = serial.Serial(comport, 57600, timeout=1)
                 self.port.reset_output_buffer()
                 self.port.reset_input_buffer()
                 self.port.baudrate = 57600
