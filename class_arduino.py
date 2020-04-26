@@ -196,12 +196,12 @@ class Arduino:
                     comport = p.device
                     print('Try to find Arduino in ' + comport)
                     self.port = serial.Serial(comport, 57600, timeout=1)
-                    self.port.reset_output_buffer()
-                    self.port.reset_input_buffer()
-                    self.port.baudrate = 57600
-                    self.port.timeout = 1
-                    self.port.write_timeout = 1
-                    sleep(3)
+                self.port.reset_output_buffer()
+                self.port.reset_input_buffer()
+                self.port.baudrate = 57600
+                self.port.timeout = 1
+                self.port.write_timeout = 1
+                sleep(3)
                 a = self.write('I', 666, 1)
                 if a == 666:
                     self.initialized = True
