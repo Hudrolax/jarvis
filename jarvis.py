@@ -1,22 +1,17 @@
 # Sergey Nazarov 26.03.2020
 
-import serial
-import serial.tools.list_ports
 from time import sleep
-import time
-import sys
 from datetime import datetime
 import threading
 import queue
 import requests
 import telebot
-from RPi import GPIO
 import copy
 import class_arduino
 import class_watchdog
 import gfunctions as gf
 
-version = "1.01"
+version = "1.02"
 path = '/home/pi/jarvis/'
 arduino_config_name = 'config.txt'
 arduino_pinstate = 'arduino_pinstate.txt'
