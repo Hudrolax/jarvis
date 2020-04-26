@@ -1,9 +1,11 @@
 from datetime import datetime
 from time import sleep
 import serial
+import serial.tools.list_ports
 import gfunctions as gf
 from class_pins import Pins
 import telegram_bot
+import pickle
 
 
 class Arduino:
@@ -187,9 +189,13 @@ class Arduino:
         while not self.initialized:
             ports = list(serial.tools.list_ports.comports())
             for p in ports:
+                # try:
+                #     with open('serial.pickle', 'rb') as f:
+                #         self.port = ports.append(pickle.load(f))
+                # except:
                 comport = p.device
                 print('Try to find Arduino in ' + comport)
-                self.port = serial.Serial(comport, 57600, timeout=1)  # change ACM number as found from ls /dev/tty/ACM*
+                self.port = serial.Serial(comport, 57600, timeout=1)
                 self.port.reset_output_buffer()
                 self.port.reset_input_buffer()
                 self.port.baudrate = 57600
@@ -197,10 +203,14 @@ class Arduino:
                 self.port.write_timeout = 1
                 sleep(3)
                 a = self.write('I', 666, 1)
-                # print(a)
-                if (a == 666):
+                if a == 666:
                     self.initialized = True
                     self.check_input_pins(True)
+                    try:
+                        with open('serial.pickle', 'wb') as f:
+                            pickle.dump(self.port, f)
+                    except:
+                        pass
                     break
             if not self.initialized:
                 print('I have not found the Arduino...')
