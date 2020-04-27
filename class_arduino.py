@@ -209,12 +209,13 @@ class Arduino:
 
     def initialize(self):
         try:
-            print('Try to load the Serial from serial.pickle')
-            with open('serial.pickle', 'rb') as f:
-                self.port = pickle.load(f)
-                if self.prepare_serial():
-                    self.check_initialisation()
-                    print('Success load serial ')
+            raise RuntimeError('any error')
+            # print('Try to load the Serial from serial.pickle')
+            # with open('serial.pickle', 'rb') as f:
+            #     self.port = pickle.load(f)
+            #     if self.prepare_serial():
+            #         self.check_initialisation()
+            #         print('Success load serial ')
         except:
             self.port = None
             print('Faild to load Serial from serial.pickle')
