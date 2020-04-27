@@ -197,15 +197,15 @@ class Arduino:
                 pass
 
     def prepare_serial(self):
-        try:
-            self.port.reset_output_buffer()
-            self.port.reset_input_buffer()
-            self.port.baudrate = 57600
-            self.port.timeout = 1
-            self.port.write_timeout = 1
-            return True
-        except:
-            return False
+        #try:
+        self.port.reset_output_buffer()
+        self.port.reset_input_buffer()
+        self.port.baudrate = 57600
+        self.port.timeout = 1
+        self.port.write_timeout = 1
+        return True
+        # except:
+        #     return False
 
     def initialize(self):
         while not self.initialized:
@@ -233,10 +233,10 @@ class Arduino:
                 print("Sorry, but i can't work whithout Arduino subcontroller :(")
                 # print("I'm have to try to find it after one second pause")
             else:
-                print('Arduino is initialized on port ' + comport)
+                print(f'Arduino is initialized on port {self.port.name}')
                 self.load_pinstate()
 
-    def LoadConfig(self, _telegram_users, first_load=True):
+    def LoadConfig(self, _telegram_users):
         __answer = None
         self.pins = []
         try:
