@@ -10,6 +10,8 @@ import copy
 import class_arduino
 import class_watchdog
 import gfunctions as gf
+from gfunctions import JPrint
+jprint = JPrint.jprint
 
 version = "1.02"
 path = '/home/pi/jarvis/'
