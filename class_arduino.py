@@ -372,9 +372,9 @@ class Arduino:
             # print(f'winner get {MaxIncludes} points')
             return Winners[0]
         elif len(Winners) > 1:
-            print('Winners more than one')
-            print(f'its get {MaxIncludes} points')
+            #print('Winners more than one')
+            #print(f'its get {MaxIncludes} points')
             return Winners
         else:
-            print('winner not found')
+            #print('winner not found')
             return None
