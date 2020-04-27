@@ -1,5 +1,36 @@
 from serial import Serial, SerialException
-from serial.serialjava import *
+from serial.serialutil import *
+
+
+def detect_java_comm(names):
+    """try given list of modules and return that imports"""
+    for name in names:
+        try:
+            mod = my_import(name)
+            mod.SerialPort
+            return mod
+        except (ImportError, AttributeError):
+            pass
+    raise ImportError("No Java Communications API implementation found")
+
+
+# Java Communications API implementations
+# http://mho.republika.pl/java/comm/
+
+comm = detect_java_comm([
+    'javax.comm',  # Sun/IBM
+    'gnu.io',      # RXTX
+])
+
+def device(portnumber):
+    """Turn a port number into a device name"""
+    enum = comm.CommPortIdentifier.getPortIdentifiers()
+    ports = []
+    while enum.hasMoreElements():
+        el = enum.nextElement()
+        if el.getPortType() == comm.CommPortIdentifier.PORT_SERIAL:
+            ports.append(el)
+    return ports[portnumber].getName()
 
 class JarvisSerial(Serial):
      def open(self):
