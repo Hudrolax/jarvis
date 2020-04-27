@@ -673,7 +673,7 @@ def CommandProcessing(cmd, telegramuser, message):
         elif cmd == 'exit':
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 print('bye...')
-                sys.exeit()
+                sys.exit()
             else:
                 answer += AccessError()
         else:
