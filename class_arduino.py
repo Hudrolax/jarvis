@@ -5,7 +5,7 @@ import serial.tools.list_ports as lp
 import gfunctions as gf
 from class_pins import Pins
 import telegram_bot
-import pickle
+import dill
 
 
 class Arduino:
@@ -192,7 +192,7 @@ class Arduino:
             self.check_input_pins(True)
             try:
                 with open('serial.pickle', 'wb') as f:
-                    pickle.dump(self.port, f)
+                    dill.dump(self.port, f)
             except:
                 pass
 
@@ -211,7 +211,7 @@ class Arduino:
         try:
             print('Try to load the Serial from serial.pickle')
             with open('serial.pickle', 'rb') as f:
-                self.port = pickle.load(f)
+                self.port = dill.load(f)
                 if self.prepare_serial():
                     self.check_initialisation()
                     print('Success load serial ')
