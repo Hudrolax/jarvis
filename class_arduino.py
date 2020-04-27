@@ -220,10 +220,10 @@ class Arduino:
             comport = p.device
             jprint('Try to find Arduino in ' + comport)
             jprint(' ... initializing without open port in first')
-            try:
-                self.port = JarvisSerial(comport, 57600, timeout=1)
-                if self._try_to_init(): break
-            except:
+            self.port = JarvisSerial(comport, 57600, timeout=1)
+            if self._try_to_init():
+                break
+            else:
                 jprint('initializing without open port faild. Try open port.')
                 self.port = serial.Serial(comport, 57600, timeout=1)
                 if self._try_to_init(): break

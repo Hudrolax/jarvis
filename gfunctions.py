@@ -36,5 +36,5 @@ class JPrint:
 
     @staticmethod
     def jprint(s):
-        __now = datetime.now().strftime("%d.%m.%y %h:%m:%s")
+        __now = datetime.now().strftime("%d.%m.%Y %H:%H:%S")
         print(__now+" "+JPrint.__NAME+": "+str(s))
