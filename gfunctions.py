@@ -1,3 +1,5 @@
+from datetime import datetime
+
 def map_func(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
@@ -28,3 +30,11 @@ def difference_between_date(date1, date2):
     minutes = divmod(hours[1], 60)  # Use remainder of hours to calc minutes
     seconds = divmod(minutes[1], 1)  # Use remainder of minutes to calc seconds
     return "%d дней, %d часов, %d минут и %d секунд" % (days[0], hours[0], minutes[0], seconds[0])
+
+class JPrint:
+    __NAME = 'Jarvis'
+
+    @staticmethod
+    def jprint(s):
+        __now = datetime.now().strftime("%d.%m.%y %h:%m:%s")
+        print(__now+" "+JPrint.__NAME+": "+str(s))

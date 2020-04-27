@@ -1,11 +1,13 @@
 from datetime import datetime
 from time import sleep
-import serial
 import serial.tools.list_ports as lp
 import gfunctions as gf
+from gfunctions import JPrint
+jprint = JPrint.jprint
 from class_pins import Pins
 import telegram_bot
-import dill
+from class_serial import JarvisSerial
+import serial
 
 
 class Arduino:
@@ -185,16 +187,11 @@ class Arduino:
         except:
             print('error load pinstate')
 
-    def check_initialisation(self):
+    def check_initialization(self):
         a = self.write('I', 666, 1)
         if a == 666:
             self.initialized = True
             self.check_input_pins(True)
-            try:
-                with open('serial.pickle', 'wb') as f:
-                    dill.dump(self.port, f)
-            except:
-                pass
 
     def prepare_serial(self):
         try:
@@ -205,37 +202,39 @@ class Arduino:
             self.port.write_timeout = 1
             return True
         except:
-            print("Can't load proporties to COM port")
+            jprint("Can't load proporties to COM port")
+            return False
+
+    def _try_to_init(self):
+        if self.prepare_serial():
+            sleep(3)
+            self.check_initialization()
+            if self.initialized:
+                return True
             return False
 
     def initialize(self):
-        try:
-            print('Try to load the Serial from serial.pickle')
-            with open('serial.pickle', 'rb') as f:
-                self.port = dill.load(f)
-                if self.prepare_serial():
-                    self.check_initialisation()
-                    print('Success load serial ')
-        except:
-            self.port = None
-            print('Faild to load Serial from serial.pickle')
-            ports = list(lp.comports())
-            for p in ports:
-                comport = p.device
-                print('Try to find Arduino in ' + comport)
+        self.port = None
+        ports = list(lp.comports())
+        for p in ports:
+            comport = p.device
+            jprint('Try to find Arduino in ' + comport)
+            jprint(' ... initializing without open port in first')
+            try:
+                self.port = JarvisSerial(comport, 57600, timeout=1)
+                if self._try_to_init(): break
+            except:
+                jprint('initializing without open port faild. Try open port.')
                 self.port = serial.Serial(comport, 57600, timeout=1)
-                if self.prepare_serial():
-                    sleep(3)
-                    self.check_initialisation()
-                    if self.initialized:
-                        break
+                if self._try_to_init(): break
+
         if not self.initialized:
-            print('I have not found the Arduino...')
-            print("Sorry, but i can't work whithout Arduino subcontroller :(")
+            jprint('I have not found the Arduino...')
+            jprint("Sorry, but i can't work whithout Arduino subcontroller :(")
             # print("I'm have to try to find it after one second pause")
             #raise RuntimeError("can't load Arduino controller")
         else:
-            print(f'Arduino is initialized on port {self.port.name}')
+            jprint(f'Arduino is initialized on port {self.port.name}')
             self.load_pinstate()
 
     def LoadConfig(self, _telegram_users):
