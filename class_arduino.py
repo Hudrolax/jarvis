@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 import serial
-import serial.tools.list_ports
+import serial.tools.list_ports as lp
 import gfunctions as gf
 from class_pins import Pins
 import telegram_bot
@@ -197,45 +197,45 @@ class Arduino:
                 pass
 
     def prepare_serial(self):
-        #try:
-        self.port.reset_output_buffer()
-        self.port.reset_input_buffer()
-        self.port.baudrate = 57600
-        self.port.timeout = 1
-        self.port.write_timeout = 1
-        return True
-        # except:
-        #     return False
+        try:
+            self.port.reset_output_buffer()
+            self.port.reset_input_buffer()
+            self.port.baudrate = 57600
+            self.port.timeout = 1
+            self.port.write_timeout = 1
+            return True
+        except:
+            return False
 
     def initialize(self):
-        while not self.initialized:
-            try:
-                print('Try to load the Serial from serial.pickle')
-                with open('serial.pickle', 'rb') as f:
-                    self.port = pickle.load(f)
-                    if self.prepare_serial():
-                        self.check_initialisation()
-                        print('Success load serial ')
-            except:
-                print('Faild to load Serial from serial.pickle')
-                ports = list(serial.tools.list_ports.comports())
-                for p in ports:
-                    comport = p.device
-                    print('Try to find Arduino in ' + comport)
-                    self.port = serial.Serial(comport, 57600, timeout=1)
-                    if self.prepare_serial():
-                        sleep(3)
-                        self.check_initialisation()
-                        if self.initialized:
-                            break
-            if not self.initialized:
-                print('I have not found the Arduino...')
-                print("Sorry, but i can't work whithout Arduino subcontroller :(")
-                # print("I'm have to try to find it after one second pause")
-                raise RuntimeError("can't load Arduino excaption")
-            else:
-                print(f'Arduino is initialized on port {self.port.name}')
-                self.load_pinstate()
+        try:
+            print('Try to load the Serial from serial.pickle')
+            with open('serial.pickle', 'rb') as f:
+                self.port = pickle.load(f)
+                if self.prepare_serial():
+                    self.check_initialisation()
+                    print('Success load serial ')
+        except:
+            self.port = None
+            print('Faild to load Serial from serial.pickle')
+            ports = list(lp.comports())
+            for p in ports:
+                comport = p.device
+                print('Try to find Arduino in ' + comport)
+                self.port = serial.Serial(comport, 57600, timeout=1)
+                if self.prepare_serial():
+                    sleep(3)
+                    self.check_initialisation()
+                    if self.initialized:
+                        break
+        if not self.initialized:
+            print('I have not found the Arduino...')
+            print("Sorry, but i can't work whithout Arduino subcontroller :(")
+            # print("I'm have to try to find it after one second pause")
+            #raise RuntimeError("can't load Arduino controller")
+        else:
+            print(f'Arduino is initialized on port {self.port.name}')
+            self.load_pinstate()
 
     def LoadConfig(self, _telegram_users):
         __answer = None
@@ -280,7 +280,8 @@ class Arduino:
             if str(type(lightpin)) != "<class 'list'>" and lightpin is not None:
                 self.OutDoorLightPin = self.FindByAuction('свет на улице')
             else:
-                print('Не могу подобрать пин уличного освещения!')
+                pass
+                # print('Не могу подобрать пин уличного освещения!')
         print(__answer)
         return __answer
 
@@ -367,8 +368,8 @@ class Arduino:
                     Winners.append(self.pin(PA[0]))
 
         if len(Winners) == 1:
-            print(f'winner is {Winners[0].description}')
-            print(f'winner get {MaxIncludes} points')
+            # print(f'winner is {Winners[0].description}')
+            # print(f'winner get {MaxIncludes} points')
             return Winners[0]
         elif len(Winners) > 1:
             print('Winners more than one')

@@ -1,5 +1,5 @@
 # Sergey Nazarov 26.03.2020
-
+import sys
 from time import sleep
 from datetime import datetime
 import threading
@@ -21,7 +21,6 @@ API_TOKEN = '1123277123:AAFz7b_joMY-4yGavFAE5o5MKstU5cz5Cfw'
 bot = telebot.TeleBot(API_TOKEN, threaded=False)  # Конструктор бота
 NotImportantWords = ['в', 'на', 'к', 'у', 'для', 'за']
 StartTime = datetime.now()
-Run = True
 
 
 def append_goodproxy(proxy):
@@ -88,8 +87,7 @@ def PingWatchdog(wd):
 
 # Function of input in thread
 def read_kbd_input(inputQueue):
-    global Run
-    while Run:
+    while True:
         # Receive keyboard input from user.
         try:
             input_str = input()
@@ -115,8 +113,7 @@ def SendToAllTelegram(message):
 
 
 def TelegramBot():
-    global Run
-    while Run:
+    while True:
         try:
             content = str(requests.get('https://www.proxy-list.download/api/v1/get?type=http').content)
             content = content.replace(r'\r\n', ',')
@@ -240,7 +237,6 @@ def AccessError():
 # Command processing module
 def CommandProcessing(cmd, telegramuser, message):
     global TelegrammAnswerQueue
-    global Run
     cmd = cmd.lower()
     print_lst = f'first command: {cmd}'
     if telegramuser != None:
@@ -677,7 +673,7 @@ def CommandProcessing(cmd, telegramuser, message):
         elif cmd == 'exit':
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 print('bye...')
-                Run = False
+                sys.exeit()
             else:
                 answer += AccessError()
         else:
@@ -766,7 +762,7 @@ if __name__ == "__main__":
 
     # Main loop dunction
     ReglamentWorkTimer = 100
-    while Run:
+    while True:
         if arduino.initialized:
             if (inputQueue.qsize() > 0):
                 queue_typle = inputQueue.get()
