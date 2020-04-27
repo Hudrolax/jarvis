@@ -196,24 +196,24 @@ class Arduino:
             except:
                 pass
 
-    def initialize(self):
-        def prepare_serial(__port):
-            try:
-                __port.reset_output_buffer()
-                __port.reset_input_buffer()
-                __port.baudrate = 57600
-                __port.timeout = 1
-                __port.write_timeout = 1
-                return True
-            except:
-                return False
+    def prepare_serial(self):
+        try:
+            self.port.reset_output_buffer()
+            self.port.reset_input_buffer()
+            self.port.baudrate = 57600
+            self.port.timeout = 1
+            self.port.write_timeout = 1
+            return True
+        except:
+            return False
 
+    def initialize(self):
         while not self.initialized:
             try:
                 print('Try to load the Serial from serial.pickle')
                 with open('serial.pickle', 'rb') as f:
                     self.port = pickle.load(f)
-                    if prepare_serial(self.serial):
+                    if self.prepare_serial():
                         self.check_initialisation()
                 print('Success load serial ')
             except:
@@ -223,7 +223,7 @@ class Arduino:
                     comport = p.device
                     print('Try to find Arduino in ' + comport)
                     self.port = serial.Serial(comport, 57600, timeout=1)
-                    if prepare_serial(self.port):
+                    if self.prepare_serial():
                         sleep(3)
                         self.check_initialisation()
                         if self.initialized:
