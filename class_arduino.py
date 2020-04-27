@@ -215,7 +215,7 @@ class Arduino:
                     self.port = pickle.load(f)
                     if self.prepare_serial():
                         self.check_initialisation()
-                print('Success load serial ')
+                        print('Success load serial ')
             except:
                 print('Faild to load Serial from serial.pickle')
                 ports = list(serial.tools.list_ports.comports())
@@ -232,6 +232,7 @@ class Arduino:
                 print('I have not found the Arduino...')
                 print("Sorry, but i can't work whithout Arduino subcontroller :(")
                 # print("I'm have to try to find it after one second pause")
+                raise RuntimeError("can't load Arduino excaption")
             else:
                 print(f'Arduino is initialized on port {self.port.name}')
                 self.load_pinstate()
