@@ -205,6 +205,7 @@ class Arduino:
             self.port.write_timeout = 1
             return True
         except:
+            print("Can't load proporties to COM port")
             return False
 
     def initialize(self):
