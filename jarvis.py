@@ -88,13 +88,13 @@ def ping_watchdog(wd):
 
 
 # Function of input in thread
-def read_kbd_input(inputQueue):
+def read_kbd_input(__input_queue):
     while True:
         # Receive keyboard input from user.
         try:
             input_str = input()
             jprint('Enter command: ' + input_str)
-            inputQueue.put((input_str, None, None))
+            __input_queue.put((input_str, None, None))
         except:
             continue
 
@@ -150,7 +150,7 @@ def telegram_bot():
 # Telegram bot
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
-    global inputQueue
+    global input_queue
     global telegram_answer_queue
 
     _user = None
@@ -158,7 +158,7 @@ def get_text_messages(message):
         if str(message.from_user.id) == user.ID:
             _user = user
             break
-    if message.text == "Привет":
+    if message.text == "привет":
         bot.reply_to(message, "Привет, чем я могу тебе помочь?")
     elif message.text == "/help" or message.text == "help":
         if _user != None:
@@ -184,9 +184,9 @@ def get_text_messages(message):
             bot.reply_to(message, "Кто ты чудовище?")
     else:
         if _user != None:
-            inputQueue.put((message.text, _user, message))  # Поместили сообщение в оцередь на обработку
-            AnsweWaitTime = 10
-            while AnsweWaitTime > 0:
+            input_queue.put((message.text, _user, message))  # Поместили сообщение в оцередь на обработку
+            __answe_wait_time = 10
+            while __answe_wait_time > 0:
                 if (telegram_answer_queue.qsize() > 0):
                     queue_typle = telegram_answer_queue.get()
                     get_message = queue_typle[0]
@@ -197,7 +197,7 @@ def get_text_messages(message):
                     else:
                         telegram_answer_queue.put((get_message, answer))
 
-                AnsweWaitTime -= 1
+                __answe_wait_time -= 1
                 sleep(1)
         else:
             bot.reply_to(message, "Кто ты чудовище?")
