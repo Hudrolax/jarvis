@@ -11,10 +11,12 @@ import class_watchdog
 import gfunctions as gf
 from gfunctions import JPrint
 from telegram_bot import TelegramBot
+
 jprint = JPrint.jprint
 
 # init telegram bot
 bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
+
 
 # Function of input in thread
 def read_kbd_input(__input_queue):
@@ -27,21 +29,22 @@ def read_kbd_input(__input_queue):
         except:
             continue
 
+
 # Telegram bot
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     global input_queue
     global telegram_answer_queue
 
-    # _user = None
-    # for user in bot.get_users():
-    #     if str(message.from_user.id) == user.ID:
-    #         _user = user
-    #         break
+    _user = None
+    for user in bot.users:
+        if str(message.from_user.id) == user.id:
+            _user = user
+            break
     if message.text == "привет":
         bot.reply_to(message, "Привет, чем я могу тебе помочь?")
     elif message.text == "/help" or message.text == "help":
-        if _user != None:
+        if _user is not None:
             helpmessage = 'Help:\n'
             helpmessage += 'getmyid - получить свой telegram ID\n'
             helpmessage += '\n'
@@ -63,7 +66,7 @@ def get_text_messages(message):
         else:
             bot.reply_to(message, "Кто ты чудовище?")
     else:
-        if _user != None:
+        if _user is not None:
             input_queue.put((message.text, _user, message))  # Поместили сообщение в оцередь на обработку
             __answe_wait_time = 10
             while __answe_wait_time > 0:
@@ -86,8 +89,8 @@ def get_text_messages(message):
 @bot.message_handler(content_types=["sticker", 'document'])
 def handle_docs_audio(message):
     _user = None
-    for user in bot.get_users():
-        if str(message.from_user.id) == user.ID:
+    for user in bot.users:
+        if str(message.from_user.id) == user.id:
             _user = user
             break
     if _user != None:
@@ -519,7 +522,7 @@ def command_processing(cmd, telegramuser, message):
         elif cmd == 'state' or cmd == 'status' or 'статус' in cmd_list:
             if telegramuser != None and telegramuser.level <= 3 or telegramuser == None:
                 uptime = gf.difference_between_date(start_time, datetime.now())
-                answer += 'ver. '+VERSION+'   '
+                answer += 'ver. ' + VERSION + '   '
                 answer += f'uptime {uptime}\n'
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                     answer += 'Включенный свет:\n'
@@ -596,7 +599,8 @@ def reglament_work():
         if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
             for user in bot.get_users():
                 if True or user.level == 0 or user.level == 3:
-                    bot.send_to_telegram_id(user.ID, 'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
+                    bot.send_to_telegram_id(user.ID,
+                                            'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
             arduino.DCVolLowAlertSended = True
 
         # Реакция пинов на разряд аккумулятора без входного напряжения
@@ -629,7 +633,8 @@ if __name__ == "__main__":
     watchdog.start_ping()
 
     # init arduino
-    arduino = class_arduino.Arduino(JARVIS_PATH + ARDUINO_CONFIG_NAME, JARVIS_PATH + ARDUINO_PINSTATE_FILENAME, NOT_IMPORTANT_WORDS)
+    arduino = class_arduino.Arduino(JARVIS_PATH + ARDUINO_CONFIG_NAME, JARVIS_PATH + ARDUINO_PINSTATE_FILENAME,
+                                    NOT_IMPORTANT_WORDS)
     arduino.load_config(bot)
 
     # Start keyboart queue thread
