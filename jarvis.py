@@ -1,91 +1,20 @@
 # Sergey Nazarov 26.03.2020
+from config import *
 import sys
 from time import sleep
 from datetime import datetime
 import threading
 import queue
-import requests
-import telebot
 import copy
 import class_arduino
 import class_watchdog
 import gfunctions as gf
 from gfunctions import JPrint
+from telegram_bot import TelegramBot
 jprint = JPrint.jprint
 
-VERSION = "1.02"
-JARVIS_PATH = '/home/pi/jarvis/'
-ARDUINO_CONFIG_NAME = 'config.txt'
-ARDUINO_PINSTATE_FILENAME = 'arduino_pinstate.txt'
-GOOD_PROXY_LIST = 'good_proxylist.txt'
-telegram_users = []  # telegram users list
-API_TOKEN = '1123277123:AAFz7b_joMY-4yGavFAE5o5MKstU5cz5Cfw'
-bot = telebot.TeleBot(API_TOKEN, threaded=False)  # Конструктор бота
-NOT_IMPORTANT_WORDS = ['в', 'на', 'к', 'у', 'для', 'за']
-start_time = datetime.now()
-
-
-def append_goodproxy(proxy):
-    try:
-        # in first read the list
-        try:
-            f = open(JARVIS_PATH + GOOD_PROXY_LIST, 'r')
-            exist_proxies = f.read().split('\n')
-            f.close()
-        except:
-            exist_proxies = []
-        if proxy in exist_proxies:
-            return
-        try:
-            f = open(JARVIS_PATH + GOOD_PROXY_LIST, 'a')
-        except:
-            jprint('good proxylist file is not exist. Im create new.')
-            f = open(JARVIS_PATH + GOOD_PROXY_LIST, 'w')
-        f.write(proxy + '\n')
-        f.close()
-    except:
-        jprint(f'cant write {JARVIS_PATH + GOOD_PROXY_LIST}!!!')
-
-
-def remove_bad_proxy(proxy):
-    try:
-        try:
-            f = open(JARVIS_PATH + GOOD_PROXY_LIST, 'r')
-        except:
-            return
-        p_list = f.read().split('\n')
-        f.close()
-        good_p_list = []
-        for prox in p_list:
-            if prox != proxy and prox != '':
-                good_p_list.append(prox)
-        f = open(JARVIS_PATH + GOOD_PROXY_LIST, 'w')
-        for gp in good_p_list:
-            f.write(gp + '\n')
-        f.close()
-    except:
-        jprint(f'cant write {JARVIS_PATH + GOOD_PROXY_LIST}')
-
-
-def load_good_proxylist():
-    try:
-        f = open(JARVIS_PATH + GOOD_PROXY_LIST, 'r')
-        lst = f.read().split('\n')
-        f.close()
-        lst2 = []
-        for l in lst:
-            if l != '':
-                lst2.append(l)
-        return lst2
-    except:
-        jprint(f'cant read {JARVIS_PATH + GOOD_PROXY_LIST}')
-        return None
-
-def ping_watchdog(wd):
-    while True:
-        wd.ping()
-        sleep(1)
-
+# init telegram bot
+bot = TelegramBot(JARVIS_PATH, GOOD_PROXY_LIST, API_TOKEN, threaded=False)  # Конструктор бота
 
 # Function of input in thread
 def read_kbd_input(__input_queue):
@@ -98,55 +27,6 @@ def read_kbd_input(__input_queue):
         except:
             continue
 
-
-def send_to_telegram_id(_id, message):
-    try:
-        bot.send_message(_id, message)
-    except:
-        jprint(f'error send to telegramm id {_id}')
-
-
-def send_to_all_telegram(message):
-    for user in telegram_users:
-        try:
-            send_to_telegram_id(user.ID, message)
-        except:
-            jprint('error send to all telegram ID')
-
-
-def telegram_bot():
-    while True:
-        try:
-            content = str(requests.get('https://www.proxy-list.download/api/v1/get?type=http').content)
-            content = content.replace(r'\r\n', ',')
-            content = content.replace("b'", '')
-            content = content.replace(",'", '')
-            a = content.split(',')
-            jprint('Im try load good proxylist')
-            gp_list = load_good_proxylist()
-            contarr = []
-            if gp_list != None:
-                contarr.extend(gp_list)
-                jprint('Good proxylist is loaded')
-            else:
-                jprint('Cant load good proxylist :(')
-            contarr.extend(a)
-        except:
-            sleep(0.1)
-            continue
-        for prox in contarr:
-            if prox != '':
-                try:
-                    telebot.apihelper.proxy = {'https': prox}
-                    append_goodproxy(prox)
-                    jprint('Try connect to Telegramm...')
-                    bot.polling(none_stop=True)
-                except:
-                    jprint('I am have some problem with connect to Telegramm')
-                    remove_bad_proxy(prox)
-                    sleep(0.1)
-
-
 # Telegram bot
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
@@ -154,7 +34,7 @@ def get_text_messages(message):
     global telegram_answer_queue
 
     _user = None
-    for user in telegram_users:
+    for user in bot.get_users():
         if str(message.from_user.id) == user.ID:
             _user = user
             break
@@ -206,7 +86,7 @@ def get_text_messages(message):
 @bot.message_handler(content_types=["sticker", 'document'])
 def handle_docs_audio(message):
     _user = None
-    for user in telegram_users:
+    for user in bot.get_users():
         if str(message.from_user.id) == user.ID:
             _user = user
             break
@@ -495,7 +375,7 @@ def command_processing(cmd, telegramuser, message):
             if "все" in cmd_list and "выключатели" in cmd_list:
                 for p in arduino.pins:
                     if not p.output:
-                        p.blocked = True;
+                        p.blocked = True
                 answer += f'Заблокировал все выключатели\n'
             elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 WinnerPin = arduino.find_by_auction(cmd_list, True)
@@ -515,7 +395,7 @@ def command_processing(cmd, telegramuser, message):
             if "все" in cmd_list and "выключатели" in cmd_list:
                 for p in arduino.pins:
                     if not p.output:
-                        p.blocked = False;
+                        p.blocked = False
                 answer += f'Заблокировал все выключатели\n'
             elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 WinnerPin = arduino.find_by_auction(cmd_list, True)
@@ -622,7 +502,7 @@ def command_processing(cmd, telegramuser, message):
                     else:
                         answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.\n'
                 except:
-                    answer == 'error unbind pins\n'
+                    answer = 'error unbind pins\n'
             else:
                 answer += get_access_error()
         elif (cmd.find('print') > -1 and cmd.find('config') > -1) or (
@@ -686,7 +566,7 @@ def command_processing(cmd, telegramuser, message):
     return answer
 
 
-def reglament_work():
+def reglament_work(_bot):
     global reglament_work_timer
     if reglament_work_timer <= 0:
         if datetime.now().hour >= 19 or datetime.now().hour <= 6:  # включим свет на улице
@@ -700,23 +580,23 @@ def reglament_work():
 
         # Сообщим, что пропало напряжение на входе
         if not arduino.ACCExist and not arduino.ACAlertSended:
-            for user in telegram_users:
+            for user in _bot.get_users():
                 if user.level == 0:
                     # if True or user.level == 0 or user.level == 3:
-                    send_to_telegram_id(user.ID, 'Отключилось напряжение на входе в дом!\n')
+                    bot.send_to_telegram_id(user.ID, 'Отключилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = True
         elif arduino.ACCExist and arduino.ACAlertSended:
-            for user in telegram_users:
+            for user in _bot.get_users():
                 # if True or user.level == 0 or user.level == 3:
                 if user.level == 0:
-                    send_to_telegram_id(user.ID, 'Ура! Появилось напряжение на входе в дом!\n')
+                    bot.send_to_telegram_id(user.ID, 'Ура! Появилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = False
 
         # Сообщить, что напряжение аккумулятора низкое
         if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
-            for user in telegram_users:
+            for user in _bot.get_users():
                 if True or user.level == 0 or user.level == 3:
-                    send_to_telegram_id(user.ID, 'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
+                    bot.send_to_telegram_id(user.ID, 'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
             arduino.DCVolLowAlertSended = True
 
         # Реакция пинов на разряд аккумулятора без входного напряжения
@@ -726,9 +606,9 @@ def reglament_work():
                     arduino.set_pin(p, 0)
                     jprint(f'Отключил {p.description} по разряду аккумулятора')
                     p.bcod_reaction = True
-                    for user in telegram_users:
+                    for user in _bot.get_users():
                         if user.level <= 1:
-                            send_to_telegram_id(user.ID, f'Отключил {p.description} по разряду аккумулятора\n')
+                            bot.send_to_telegram_id(user.ID, f'Отключил {p.description} по разряду аккумулятора\n')
         else:
             for p in arduino.pins:
                 if p.output and p.bcod_reaction and arduino.DCVoltageInPercent > p.bcod:
@@ -742,23 +622,23 @@ def reglament_work():
 
 # ****** MAIN ******
 if __name__ == "__main__":
+    start_time = datetime.now()
+
     # init watchdog
     watchdog = class_watchdog.CWatchDog('/dev/ttyACM0')
-    wd_thread = threading.Thread(target=ping_watchdog, args=(watchdog,), daemon=True)
-    wd_thread.start()
+    watchdog.start_ping()
 
     # init arduino
     arduino = class_arduino.Arduino(JARVIS_PATH + ARDUINO_CONFIG_NAME, JARVIS_PATH + ARDUINO_PINSTATE_FILENAME, NOT_IMPORTANT_WORDS)
-    arduino.load_config(telegram_users)
+    arduino.load_config(bot)
 
     # Start keyboart queue thread
     input_queue = queue.Queue()
     inputThread = threading.Thread(target=read_kbd_input, args=(input_queue,), daemon=True)
     inputThread.start()
 
-    # Start Telegram bot thread
-    telegram_bot_thread = threading.Thread(target=telegram_bot, args=(), daemon=True)
-    telegram_bot_thread.start()
+    # Start Telegram bot
+    bot.start()
 
     telegram_answer_queue = queue.Queue()
 
