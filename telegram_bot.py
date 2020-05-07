@@ -1,4 +1,4 @@
-from telebot import TeleBot
+import telebot
 from gfunctions import JPrint
 from time import sleep
 import requests
@@ -13,11 +13,13 @@ class TelegramUserClass:
     def get_id(self):
         return self._id
 
-class TelegramBot(TeleBot, JPrint):
+class TelegramBot(telebot.TeleBot, JPrint):
     PROXY_LIST_SITE = 'https://www.proxy-list.download/api/v1/get?type=http'
 
-    def __init__(self, path, list_file, token, threaded=True ):
-        TeleBot.__init__(token, threaded)
+    def __init__(self, path, list_file, token, threaded=True, skip_pending=False, num_threads=2,
+            next_step_backend=None, reply_backend=None):
+        super().__init__(token, threaded, skip_pending, num_threads,
+            next_step_backend, reply_backend)
         self._users = []
         self._prog_path = path
         self._good_proxy_list_file = list_file
@@ -151,6 +153,7 @@ class TelegramBot(TeleBot, JPrint):
 
 
 if __name__ == '__main__':
+    from config import *
     API_TOKEN = '1123277123:AAFz7b_joMY-4yGavFAE5o5MKstU5cz5Cfw'
-    bot = TelegramBot(API_TOKEN, threaded=False)  # Конструктор бота
+    bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
     print(bot)
