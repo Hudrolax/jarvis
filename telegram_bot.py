@@ -17,11 +17,8 @@ class TelegramBot(telebot.TeleBot, JPrint):
     PROXY_LIST_SITE = 'https://www.proxy-list.download/api/v1/get?type=http'
 
     def __init__(
-            self, path, list_file, token, threaded=True, skip_pending=False, num_threads=2,
-            next_step_backend=None, reply_backend=None
-    ):
-        telebot.TeleBot.__init__(token, threaded, skip_pending, num_threads,
-            next_step_backend, reply_backend)
+            self, path, list_file, token, threaded=True ):
+        telebot.TeleBot.__init__(token, threaded)
         self._users = []
         self._prog_path = path
         self._good_proxy_list_file = list_file
