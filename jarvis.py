@@ -33,11 +33,11 @@ def get_text_messages(message):
     global input_queue
     global telegram_answer_queue
 
-    _user = None
-    for user in bot.get_users():
-        if str(message.from_user.id) == user.ID:
-            _user = user
-            break
+    # _user = None
+    # for user in bot.get_users():
+    #     if str(message.from_user.id) == user.ID:
+    #         _user = user
+    #         break
     if message.text == "привет":
         bot.reply_to(message, "Привет, чем я могу тебе помочь?")
     elif message.text == "/help" or message.text == "help":
