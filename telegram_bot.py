@@ -20,7 +20,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
             self, path, list_file, token, threaded=True, skip_pending=False, num_threads=2,
             next_step_backend=None, reply_backend=None
     ):
-        super().__init__(token, threaded, skip_pending, num_threads,
+        telebot.TeleBot.__init__(token, threaded, skip_pending, num_threads,
             next_step_backend, reply_backend)
         self._users = []
         self._prog_path = path

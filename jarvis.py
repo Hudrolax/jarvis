@@ -14,7 +14,7 @@ from telegram_bot import TelegramBot
 jprint = JPrint.jprint
 
 # init telegram bot
-bot = TelegramBot(JARVIS_PATH, GOOD_PROXY_LIST, API_TOKEN, threaded=False)  # Конструктор бота
+bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
 
 # Function of input in thread
 def read_kbd_input(__input_queue):
