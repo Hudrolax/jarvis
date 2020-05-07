@@ -66,7 +66,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
 
     def find_user_by_id(self, id):
         for user in self._users:
-            if user.get_id() == id:
+            if user.id == id:
                 return user
         return None
 
