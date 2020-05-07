@@ -566,7 +566,7 @@ def command_processing(cmd, telegramuser, message):
     return answer
 
 
-def reglament_work(_bot):
+def reglament_work():
     global reglament_work_timer
     if reglament_work_timer <= 0:
         if datetime.now().hour >= 19 or datetime.now().hour <= 6:  # включим свет на улице
@@ -580,13 +580,13 @@ def reglament_work(_bot):
 
         # Сообщим, что пропало напряжение на входе
         if not arduino.ACCExist and not arduino.ACAlertSended:
-            for user in _bot.get_users():
+            for user in bot.get_users():
                 if user.level == 0:
                     # if True or user.level == 0 or user.level == 3:
                     bot.send_to_telegram_id(user.ID, 'Отключилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = True
         elif arduino.ACCExist and arduino.ACAlertSended:
-            for user in _bot.get_users():
+            for user in bot.get_users():
                 # if True or user.level == 0 or user.level == 3:
                 if user.level == 0:
                     bot.send_to_telegram_id(user.ID, 'Ура! Появилось напряжение на входе в дом!\n')
@@ -594,7 +594,7 @@ def reglament_work(_bot):
 
         # Сообщить, что напряжение аккумулятора низкое
         if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
-            for user in _bot.get_users():
+            for user in bot.get_users():
                 if True or user.level == 0 or user.level == 3:
                     bot.send_to_telegram_id(user.ID, 'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
             arduino.DCVolLowAlertSended = True
@@ -606,7 +606,7 @@ def reglament_work(_bot):
                     arduino.set_pin(p, 0)
                     jprint(f'Отключил {p.description} по разряду аккумулятора')
                     p.bcod_reaction = True
-                    for user in _bot.get_users():
+                    for user in bot.get_users():
                         if user.level <= 1:
                             bot.send_to_telegram_id(user.ID, f'Отключил {p.description} по разряду аккумулятора\n')
         else:

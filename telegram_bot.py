@@ -105,7 +105,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
             self.jprint(f'cant write {self._prog_path + self._good_proxy_list_file}')
 
     def _telegram_bot(self):
-        while self.started:
+        while self._started:
             try:
                 content = str(requests.get(TelegramBot.PROXY_LIST_SITE).content)
                 content = content.replace(r'\r\n', ',')
