@@ -1,168 +1,50 @@
 # Sergey Nazarov 26.03.2020
-
+from config import *
+import sys
 from time import sleep
 from datetime import datetime
 import threading
 import queue
-import requests
-import telebot
 import copy
 import class_arduino
 import class_watchdog
 import gfunctions as gf
+from gfunctions import JPrint
+from telegram_bot import TelegramBot
 
-version = "1.02"
-path = '/home/pi/jarvis/'
-arduino_config_name = 'config.txt'
-arduino_pinstate = 'arduino_pinstate.txt'
-good_proxylist = 'good_proxylist.txt'
-telegram_users = []  # telegram users list
-API_TOKEN = '1123277123:AAFz7b_joMY-4yGavFAE5o5MKstU5cz5Cfw'
-bot = telebot.TeleBot(API_TOKEN, threaded=False)  # Конструктор бота
-NotImportantWords = ['в', 'на', 'к', 'у', 'для', 'за']
-StartTime = datetime.now()
-Run = True
+jprint = JPrint.jprint
 
-
-def append_goodproxy(proxy):
-    try:
-        # in first read the list
-        try:
-            f = open(path + good_proxylist, 'r')
-            exist_proxies = f.read().split('\n')
-            f.close()
-        except:
-            exist_proxies = []
-        if proxy in exist_proxies:
-            return
-        try:
-            f = open(path + good_proxylist, 'a')
-        except:
-            print('good proxylist file is not exist. Im create new.')
-            f = open(path + good_proxylist, 'w')
-        f.write(proxy + '\n')
-        f.close()
-    except:
-        print(f'cant write {path + good_proxylist}!!!')
-
-
-def remove_bad_proxy(proxy):
-    try:
-        try:
-            f = open(path + good_proxylist, 'r')
-        except:
-            return
-        p_list = f.read().split('\n')
-        f.close()
-        good_p_list = []
-        for prox in p_list:
-            if prox != proxy and prox != '':
-                good_p_list.append(prox)
-        f = open(path + good_proxylist, 'w')
-        for gp in good_p_list:
-            f.write(gp + '\n')
-        f.close()
-    except:
-        print(f'cant write {path + good_proxylist}')
-
-
-def load_good_proxylist():
-    try:
-        f = open(path + good_proxylist, 'r')
-        lst = f.read().split('\n')
-        f.close()
-        lst2 = []
-        for l in lst:
-            if l != '':
-                lst2.append(l)
-        return lst2
-    except:
-        print(f'cant read {path + good_proxylist}')
-        return None
-
-def PingWatchdog(wd):
-    while True:
-        wd.ping()
-        sleep(1)
+# init telegram bot
+bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
 
 
 # Function of input in thread
-def read_kbd_input(inputQueue):
-    global Run
-    while Run:
+def read_kbd_input(__input_queue):
+    while True:
         # Receive keyboard input from user.
         try:
             input_str = input()
-            print('Enter command: ' + input_str)
-            inputQueue.put((input_str, None, None))
+            jprint('Enter command: ' + input_str)
+            __input_queue.put((input_str, None, None))
         except:
             continue
-
-
-def SendToTelegramId(_id, message):
-    try:
-        bot.send_message(_id, message)
-    except:
-        print(f'error send to telegramm id {_id}')
-
-
-def SendToAllTelegram(message):
-    for user in telegram_users:
-        try:
-            SendToTelegramId(user.ID, message)
-        except:
-            print('error send to all telegram ID')
-
-
-def TelegramBot():
-    global Run
-    while Run:
-        try:
-            content = str(requests.get('https://www.proxy-list.download/api/v1/get?type=http').content)
-            content = content.replace(r'\r\n', ',')
-            content = content.replace("b'", '')
-            content = content.replace(",'", '')
-            a = content.split(',')
-            print('Im try load good proxylist')
-            gp_list = load_good_proxylist()
-            contarr = []
-            if gp_list != None:
-                contarr.extend(gp_list)
-                print('Good proxylist is loaded')
-            else:
-                print('Cant load good proxylist :(')
-            contarr.extend(a)
-        except:
-            sleep(0.1)
-            continue
-        for prox in contarr:
-            if prox != '':
-                try:
-                    telebot.apihelper.proxy = {'https': prox}
-                    append_goodproxy(prox)
-                    print('Try connect to Telegramm...')
-                    bot.polling(none_stop=True)
-                except:
-                    print('I am have some problem with connect to Telegramm')
-                    remove_bad_proxy(prox)
-                    sleep(0.1)
 
 
 # Telegram bot
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
-    global inputQueue
-    global TelegrammAnswerQueue
+    global input_queue
+    global telegram_answer_queue
 
     _user = None
-    for user in telegram_users:
-        if str(message.from_user.id) == user.ID:
+    for user in bot.users:
+        if str(message.from_user.id) == user.id:
             _user = user
             break
-    if message.text == "Привет":
+    if message.text == "привет":
         bot.reply_to(message, "Привет, чем я могу тебе помочь?")
     elif message.text == "/help" or message.text == "help":
-        if _user != None:
+        if _user is not None:
             helpmessage = 'Help:\n'
             helpmessage += 'getmyid - получить свой telegram ID\n'
             helpmessage += '\n'
@@ -184,21 +66,21 @@ def get_text_messages(message):
         else:
             bot.reply_to(message, "Кто ты чудовище?")
     else:
-        if _user != None:
-            inputQueue.put((message.text, _user, message))  # Поместили сообщение в оцередь на обработку
-            AnsweWaitTime = 10
-            while AnsweWaitTime > 0:
-                if (TelegrammAnswerQueue.qsize() > 0):
-                    queue_typle = TelegrammAnswerQueue.get()
+        if _user is not None:
+            input_queue.put((message.text, _user, message))  # Поместили сообщение в оцередь на обработку
+            __answe_wait_time = 10
+            while __answe_wait_time > 0:
+                if (telegram_answer_queue.qsize() > 0):
+                    queue_typle = telegram_answer_queue.get()
                     get_message = queue_typle[0]
                     answer = queue_typle[1]
                     if get_message == message:
                         bot.reply_to(message, answer)
                         break
                     else:
-                        TelegrammAnswerQueue.put((get_message, answer))
+                        telegram_answer_queue.put((get_message, answer))
 
-                AnsweWaitTime -= 1
+                __answe_wait_time -= 1
                 sleep(1)
         else:
             bot.reply_to(message, "Кто ты чудовище?")
@@ -207,8 +89,8 @@ def get_text_messages(message):
 @bot.message_handler(content_types=["sticker", 'document'])
 def handle_docs_audio(message):
     _user = None
-    for user in telegram_users:
-        if str(message.from_user.id) == user.ID:
+    for user in bot.users:
+        if str(message.from_user.id) == user.id:
             _user = user
             break
     if _user != None:
@@ -222,7 +104,7 @@ def handle_docs_audio(message):
                 downloaded_file = bot.download_file(file_info.file_path)
                 with open(arduino.config_path, 'wb') as new_file:
                     new_file.write(downloaded_file)
-                test_config = arduino.LoadConfig(False)
+                test_config = arduino.load_config(False)
                 if test_config == 'config loaded!':
                     bot.reply_to(message, "конфиг загрузил и применил")
                 else:
@@ -233,19 +115,18 @@ def handle_docs_audio(message):
         bot.reply_to(message, "Кто ты чудовище?")
 
 
-def AccessError():
+def get_access_error():
     return 'У вас нет доступа к этой команде\n'
 
 
 # Command processing module
-def CommandProcessing(cmd, telegramuser, message):
-    global TelegrammAnswerQueue
-    global Run
+def command_processing(cmd, telegramuser, message):
+    global telegram_answer_queue
     cmd = cmd.lower()
     print_lst = f'first command: {cmd}'
     if telegramuser != None:
         print_lst += f' from {telegramuser.name}'
-    print(print_lst)
+    jprint(print_lst)
     global_cmd_list = cmd.split(' ')
     cmdlist_by_and = cmd.split(' и ')
     answer = ''
@@ -265,7 +146,7 @@ def CommandProcessing(cmd, telegramuser, message):
         if ('свет' not in cmd_list and 'свет' in global_cmd_list) or (
                 'освещение' not in cmd_list and 'освещение' in global_cmd_list):
             cmd_list.append('свет')
-        print(f'cmd in loop: {cmd_list}')
+        jprint(f'cmd in loop: {cmd_list}')
 
         if 'включи' in cmd_list or 'on' in cmd_list:
             if 'свет' in cmd_list and ('везде' in cmd_list or 'доме' in cmd_list or 'дома' in cmd_list):
@@ -274,12 +155,12 @@ def CommandProcessing(cmd, telegramuser, message):
                         if p.output and 'свет' in p.ConvertibleTerms and 'дом' in p.ConvertibleTerms:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                 arduino.set_pin(p, 1)
-                                print(f'Включил свет в {p.description}')
+                                jprint(f'Включил свет в {p.description}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
                     answer += 'Включил свет везде.\n'
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
             elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                 if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                     for p in arduino.pins:
@@ -287,12 +168,12 @@ def CommandProcessing(cmd, telegramuser, message):
                                 'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                 arduino.set_pin(p, 1)
-                                print(f'Включил свет в {p.description}')
+                                jprint(f'Включил свет в {p.description}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
                     answer += 'Включил свет на первом этаже.\n'
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
             elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                 if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                     for p in arduino.pins:
@@ -300,12 +181,12 @@ def CommandProcessing(cmd, telegramuser, message):
                                 'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                 arduino.set_pin(p, 1)
-                                print(f'Включил свет в {p.description}')
+                                jprint(f'Включил свет в {p.description}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
                     answer += 'Включил свет на втором этаже.\n'
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
             else:
                 # elif 'свет' in cmd_list:
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
@@ -313,7 +194,7 @@ def CommandProcessing(cmd, telegramuser, message):
                     findlist = copy.deepcopy(cmd_list)
                     if telegramuser != None:
                         findlist.append(telegramuser.name)
-                    WinnerPin = arduino.FindByAuction(findlist)
+                    WinnerPin = arduino.find_by_auction(findlist)
                     if WinnerPin == None:
                         answer += 'Не понятно, что нужно включить. Уточни команду.\n'
                     elif str(type(WinnerPin)) == "<class 'list'>":
@@ -331,7 +212,7 @@ def CommandProcessing(cmd, telegramuser, message):
                                     else:
                                         answer += f'{p.description} заблокирован для вас'
                         else:
-                            answer += AccessError()
+                            answer += get_access_error()
                     else:
                         if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
                                 telegramuser != None and telegramuser.name in WinnerPin.ConvertibleTerms):
@@ -346,9 +227,9 @@ def CommandProcessing(cmd, telegramuser, message):
                             else:
                                 answer += f'{WinnerPin.description} заблокирован для вас'
                         else:
-                            answer += AccessError()
+                            answer += get_access_error()
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
         elif 'выключи' in cmd_list or 'отключи' in cmd_list or 'off' in cmd_list:
             if 'свет' in cmd_list and ('везде' in cmd_list or 'доме' in cmd_list or 'дома' in cmd_list):
                 if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
@@ -356,12 +237,12 @@ def CommandProcessing(cmd, telegramuser, message):
                         if p.output and 'свет' in p.ConvertibleTerms and 'дом' in p.ConvertibleTerms:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                 arduino.set_pin(p, 0)
-                                print(f'Выключил свет в {p.description}')
+                                jprint(f'Выключил свет в {p.description}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
                     answer += 'Выключил свет везде.\n'
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
             elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                 if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                     for p in arduino.pins:
@@ -369,12 +250,12 @@ def CommandProcessing(cmd, telegramuser, message):
                                 'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                 arduino.set_pin(p, 0)
-                                print(f'Выключил свет в {p.description}')
+                                jprint(f'Выключил свет в {p.description}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
                     answer += 'Выключил свет на первом этаже.\n'
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
             elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                 if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                     for p in arduino.pins:
@@ -382,19 +263,19 @@ def CommandProcessing(cmd, telegramuser, message):
                                 'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                 arduino.set_pin(p, 0)
-                                print(f'Выключил свет в {p.description}')
+                                jprint(f'Выключил свет в {p.description}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
                     answer += 'Выключил свет на втором этаже.\n'
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
             else:
                 # elif 'свет' in cmd_list:
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                     findlist = copy.deepcopy(cmd_list)
                     if telegramuser != None:
                         findlist.append(telegramuser.name)
-                    WinnerPin = arduino.FindByAuction(findlist)
+                    WinnerPin = arduino.find_by_auction(findlist)
                     if WinnerPin == None:
                         answer += 'Не понятно, что нужно выключить. Уточни команду.\n'
                     elif str(type(WinnerPin)) == "<class 'list'>":
@@ -412,7 +293,7 @@ def CommandProcessing(cmd, telegramuser, message):
                                     else:
                                         answer += f'{p.description} заблокирован для вас'
                         else:
-                            answer += AccessError()
+                            answer += get_access_error()
                     else:
                         if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
                                 telegramuser != None and telegramuser.name in WinnerPin.ConvertibleTerms):
@@ -427,9 +308,9 @@ def CommandProcessing(cmd, telegramuser, message):
                             else:
                                 answer += f'{WinnerPin.description} заблокирован для вас'
                         else:
-                            answer += AccessError()
+                            answer += get_access_error()
                 else:
-                    answer += AccessError()
+                    answer += get_access_error()
         elif ('верни' in cmd_list and (
                 'было' in cmd_list or 'обратно' in cmd_list)) or 'пошутил' in cmd_list or 'шутка' in cmd_list:
             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
@@ -437,15 +318,15 @@ def CommandProcessing(cmd, telegramuser, message):
                     if (datetime.now() - p.LastRevTime).total_seconds() <= 30:
                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                             a = arduino.set_pin(p, p.prevstate)  # prev pin state
-                            print(f'pin {p.num} is {a}')
+                            jprint(f'pin {p.num} is {a}')
                         else:
                             answer += f'{p.description} заблокирован для вас'
                 answer += 'Вернул все как было\n'
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif 'оставь' in cmd_list and 'свет' in cmd_list:
             if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
-                WinnerPin = arduino.FindByAuction(cmd_list)
+                WinnerPin = arduino.find_by_auction(cmd_list)
                 if WinnerPin == None:
                     answer += 'Не понятно, что нужно оставить включенным. Уточни команду.\n'
                 elif str(type(WinnerPin)) == "<class 'list'>":
@@ -464,7 +345,7 @@ def CommandProcessing(cmd, telegramuser, message):
                                         answer += f'{p.description} заблокирован для вас'
                             answer += 'Оставил включенным только свет на кухне.\n'
                         else:
-                            answer += AccessError()
+                            answer += get_access_error()
                     else:
                         answer += 'Я нашел более одного объекта для оставления:\n'
                         for w in WinnerPin:
@@ -490,17 +371,17 @@ def CommandProcessing(cmd, telegramuser, message):
                                         answer += f'{p.description} заблокирован для вас'
                         answer += f'Оставил включенным только {WinnerPin.description}\n'
                     else:
-                        answer += AccessError()
+                        answer += get_access_error()
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif 'заблокируй' in cmd_list or 'заблокирую' in cmd_list:
             if "все" in cmd_list and "выключатели" in cmd_list:
                 for p in arduino.pins:
                     if not p.output:
-                        p.blocked = True;
+                        p.blocked = True
                 answer += f'Заблокировал все выключатели\n'
             elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                WinnerPin = arduino.FindByAuction(cmd_list, True)
+                WinnerPin = arduino.find_by_auction(cmd_list, True)
                 if WinnerPin == None:
                     answer += 'Не понятно, что нужно заблокировать. Уточни команду.\n'
                 elif str(type(WinnerPin)) == "<class 'list'>":
@@ -512,15 +393,15 @@ def CommandProcessing(cmd, telegramuser, message):
                     answer += f'Заблокировал {WinnerPin.description}\n'
                 arduino.write_pinstate(None)
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif 'разблокируй' in cmd_list or 'разблокирую' in cmd_list:
             if "все" in cmd_list and "выключатели" in cmd_list:
                 for p in arduino.pins:
                     if not p.output:
-                        p.blocked = False;
+                        p.blocked = False
                 answer += f'Заблокировал все выключатели\n'
             elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                WinnerPin = arduino.FindByAuction(cmd_list, True)
+                WinnerPin = arduino.find_by_auction(cmd_list, True)
                 if WinnerPin == None:
                     answer += 'Не понятно, что нужно разблокировать. Уточни команду.\n'
                 elif str(type(WinnerPin)) == "<class 'list'>":
@@ -532,14 +413,14 @@ def CommandProcessing(cmd, telegramuser, message):
                     answer += f'Разблокировал {WinnerPin.description}\n'
                 arduino.write_pinstate(None)
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif cmd.find('pinstate') > -1:
             if telegramuser != None and telegramuser.level <= 3 or telegramuser == None:
                 try:
                     val = cmd.split(' ')[1]
                 except:
                     val = -1
-                pin = arduino.pin(val)
+                pin = arduino.find_pin(val)
                 if pin != None:
                     if pin.state:
                         answer = f'pin {pin.num} is ON\n'
@@ -548,12 +429,12 @@ def CommandProcessing(cmd, telegramuser, message):
                 else:
                     answer = f"Can't find the pin with number {val}\n"
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif cmd.find('loadconfig') > -1 or cmd.find('загрузи конфиг') > -1:
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                answer = arduino.LoadConfig(False)
+                answer = arduino.load_config(False)
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif cmd.find('pinlist') > -1 or cmd.find('list pins') > -1 or cmd.find('listpins') > -1 or cmd.find(
                 'список пинов') > -1 or cmd.find('пинлист') > -1:
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
@@ -581,15 +462,15 @@ def CommandProcessing(cmd, telegramuser, message):
                             answer += '(blocked)'
                         answer += '\n'
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif cmd.startswith('bind '):
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 try:
                     val = cmd.split(' ')
-                    bindto = arduino.pin(val[1])
+                    bindto = arduino.find_pin(val[1])
                     if not bindto.output:
                         for i in range(2, len(val)):
-                            addpin = arduino.pin(val[i])
+                            addpin = arduino.find_pin(val[i])
                             if addpin.output:
                                 if not addpin in bindto.binds:
                                     bindto.binds.append(addpin)
@@ -598,7 +479,7 @@ def CommandProcessing(cmd, telegramuser, message):
                             else:
                                 answer += f'pin {addpin.name} is INPUT pin and connot binded to pin {bindto.name}\n'
                         answer += 'pins is binded!\n'
-                        if arduino.SaveConfig() == None:
+                        if arduino.save_config() == None:
                             answer += 'config is saved\n'
                         else:
                             answer += 'error save config\n'
@@ -607,26 +488,26 @@ def CommandProcessing(cmd, telegramuser, message):
                 except:
                     answer += 'error bind pins\n'
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif cmd.startswith('unbind '):
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                 try:
                     val = cmd.split(' ')
-                    bindto = arduino.pin(val[1])
+                    bindto = arduino.find_pin(val[1])
                     if not bindto.output:
                         for i in range(2, len(val)):
-                            bindto.binds.remove(arduino.pin(val[i]))
+                            bindto.binds.remove(arduino.find_pin(val[i]))
                         answer = 'pins is unbinded!\n'
-                        if arduino.SaveConfig() == None:
+                        if arduino.save_config() == None:
                             answer += 'config is saved\n'
                         else:
                             answer += 'error save config\n'
                     else:
                         answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.\n'
                 except:
-                    answer == 'error unbind pins\n'
+                    answer = 'error unbind pins\n'
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif (cmd.find('print') > -1 and cmd.find('config') > -1) or (
                 cmd.find('покажи') > -1 and cmd.find('конфиг') > -1):
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
@@ -637,11 +518,11 @@ def CommandProcessing(cmd, telegramuser, message):
                 except:
                     answer += 'не могу прочесть конфиг\n'
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif cmd == 'state' or cmd == 'status' or 'статус' in cmd_list:
             if telegramuser != None and telegramuser.level <= 3 or telegramuser == None:
-                uptime = gf.difference_between_date(StartTime, datetime.now())
-                answer += 'ver. '+version+'   '
+                uptime = gf.difference_between_date(start_time, datetime.now())
+                answer += 'ver. ' + VERSION + '   '
                 answer += f'uptime {uptime}\n'
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                     answer += 'Включенный свет:\n'
@@ -658,7 +539,7 @@ def CommandProcessing(cmd, telegramuser, message):
                 answer += '\n'
 
                 answer += "Насосы "
-                pumpsPin = arduino.pin("насосы")
+                pumpsPin = arduino.find_pin("насосы")
                 if pumpsPin is not None:
                     if pumpsPin.state:
                         answer += "включены"
@@ -673,24 +554,24 @@ def CommandProcessing(cmd, telegramuser, message):
                 answer += f'Напряжение в сети {ACNet}\n'
                 answer += f'Напряжение аккумулятора {arduino.DCVol} V ({arduino.DCVoltageInPercent} %)\n'
             else:
-                answer += AccessError()
+                answer += get_access_error()
         elif cmd == 'exit':
             if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                print('bye...')
-                Run = False
+                jprint('bye...')
+                sys.exit()
             else:
-                answer += AccessError()
+                answer += get_access_error()
         else:
             answer += 'неизвестная команда\n'
 
     if message != None:
-        TelegrammAnswerQueue.put((message, answer))  # Поместили сообщение в оцередь на обработку
+        telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
     return answer
 
 
-def ReglamentWork():
-    global ReglamentWorkTimer
-    if ReglamentWorkTimer <= 0:
+def reglament_work():
+    global reglament_work_timer
+    if reglament_work_timer <= 0:
         if datetime.now().hour >= 19 or datetime.now().hour <= 6:  # включим свет на улице
             if not arduino.LastSetStateOutDoorLight or arduino.LastSetStateOutDoorLight == None:
                 arduino.set_pin(arduino.OutDoorLightPin, 1)
@@ -702,23 +583,24 @@ def ReglamentWork():
 
         # Сообщим, что пропало напряжение на входе
         if not arduino.ACCExist and not arduino.ACAlertSended:
-            for user in telegram_users:
+            for user in bot.get_users():
                 if user.level == 0:
                     # if True or user.level == 0 or user.level == 3:
-                    SendToTelegramId(user.ID, 'Отключилось напряжение на входе в дом!\n')
+                    bot.send_to_telegram_id(user.ID, 'Отключилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = True
         elif arduino.ACCExist and arduino.ACAlertSended:
-            for user in telegram_users:
+            for user in bot.get_users():
                 # if True or user.level == 0 or user.level == 3:
                 if user.level == 0:
-                    SendToTelegramId(user.ID, 'Ура! Появилось напряжение на входе в дом!\n')
+                    bot.send_to_telegram_id(user.ID, 'Ура! Появилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = False
 
         # Сообщить, что напряжение аккумулятора низкое
         if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
-            for user in telegram_users:
+            for user in bot.get_users():
                 if True or user.level == 0 or user.level == 3:
-                    SendToTelegramId(user.ID, 'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
+                    bot.send_to_telegram_id(user.ID,
+                                            'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
             arduino.DCVolLowAlertSended = True
 
         # Реакция пинов на разряд аккумулятора без входного напряжения
@@ -726,57 +608,58 @@ def ReglamentWork():
             for p in arduino.pins:
                 if p.output and not p.bcod_reaction and arduino.DCVoltageInPercent <= p.bcod:
                     arduino.set_pin(p, 0)
-                    print(f'Отключил {p.description} по разряду аккумулятора')
+                    jprint(f'Отключил {p.description} по разряду аккумулятора')
                     p.bcod_reaction = True
-                    for user in telegram_users:
+                    for user in bot.get_users():
                         if user.level <= 1:
-                            SendToTelegramId(user.ID, f'Отключил {p.description} по разряду аккумулятора\n')
+                            bot.send_to_telegram_id(user.ID, f'Отключил {p.description} по разряду аккумулятора\n')
         else:
             for p in arduino.pins:
                 if p.output and p.bcod_reaction and arduino.DCVoltageInPercent > p.bcod:
                     p.bcod_reaction = False
                     arduino.set_pin(p, p.prevstate)  # Вернем состояние пинов на последнее
 
-        ReglamentWorkTimer = 100
+        reglament_work_timer = 100
     else:
-        ReglamentWorkTimer -= 1
+        reglament_work_timer -= 1
 
 
 # ****** MAIN ******
 if __name__ == "__main__":
+    start_time = datetime.now()
+
     # init watchdog
     watchdog = class_watchdog.CWatchDog('/dev/ttyACM0')
-    WDThread = threading.Thread(target=PingWatchdog, args=(watchdog,), daemon=True)
-    WDThread.start()
+    watchdog.start_ping()
 
     # init arduino
-    arduino = class_arduino.Arduino(path + arduino_config_name, path + arduino_pinstate, NotImportantWords)
-    arduino.LoadConfig(telegram_users)
+    arduino = class_arduino.Arduino(JARVIS_PATH + ARDUINO_CONFIG_NAME, JARVIS_PATH + ARDUINO_PINSTATE_FILENAME,
+                                    NOT_IMPORTANT_WORDS)
+    arduino.load_config(bot)
 
     # Start keyboart queue thread
-    inputQueue = queue.Queue()
-    inputThread = threading.Thread(target=read_kbd_input, args=(inputQueue,), daemon=True)
+    input_queue = queue.Queue()
+    inputThread = threading.Thread(target=read_kbd_input, args=(input_queue,), daemon=True)
     inputThread.start()
 
-    # Start Telegram bot thread
-    TelegramBotThread = threading.Thread(target=TelegramBot, args=(), daemon=True)
-    TelegramBotThread.start()
+    # Start Telegram bot
+    bot.start()
 
-    TelegrammAnswerQueue = queue.Queue()
+    telegram_answer_queue = queue.Queue()
 
     # Main loop dunction
-    ReglamentWorkTimer = 100
-    while Run:
+    reglament_work_timer = 100
+    while True:
         if arduino.initialized:
-            if (inputQueue.qsize() > 0):
-                queue_typle = inputQueue.get()
+            if (input_queue.qsize() > 0):
+                queue_typle = input_queue.get()
                 input_str = queue_typle[0]
                 user = queue_typle[1]
                 message = queue_typle[2]
-                answer = CommandProcessing(input_str, user, message)
-                print(answer)
+                answer = command_processing(input_str, user, message)
+                jprint(answer)
             arduino.check_input_pins()
-            ReglamentWork()
+            reglament_work()
         else:
             arduino.initialize()
         sleep(0.02)

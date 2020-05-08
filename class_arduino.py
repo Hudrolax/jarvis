@@ -1,16 +1,15 @@
 from datetime import datetime
 from time import sleep
-import serial
-import serial.tools.list_ports
+import serial.tools.list_ports as lp
 import gfunctions as gf
+from gfunctions import JPrint
 from class_pins import Pins
-import telegram_bot
-import pickle
+import serial
 
 
-class Arduino:
+class Arduino(JPrint):
     def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
-        self.port = ''
+        self.port = None
         self.initialized = False
         self.pins = []
         self.config_path = config_path
@@ -27,7 +26,7 @@ class Arduino:
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
 
-    def pin(self, __pin):
+    def find_pin(self, __pin):
         for p in self.pins:
             if str(type(__pin)) == "<class 'str'>":
                 __pin = __pin.lower()
@@ -40,38 +39,38 @@ class Arduino:
 
     def set_pin(self, _pin, __state):
         if str(type(_pin)) == "<class 'list'>":
-            print("Error (set_pin): _pin is <class 'list'>")
+            self.jprint("Error (set_pin): _pin is <class 'list'>")
             return None
         if __state:
             __state = 1
         elif not __state:
             __state = 0
         if str(type(_pin)) == "<class 'int'>":
-            p = self.pin(_pin)
+            p = self.find_pin(_pin)
         elif str(type(_pin)) == "<class 'str'>":
             _pin = int(_pin)
-            p = self.pin(_pin)
+            p = self.find_pin(_pin)
         else:
             p = _pin
             _pin = _pin.num
         try:
             p.prevstate = p.state
         except:
-            print(p)
+            self.jprint(p)
 
         answer = None
         if __state == 1:
             while answer != 3001 or answer is None:
-                answer = self.write('P', _pin, __state)
-                # print(f'set_pin get answer {answer}')
+                answer = self.write_to_port('P', _pin, __state)
+                # self.jprint(f'set_pin get answer {answer}')
         elif __state == 0:
             while answer != 3000 or answer is None:
-                answer = self.write('P', _pin, __state)
-                # print(f'set_pin get answer {answer}')
+                answer = self.write_to_port('P', _pin, __state)
+                # self.jprint(f'set_pin get answer {answer}')
         else:
             while answer != 3001 and answer != 3000 or answer is None:
-                answer = self.write('P', _pin, __state)
-                # print(f'set_pin get answer {answer}')
+                answer = self.write_to_port('P', _pin, __state)
+                # self.jprint(f'set_pin get answer {answer}')
 
         if answer is not None:
             p.LastRevTime = datetime.now()
@@ -89,15 +88,15 @@ class Arduino:
             if not p.output or allpins:
                 # if True:
                 p.prevstate = p.state
-                if self.write('S', p.num, 0) == 2001:
+                if self.write_to_port('S', p.num, 0) == 2001:
                     p.state = True
                 else:
                     p.state = False
                 if allpins:
                     p.prevstate = p.state
-                self.PinReaction(p)
+                self.pin_reaction(p)
         if self.DCCheckTimer <= 0:
-            val = self.write('A', 1, 0)
+            val = self.write_to_port('A', 1, 0)
             voltage_now = round(gf.map_func(val, 0, 1023, 0, 40.1), 2)
             self.DCVolArray.pop(0)
             self.DCVolArray.append(voltage_now)
@@ -111,31 +110,31 @@ class Arduino:
             if self.DCVoltageInPercent == 100:
                 self.DCVolLowAlertSended = False
 
-            acc_exist = val = self.write('A', 0, 0)
-            # print(acc_exist)
+            acc_exist = val = self.write_to_port('A', 0, 0)
+            # self.jprint(acc_exist)
             if acc_exist > 500:
                 self.ACCExist = True
             else:
                 if self.ACCExist:
                     self.ACNonExistStartTimer = datetime.now()
                 self.ACCExist = False
-            # print(self.ACCExist)
+            # self.jprint(self.ACCExist)
             self.DCCheckTimer = 50
         else:
             self.DCCheckTimer -= 1
 
-    def PinReaction(self, p):
+    def pin_reaction(self, p):
         # p - swich (S-pin)
         # b - bind (DG-pin)
         if p.state != p.prevstate:
             for b in p.binds:
                 if not p.blocked and not b.blocked:
-                    print(f'im set pin {b.description} to {p.state} by PinReaction in {datetime.now().strftime("%X")}')
+                    self.jprint(f'im set pin {b.description} to {p.state} by pin_reaction in {datetime.now().strftime("%X")}')
                     self.set_pin(b.num, p.state)
                     p.LastRevTime = datetime.now()
                     b.LastRevTime = datetime.now()
 
-    def write(self, cmd, val1, val2):
+    def write_to_port(self, cmd, val1, val2):
         answer = None
         try:
             self.port.write((222).to_bytes(1, 'big'))  # header byte
@@ -157,7 +156,7 @@ class Arduino:
                 f.write(f'{p.num} {p.state} {p.blocked}\n')
             f.close()
         except:
-            print('error save pinstate')
+            self.jprint('error save pinstate')
 
     def load_pinstate(self):
         try:
@@ -181,46 +180,55 @@ class Arduino:
                                 p.blocked = False
                         except:
                             pass
-            print('pinstate is loaded')
+            self.jprint('pinstate is loaded')
         except:
-            print('error load pinstate')
+            self.jprint('error load pinstate')
+
+    def check_initialization(self):
+        a = self.write_to_port('I', 666, 1)
+        if a == 666:
+            self.initialized = True
+            self.check_input_pins(True)
+
+    def prepare_serial(self):
+        try:
+            self.port.reset_output_buffer()
+            self.port.reset_input_buffer()
+            self.port.baudrate = 57600
+            self.port.timeout = 1
+            self.port.write_timeout = 1
+            return True
+        except:
+            self.jprint("Can't load proporties to COM port")
+            return False
+
+    def _try_to_init(self):
+        if self.prepare_serial():
+            sleep(3)
+            self.check_initialization()
+            if self.initialized:
+                return True
+            return False
 
     def initialize(self):
-        while not self.initialized:
-            ports = list(serial.tools.list_ports.comports())
-            for p in ports:
-                # try:
-                #     with open('serial.pickle', 'rb') as f:
-                #         self.port = ports.append(pickle.load(f))
-                # except:
-                comport = p.device
-                print('Try to find Arduino in ' + comport)
-                self.port = serial.Serial(comport, 57600, timeout=1)
-                self.port.reset_output_buffer()
-                self.port.reset_input_buffer()
-                self.port.baudrate = 57600
-                self.port.timeout = 1
-                self.port.write_timeout = 1
-                sleep(3)
-                a = self.write('I', 666, 1)
-                if a == 666:
-                    self.initialized = True
-                    self.check_input_pins(True)
-                    try:
-                        with open('serial.pickle', 'wb') as f:
-                            pickle.dump(self.port, f)
-                    except:
-                        pass
-                    break
-            if not self.initialized:
-                print('I have not found the Arduino...')
-                print("Sorry, but i can't work whithout Arduino subcontroller :(")
-                # print("I'm have to try to find it after one second pause")
-            else:
-                print('Arduino is initialized on port ' + comport)
-                self.load_pinstate()
+        self.port = None
+        ports = list(lp.comports())
+        for p in ports:
+            comport = p.device
+            self.jprint('Try to find Arduino in ' + comport)
+            self.port = serial.Serial(comport, 57600, timeout=1)
+            if self._try_to_init(): break
 
-    def LoadConfig(self, _telegram_users, first_load=True):
+        if not self.initialized:
+            self.jprint('I have not found the Arduino...')
+            self.jprint("Sorry, but i can't work whithout Arduino subcontroller :(")
+            # self.jprint("I'm have to try to find it after one second pause")
+            #raise RuntimeError("can't load Arduino controller")
+        else:
+            self.jprint(f'Arduino is initialized on port {self.port.name}')
+            self.load_pinstate()
+
+    def load_config(self, bot):
         __answer = None
         self.pins = []
         try:
@@ -245,29 +253,30 @@ class Arduino:
                 if len(line) > 5:
                     for i in range(6, len(line)):
                         _CT.append(line[i])
-                if self.pin(_num) not in self.pins:
+                if self.find_pin(_num) not in self.pins:
                     self.pins.append(Pins(_output, int(_num), _BCOD, _name, _description, _CT))
             elif line[0] == 'bind':
-                _pin = self.pin(line[1])
+                _pin = self.find_pin(line[1])
                 if _pin is not None:
                     for i in range(2, len(line)):
-                        _pin2 = self.pin(line[i])
+                        _pin2 = self.find_pin(line[i])
                         if _pin2 is not None:
                             if _pin2 not in _pin.binds:
                                 _pin.binds.append(_pin2)
             elif line[0] == 'telegram_user':
-                _telegram_users.append(telegram_bot.TelegramUserClass(line[1], line[2], int(line[3])))
+                bot.add_user(line[1], line[2], int(line[3]))
 
             __answer = 'config loaded!'
-            lightpin = self.FindByAuction('свет на улице')
+            lightpin = self.find_by_auction('свет на улице')
             if str(type(lightpin)) != "<class 'list'>" and lightpin is not None:
-                self.OutDoorLightPin = self.FindByAuction('свет на улице')
+                self.OutDoorLightPin = self.find_by_auction('свет на улице')
             else:
-                print('Не могу подобрать пин уличного освещения!')
-        print(__answer)
+                pass
+                # self.jprint('Не могу подобрать пин уличного освещения!')
+        self.jprint(__answer)
         return __answer
 
-    def SaveConfig(self, _telegram_users):
+    def save_config(self, bot):
         try:
             f = open(self.config_path, 'w')
             f.write(
@@ -297,7 +306,7 @@ class Arduino:
                     f.write(f'bind {p.num}' + bindstr + '\n')
             f.write('\n')
             f.write('# Telegram user line: telegram_user <name> <ID>' + '\n')
-            for u in _telegram_users:
+            for u in bot.get_users():
                 f.write(f'telegram_user {u.name} {u.ID}' + '\n')
 
             answer = None
@@ -305,7 +314,7 @@ class Arduino:
             answer = 'error save config'
         return answer
 
-    def FindByAuction(self, cmd, allpins=False):
+    def find_by_auction(self, cmd, allpins=False):
         if str(type(cmd)) != "<class 'list'>":
             cmd = str(cmd)
             _wordlist = cmd.split(' ')
@@ -328,17 +337,17 @@ class Arduino:
 
         for word in wordlist:
             for PA in PinAuction:
-                includes = 0;
-                # print(f'count points for {PA[0]}')
+                includes = 0
+                # self.jprint(f'count points for {PA[0]}')
                 for ct in PA[1]:
                     if ct.lower() == word:
                         PA[2] += 2
-                        # print(f'word = {word} 2 points')
+                        # self.jprint(f'word = {word} 2 points')
                     elif ct.lower().find(word) > -1:
                         PA[2] += 1
-                        # print(f'word find {word} 1 point')
+                        # self.jprint(f'word find {word} 1 point')
 
-        MaxIncludes = 0;
+        MaxIncludes = 0
         Winners = []
         for PA in PinAuction:
             if PA[2] > MaxIncludes:
@@ -347,16 +356,17 @@ class Arduino:
         if MaxIncludes > 0:
             for PA in PinAuction:
                 if PA[2] == MaxIncludes:
-                    Winners.append(self.pin(PA[0]))
+                    Winners.append(self.find_pin(PA[0]))
 
         if len(Winners) == 1:
-            print(f'winner is {Winners[0].description}')
-            print(f'winner get {MaxIncludes} points')
+            # self.jprint(f'winner is {Winners[0].description}')
+            # self.jprint(f'winner get {MaxIncludes} points')
             return Winners[0]
         elif len(Winners) > 1:
-            print('Winners more than one')
-            print(f'its get {MaxIncludes} points')
+            #self.jprint('Winners more than one')
+            #self.jprint(f'its get {MaxIncludes} points')
             return Winners
         else:
-            print('winner not found')
+            #self.jprint('winner not found')
+            #self.jprint('winner not found')
             return None
