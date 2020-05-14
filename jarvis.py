@@ -556,7 +556,7 @@ def command_processing(cmd, telegramuser, message):
             else:
                 answer += get_access_error()
         elif cmd == 'exit':
-            if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
+            if telegramuser is None:
                 jprint('bye...')
                 sys.exit()
             else:
