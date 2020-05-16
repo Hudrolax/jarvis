@@ -31,6 +31,15 @@ def difference_between_date(date1, date2):
     seconds = divmod(minutes[1], 1)  # Use remainder of minutes to calc seconds
     return "%d дней, %d часов, %d минут и %d секунд" % (days[0], hours[0], minutes[0], seconds[0])
 
+class GFunctions:
+    @staticmethod
+    def clear_str(str):
+        return clear_str(str)
+
+    @staticmethod
+    def difference_between_date(date1, date2):
+        return difference_between_date(date1, date2)
+
 class JPrint:
     __NAME = 'Jarvis'
 

@@ -95,7 +95,7 @@ def handle_docs_audio(message):
             break
     if _user != None:
         if message.content_type == 'sticker':
-            # Получим ID Стикера
+            # Получим id Стикера
             sticker_id = message.sticker.file_id
             bot.send_message(message.from_user.id, str(sticker_id))
         elif message.content_type == 'document':
@@ -556,7 +556,7 @@ def command_processing(cmd, telegramuser, message):
             else:
                 answer += get_access_error()
         elif cmd == 'exit':
-            if telegramuser is None:
+            if telegramuser is None: # выходить можно только из консоли
                 jprint('bye...')
                 sys.exit()
             else:
@@ -586,20 +586,20 @@ def reglament_work():
             for user in bot.get_users():
                 if user.level == 0:
                     # if True or user.level == 0 or user.level == 3:
-                    bot.send_to_telegram_id(user.ID, 'Отключилось напряжение на входе в дом!\n')
+                    bot.send_to_telegram_id(user.id, 'Отключилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = True
         elif arduino.ACCExist and arduino.ACAlertSended:
             for user in bot.get_users():
                 # if True or user.level == 0 or user.level == 3:
                 if user.level == 0:
-                    bot.send_to_telegram_id(user.ID, 'Ура! Появилось напряжение на входе в дом!\n')
+                    bot.send_to_telegram_id(user.id, 'Ура! Появилось напряжение на входе в дом!\n')
             arduino.ACAlertSended = False
 
         # Сообщить, что напряжение аккумулятора низкое
         if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
             for user in bot.get_users():
                 if True or user.level == 0 or user.level == 3:
-                    bot.send_to_telegram_id(user.ID,
+                    bot.send_to_telegram_id(user.id,
                                             'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
             arduino.DCVolLowAlertSended = True
 
@@ -612,7 +612,7 @@ def reglament_work():
                     p.bcod_reaction = True
                     for user in bot.get_users():
                         if user.level <= 1:
-                            bot.send_to_telegram_id(user.ID, f'Отключил {p.description} по разряду аккумулятора\n')
+                            bot.send_to_telegram_id(user.id, f'Отключил {p.description} по разряду аккумулятора\n')
         else:
             for p in arduino.pins:
                 if p.output and p.bcod_reaction and arduino.DCVoltageInPercent > p.bcod:
