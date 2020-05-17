@@ -8,14 +8,14 @@ from gfunctions import difference_between_date
 jprint = JPrint.jprint
 
 WRITE_LOG_TO_FILE = False
-LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
+LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
 #LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
-    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d/%m/%y %H:%M:%S')
 else:
-    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d/%m/%y %H:%M:%S')
 
 # Command processing class
 class CommandProcessing():
@@ -42,7 +42,7 @@ class CommandProcessing():
         self._telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
 
-    def command_processing(self, cmd, telegramuser, message):
+    def command_processing(self, cmd, telegramuser, message, bot):
         def get_access_error():
             return 'У вас нет доступа к этой команде\n'
         info = CommandProcessing.logger.info
@@ -360,7 +360,7 @@ class CommandProcessing():
                     answer += get_access_error()
             elif cmd.find('loadconfig') > -1 or cmd.find('загрузи конфиг') > -1:
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    answer = self._arduino.load_config(False)
+                    answer = self._arduino.load_config(bot)
                 else:
                     answer += get_access_error()
             elif cmd.find('pinlist') > -1 or cmd.find('list pins') > -1 or cmd.find('listpins') > -1 or cmd.find(
