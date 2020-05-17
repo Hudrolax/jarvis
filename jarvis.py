@@ -173,7 +173,7 @@ def reglament_work():
     else:
         # Включаем пины, если отключали их по уровню разряда
         for p in arduino.pins:
-            if p.output and not p.state and p.bcod_reaction and arduino.DCVoltageInPercent > p.bcod:
+            if p.output and not p.state and p.bcod_reaction and arduino.DCVoltageInPercent >= p.bcod:
                 p.bcod_reaction = False
                 arduino.set_pin(p, 1)  # Вернем состояние пинов на последнее
 
