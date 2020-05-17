@@ -9,12 +9,12 @@ import serial
 import logging
 
 WRITE_LOG_TO_FILE = False
-LOG_FORMAT = '%(name)s - %(levelname)s %d/%m/%Y %I:%M:%S: %(message)s'
+LOG_FORMAT = '%(name)s - %(levelname)s %(asctime)s: %(message)s'
 #LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
-    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d/%m/%y %H:%M:%S')
 else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
@@ -139,7 +139,7 @@ class Arduino(JPrint):
             self.DCVolLowAlertSended = False
 
         val = self.write_to_port('A', 0, 0)
-        if val > 700:
+        if val > 600:
             if not self._ac_exist:
                 Arduino.logger.debug('Включилось напряжение на входе')
                 self._ac_exist = True
