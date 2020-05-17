@@ -135,13 +135,10 @@ class Arduino(JPrint):
         return self._ac_exist
 
     def time_without_ac(self, in_str:bool = False):
-        if not self._ac_exist:
-            if in_str:
-                return gf.difference_between_date(datetime.now(), self._ac_non_exist_start_timer)
-            else:
-                return (datetime.now() - self._ac_non_exist_start_timer).total_seconds()
+        if in_str:
+            return gf.difference_between_date(datetime.now(), self._ac_non_exist_start_timer)
         else:
-            return 0
+            return (datetime.now() - self._ac_non_exist_start_timer).total_seconds()
 
     def pin_reaction(self, p):
         # p - swich (S-pin)
