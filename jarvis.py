@@ -175,7 +175,11 @@ def reglament_work():
         for p in arduino.pins:
             if p.output and not p.state and p.bcod_reaction and arduino.DCVoltageInPercent >= p.bcod:
                 p.bcod_reaction = False
+                jprint(f'Включил {p.description} обратно')
                 arduino.set_pin(p, 1)  # Вернем состояние пинов на последнее
+                for user in bot.get_users():
+                    if user.level <= 1:
+                        bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
 
 # ****** MAIN ******
 if __name__ == "__main__":
