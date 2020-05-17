@@ -1,4 +1,4 @@
-VERSION = "1.05"
+VERSION = "1.06"
 JARVIS_PATH = '/home/pi/jarvis/'
 ARDUINO_CONFIG_NAME = 'config.txt'
 ARDUINO_PINSTATE_FILENAME = 'arduino_pinstate.txt'

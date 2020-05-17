@@ -139,7 +139,7 @@ class Arduino(JPrint):
             if self._ac_exist:
                 Arduino.logger.debug('Отключилось напряжение на входе')
                 self._ac_non_exist_start_timer = datetime.now()
-            self._ac_exist = False
+                self._ac_exist = False
 
     @property
     def ac_exist(self):
@@ -147,7 +147,7 @@ class Arduino(JPrint):
 
     def time_without_ac(self, in_str:bool = False):
         if in_str:
-            return gf.difference_between_date(datetime.now(), self._ac_non_exist_start_timer)
+            return gf.difference_between_date(self._ac_non_exist_start_timer, datetime.now())
         else:
             return (datetime.now() - self._ac_non_exist_start_timer).total_seconds()
 
