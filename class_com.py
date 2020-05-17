@@ -5,8 +5,8 @@ import threading
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
-#LOG_LEVEL = logging.DEBUG
-LOG_LEVEL = logging.WARNING
+LOG_LEVEL = logging.DEBUG
+#LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
     logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
@@ -56,7 +56,7 @@ class CommunicationServer():
 
     def handler(self, client, data):
         self.logger.info('call handler')
-        pass
+        return None
 
     def _tcp_server(self): # hendler take client:str and data:str parameters
         debug = self.logger.debug
@@ -68,17 +68,19 @@ class CommunicationServer():
         while self._started:
             connection, client_address = server_socket.accept()
             debug(f"new connection from {client_address}")
-            data = clear_str(connection.recv(1024).decode("utf-8"))
-            self.logger.debug(f"received data: {data}")
-            answer = self.handler(client=client_address, data=data)
-            debug(f'answer is {answer}')
-            if answer is not None:
-                debug(f'send an answer to {client_address}')
-                connection.send(bytes(answer, encoding='UTF-8'))
+            answer = ""
+            while answer is not None:
+                data = clear_str(connection.recv(1024).decode("utf-8"))
+                self.logger.debug(f"received data: {data}")
+                answer = self.handler(client=client_address, data=data)
+                debug(f'answer is {answer}')
+                if answer is not None:
+                    debug(f'send an answer to {client_address}')
+                    connection.send(bytes(answer, encoding='UTF-8'))
             connection.close()
 
-class CommunicationClient(GFunctions):
-    def __init__(self, ip:str='127.0.0.1', port:int=8585):
+class CommunicationClient():
+    def __init__(self, name:str, ip:str='127.0.0.1', port:int=8585):
         self.logger = logging.getLogger('Comm client')
         if not isinstance(ip, str):
             self.logger.critical("init error. 'ip' is not 'str' type.")
@@ -90,11 +92,11 @@ class CommunicationClient(GFunctions):
         self._port = port
 
     def send(self, message):
-        data = None
+        answer = None
         try:
             sock = socket.create_connection((self._ip, self._port), 10)
             sock.sendall(bytes(message, encoding='UTF-8'))
-            data = self.clear_str(sock.recv(1024).decode("utf-8"))
+            answer = clear_str(sock.recv(1024).decode("utf-8"))
         except:
             self.logger.error(f'error connection to {self._ip}')
         finally:
@@ -102,20 +104,40 @@ class CommunicationClient(GFunctions):
                 sock.close()
             except:
                 pass
-        return data
+        return answer
 
 
 if __name__ == '__main__':
     from time import sleep
     class Serverx(CommunicationServer):
-        def handler(self, client, data):
-            return(f"принял сообщение от клиента {client}: {data}")
+        def __init__(self, name:str='root', ip:str='127.0.0.1', port:int = 8585):
+            super().__init__(name, ip, port)
+            self._miners = JList
 
-    server = Serverx(name='Serverx')
+        def add_miner(self, name):
+            if not self._miners.find(name):
+                self._miners.append(name)
+
+        def stop_miner(self, satellite=None):
+            pass
+
+
+        def handler(self, client, data):
+            answer = None
+            data = data.split(':')
+            if len(data) != 2:
+                return None
+            name = data[0]
+            message = data[1]
+            if name == 'serverx':
+                print(name+' '+message)
+                answer = 'ok'
+
+            return answer
+
+    server = Serverx(name='Jarvis')
     server.start()
 
-    client = CommunicationClient()
-    answer = client.send('проверка')
-    sleep(1)
-    print(f'answer is: {answer}')
+    while True:
+        sleep(0.1)
     server.stop()

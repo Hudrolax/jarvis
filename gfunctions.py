@@ -31,6 +31,26 @@ def difference_between_date(date1, date2):
     seconds = divmod(minutes[1], 1)  # Use remainder of minutes to calc seconds
     return "%d дней, %d часов, %d минут и %d секунд" % (days[0], hours[0], minutes[0], seconds[0])
 
+def find_in_list(lst, value):
+    for el in lst:
+        if el == value:
+            return True
+    return False
+
+class JList(list):
+    def find(self, value):
+        for el in self:
+            if el == value:
+                return True
+        return False
+
+    def delete(self, value):
+        try:
+            self.remove(value)
+            return True
+        except ValueError:
+            return False
+
 class GFunctions:
     @staticmethod
     def clear_str(str):
@@ -39,6 +59,10 @@ class GFunctions:
     @staticmethod
     def difference_between_date(date1, date2):
         return difference_between_date(date1, date2)
+
+    @staticmethod
+    def find_in_list(*args):
+        return find_in_list(*args)
 
 class JPrint:
     __NAME = 'Jarvis'
