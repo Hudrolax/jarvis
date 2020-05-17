@@ -23,12 +23,19 @@ class CommandProcessing():
     logger.setLevel(LOG_LEVEL)
 
     @staticmethod
-    def debug():
-        CommandProcessing.logger.setLevel(logging.DEBUG)
+    def set_info():
+        CommandProcessing.logger.setLevel(logging.INFO)
+        jprint('set INFO level in CommandProcessiong logger')
 
     @staticmethod
-    def warning():
+    def set_debug():
+        CommandProcessing.logger.setLevel(logging.DEBUG)
+        jprint('set DEBUG level in CommandProcessiong logger')
+
+    @staticmethod
+    def set_warning():
         CommandProcessing.logger.setLevel(logging.WARNING)
+        jprint('set WARNING level in CommandProcessiong logger')
 
     def __init__(self, arduino, telegram_answer_queue):
         self._arduino = arduino
@@ -38,12 +45,16 @@ class CommandProcessing():
     def command_processing(self, cmd, telegramuser, message):
         def get_access_error():
             return 'У вас нет доступа к этой команде\n'
+        info = CommandProcessing.logger.info
+        debug = CommandProcessing.logger.debug
+        warning = CommandProcessing.logger.warning
+        error = CommandProcessing.logger.error
 
         cmd = cmd.lower()
         print_lst = f'first command: {cmd}'
         if telegramuser != None:
             print_lst += f' from {telegramuser.name}'
-        jprint(print_lst)
+        debug(print_lst)
         global_cmd_list = cmd.split(' ')
         cmdlist_by_and = cmd.split(' и ')
         answer = ''
@@ -63,7 +74,7 @@ class CommandProcessing():
             if ('свет' not in cmd_list and 'свет' in global_cmd_list) or (
                     'освещение' not in cmd_list and 'освещение' in global_cmd_list):
                 cmd_list.append('свет')
-            jprint(f'cmd in loop: {cmd_list}')
+            debug(f'cmd in loop: {cmd_list}')
 
             if 'включи' in cmd_list or 'on' in cmd_list:
                 if 'свет' in cmd_list and ('везде' in cmd_list or 'доме' in cmd_list or 'дома' in cmd_list):
@@ -478,12 +489,15 @@ class CommandProcessing():
                     sys.exit()
                 else:
                     answer += get_access_error()
+            elif cmd == 'info':
+                self._arduino.set_info()
+                CommandProcessing.set_info()
             elif cmd == 'debug':
-                self._arduino.debug()
-                CommandProcessing.debug()
+                self._arduino.set_debug()
+                CommandProcessing.set_debug()
             elif cmd == 'warning':
                 self._arduino.warning()
-                CommandProcessing.warning()
+                CommandProcessing.set_warning()
             else:
                 answer += 'неизвестная команда\n'
 

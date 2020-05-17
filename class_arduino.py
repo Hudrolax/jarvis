@@ -3,6 +3,7 @@ from time import sleep
 import serial.tools.list_ports as lp
 import gfunctions as gf
 from gfunctions import JPrint
+jprint = JPrint.jprint
 from class_pins import Pins
 import serial
 import logging
@@ -39,12 +40,19 @@ class Arduino(JPrint):
         self.__not_important_words = not_important_words
 
     @staticmethod
-    def debug():
-        Arduino.logger.setLevel(logging.DEBUG)
+    def set_info():
+        Arduino.logger.setLevel(logging.INFO)
+        jprint('set INFO level in Arduino logger')
 
     @staticmethod
-    def warning():
+    def set_debug():
+        Arduino.logger.setLevel(logging.DEBUG)
+        jprint('set DEBUG level in Arduino logger')
+
+    @staticmethod
+    def set_warning():
         Arduino.logger.setLevel(logging.WARNING)
+        jprint('set WARNING level in Arduino logger')
 
     def find_pin(self, __pin):
         for p in self.pins:
