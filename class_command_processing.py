@@ -5,7 +5,7 @@ from datetime import datetime
 from config import *
 from gfunctions import JPrint
 from gfunctions import difference_between_date
-jprint = JPrint.jprint()
+jprint = JPrint.jprint
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
