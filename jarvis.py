@@ -570,22 +570,6 @@ def command_processing(cmd, telegramuser, message):
 
 
 def reglament_work():
-    # Реакция пинов на разряд аккумулятора без входного напряжения
-    if not arduino.ac_exist:
-        for p in arduino.pins:
-            if p.output and not p.bcod_reaction and arduino.DCVoltageInPercent <= p.bcod:
-                arduino.set_pin(p, 0)
-                jprint(f'Отключил {p.description} по разряду аккумулятора')
-                p.bcod_reaction = True
-                for user in bot.get_users():
-                    if user.level <= 1:
-                        bot.send_to_telegram_id(user.id, f'Отключил {p.description} по разряду аккумулятора\n')
-    else:
-        for p in arduino.pins:
-            if p.output and p.bcod_reaction and arduino.DCVoltageInPercent > p.bcod:
-                p.bcod_reaction = False
-                arduino.set_pin(p, p.prevstate)  # Вернем состояние пинов на последнее
-
     if datetime.now().hour >= 19 or datetime.now().hour <= 6:  # включим свет на улице
         if not arduino.LastSetStateOutDoorLight or arduino.LastSetStateOutDoorLight == None:
             arduino.set_pin(arduino.OutDoorLightPin, 1)
@@ -600,26 +584,41 @@ def reglament_work():
         for user in bot.get_users():
             if user.level == 0:
                 # if True or user.level == 0 or user.level == 3:
-                bot.send_to_telegram_id(user.id, 'Отключилось напряжение на входе в дом!\n')
+                bot.add_to_queue(user.id, 'Отключилось напряжение на входе в дом!\n')
         arduino.ACAlertSended = True
     elif arduino.ac_exist and arduino.ACAlertSended:
         for user in bot.get_users():
             # if True or user.level == 0 or user.level == 3:
             if user.level == 0:
                 _message = 'Ура! Появилось напряжение на входе в дом!\n'
-                _message += 'Электричества не было '+arduino.time_without_ac()
+                _message += 'Электричества не было '+arduino.time_without_ac(in_str=True)
 
-                bot.send_to_telegram_id(user.id, _message)
+                bot.add_to_queue(user.id, _message)
         arduino.ACAlertSended = False
 
     # Сообщить, что напряжение аккумулятора низкое
     if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
         for user in bot.get_users():
             if True or user.level == 0 or user.level == 3:
-                bot.send_to_telegram_id(user.id,
+                bot.add_to_queue(user.id,
                                         'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
         arduino.DCVolLowAlertSended = True
 
+    # Реакция пинов на разряд аккумулятора без входного напряжения
+    if not arduino.ac_exist:
+        for p in arduino.pins:
+            if p.output and not p.bcod_reaction and arduino.DCVoltageInPercent <= p.bcod:
+                arduino.set_pin(p, 0)
+                jprint(f'Отключил {p.description} по разряду аккумулятора')
+                p.bcod_reaction = True
+                for user in bot.get_users():
+                    if user.level <= 1:
+                        bot.add_to_queue(user.id, f'Отключил {p.description} по разряду аккумулятора\n')
+    else:
+        for p in arduino.pins:
+            if p.output and p.bcod_reaction and arduino.DCVoltageInPercent > p.bcod:
+                p.bcod_reaction = False
+                arduino.set_pin(p, p.prevstate)  # Вернем состояние пинов на последнее
 
 # ****** MAIN ******
 if __name__ == "__main__":

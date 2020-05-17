@@ -5,7 +5,17 @@ import gfunctions as gf
 from gfunctions import JPrint
 from class_pins import Pins
 import serial
+import logging
 
+WRITE_LOG_TO_FILE = False
+LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
+#LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.WARNING
+
+if WRITE_LOG_TO_FILE:
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
+else:
+    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
 class Arduino(JPrint):
     def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
@@ -109,11 +119,14 @@ class Arduino(JPrint):
         if self.DCVoltageInPercent == 100:
             self.DCVolLowAlertSended = False
 
-        acc_exist = self.write_to_port('A', 0, 0)
-        if acc_exist > 800:
-            self._ac_exist = True
+        val = self.write_to_port('A', 0, 0)
+        if val > 800:
+            if not self._ac_exist:
+                logging.debug('Включилось напряжение на входе')
+                self._ac_exist = True
         else:
             if self._ac_exist:
+                logging.debug('Отключилось напряжение на входе')
                 self._ac_non_exist_start_timer = datetime.now()
             self._ac_exist = False
 
@@ -331,7 +344,7 @@ class Arduino(JPrint):
         for w in _wordlist:
             if w not in self.__not_important_words:
                 wordlist.append(w)
-        PinAuction = []
+        _pin_auction = []
         for p in self.pins:
             if p.output or allpins:  # добавляем выходы в аукцион
                 ct_all = []
@@ -340,40 +353,39 @@ class Arduino(JPrint):
                 ct_all.append(p.description)
                 ct_all.append(str(p.num))
                 ct_all.append(p.name.lower())
-                PinAuction.append([p.num, ct_all, 0])
+                _pin_auction.append([p.num, ct_all, 0])
 
         for word in wordlist:
-            for PA in PinAuction:
-                includes = 0
-                # self.jprint(f'count points for {PA[0]}')
-                for ct in PA[1]:
+            for _pa in _pin_auction:
+                logging.debug(f'count points for {_pa[0]}')
+                for ct in _pa[1]:
                     if ct.lower() == word:
-                        PA[2] += 2
-                        # self.jprint(f'word = {word} 2 points')
+                        _pa[2] += 2
+                        logging.debug(f'word = {word} 2 points')
                     elif ct.lower().find(word) > -1:
-                        PA[2] += 1
-                        # self.jprint(f'word find {word} 1 point')
+                        _pa[2] += 1
+                        logging.debug(f'word find {word} 1 point')
 
-        MaxIncludes = 0
-        Winners = []
-        for PA in PinAuction:
-            if PA[2] > MaxIncludes:
-                MaxIncludes = PA[2]
+        _max_includes = 0
+        _winners = []
+        for _pa in _pin_auction:
+            if _pa[2] > _max_includes:
+                _max_includes = _pa[2]
 
-        if MaxIncludes > 0:
-            for PA in PinAuction:
-                if PA[2] == MaxIncludes:
-                    Winners.append(self.find_pin(PA[0]))
+        if _max_includes > 0:
+            for _pa in _pin_auction:
+                if _pa[2] == _max_includes:
+                    _winners.append(self.find_pin(_pa[0]))
 
-        if len(Winners) == 1:
-            # self.jprint(f'winner is {Winners[0].description}')
-            # self.jprint(f'winner get {MaxIncludes} points')
-            return Winners[0]
-        elif len(Winners) > 1:
-            #self.jprint('Winners more than one')
-            #self.jprint(f'its get {MaxIncludes} points')
-            return Winners
+        if len(_winners) == 1:
+            logging.debug(f'winner is {_winners[0].description}')
+            logging.debug(f'winner get {_max_includes} points')
+            return _winners[0]
+        elif len(_winners) > 1:
+            logging.debug('_winners more than one')
+            logging.debug(f'its get {_max_includes} points')
+            return _winners
         else:
-            #self.jprint('winner not found')
-            #self.jprint('winner not found')
+            logging.debug('winner not found')
+            logging.debug('winner not found')
             return None
