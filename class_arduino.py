@@ -18,10 +18,9 @@ class Arduino(JPrint):
         self.DCVol = 27
         self.DCVolLowAlertSended = False
         self.DCVoltageInPercent = 100
-        self.DCCheckTimer = 0
-        self.ACCExist = True
+        self._ac_exist = True
         self.ACAlertSended = False
-        self.ACNonExistStartTimer = datetime.now()
+        self._ac_non_exist_start_timer = datetime.now()
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
@@ -95,33 +94,41 @@ class Arduino(JPrint):
                 if allpins:
                     p.prevstate = p.state
                 self.pin_reaction(p)
-        if self.DCCheckTimer <= 0:
-            val = self.write_to_port('A', 1, 0)
-            voltage_now = round(gf.map_func(val, 0, 1023, 0, 40.1), 2)
-            self.DCVolArray.pop(0)
-            self.DCVolArray.append(voltage_now)
-            self.DCVol = round(gf.array_ma(self.DCVolArray), 2)
-            percent = round(gf.map_func(self.DCVol, 22, 27, 0, 100), 0)
-            if percent > 100:
-                percent = 100
-            elif percent < 0:
-                percent = 0
-            self.DCVoltageInPercent = percent
-            if self.DCVoltageInPercent == 100:
-                self.DCVolLowAlertSended = False
 
-            acc_exist = val = self.write_to_port('A', 0, 0)
-            # self.jprint(acc_exist)
-            if acc_exist > 500:
-                self.ACCExist = True
-            else:
-                if self.ACCExist:
-                    self.ACNonExistStartTimer = datetime.now()
-                self.ACCExist = False
-            # self.jprint(self.ACCExist)
-            self.DCCheckTimer = 50
+        val = self.write_to_port('A', 1, 0)
+        voltage_now = round(gf.map_func(val, 0, 1023, 0, 40.1), 2)
+        self.DCVolArray.pop(0)
+        self.DCVolArray.append(voltage_now)
+        self.DCVol = round(gf.array_ma(self.DCVolArray), 2)
+        percent = round(gf.map_func(self.DCVol, 22, 27, 0, 100), 0)
+        if percent > 100:
+            percent = 100
+        elif percent < 0:
+            percent = 0
+        self.DCVoltageInPercent = percent
+        if self.DCVoltageInPercent == 100:
+            self.DCVolLowAlertSended = False
+
+        acc_exist = self.write_to_port('A', 0, 0)
+        if acc_exist > 800:
+            self._ac_exist = True
         else:
-            self.DCCheckTimer -= 1
+            if self._ac_exist:
+                self._ac_non_exist_start_timer = datetime.now()
+            self._ac_exist = False
+
+    @property
+    def ac_exist(self):
+        return self._ac_exist
+
+    def time_without_ac(self, in_str:bool = False):
+        if not self._ac_exist:
+            if in_str:
+                return gf.difference_between_date(datetime.now(), self._ac_non_exist_start_timer)
+            else:
+                return (datetime.now() - self._ac_non_exist_start_timer).total_seconds()
+        else:
+            return 0
 
     def pin_reaction(self, p):
         # p - swich (S-pin)

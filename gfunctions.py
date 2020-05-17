@@ -22,7 +22,7 @@ def clear_str(str_):
     return str_
 
 
-def difference_between_date(date1, date2):
+def difference_between_date(date1, date2, format=None):
     duration = date2 - date1
     duration_in_s = duration.total_seconds()  # Total number of seconds between dates
     days = divmod(duration_in_s, 86400)  # Get days (without [0]!)
