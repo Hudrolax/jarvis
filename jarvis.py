@@ -561,6 +561,10 @@ def command_processing(cmd, telegramuser, message):
                 sys.exit()
             else:
                 answer += get_access_error()
+        elif cmd == 'debug':
+            arduino.debug()
+        elif cmd == 'warning':
+            arduino.warning()
         else:
             answer += 'неизвестная команда\n'
 
@@ -591,7 +595,7 @@ def reglament_work():
             # if True or user.level == 0 or user.level == 3:
             if user.level == 0:
                 _message = 'Ура! Появилось напряжение на входе в дом!\n'
-                _message += 'Электричества не было '+arduino.time_without_ac(in_str=True)
+                _message += f'Электричества не было {arduino.time_without_ac(in_str=True)}'
 
                 bot.add_to_queue(user.id, _message)
         arduino.ACAlertSended = False

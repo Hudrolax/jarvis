@@ -18,6 +18,9 @@ else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
 class Arduino(JPrint):
+    logger = logging.getLogger('Arduino')
+    logger.setLevel(LOG_LEVEL)
+
     def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
         self.port = None
         self.initialized = False
@@ -34,6 +37,14 @@ class Arduino(JPrint):
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
+
+    @staticmethod
+    def debug():
+        Arduino.logger.setLevel(logging.DEBUG)
+
+    @staticmethod
+    def warning():
+        Arduino.logger.setLevel(logging.WARNING)
 
     def find_pin(self, __pin):
         for p in self.pins:
@@ -122,11 +133,11 @@ class Arduino(JPrint):
         val = self.write_to_port('A', 0, 0)
         if val > 800:
             if not self._ac_exist:
-                logging.debug('Включилось напряжение на входе')
+                Arduino.logger.debug('Включилось напряжение на входе')
                 self._ac_exist = True
         else:
             if self._ac_exist:
-                logging.debug('Отключилось напряжение на входе')
+                Arduino.logger.debug('Отключилось напряжение на входе')
                 self._ac_non_exist_start_timer = datetime.now()
             self._ac_exist = False
 
@@ -239,8 +250,8 @@ class Arduino(JPrint):
         if not self.initialized:
             self.jprint('I have not found the Arduino...')
             self.jprint("Sorry, but i can't work whithout Arduino subcontroller :(")
-            # self.jprint("I'm have to try to find it after one second pause")
-            #raise RuntimeError("can't load Arduino controller")
+            Arduino.logger.debug("I'm have to try to find it after one second pause")
+            Arduino.logger.debug("can't load Arduino controller")
         else:
             self.jprint(f'Arduino is initialized on port {self.port.name}')
             self.load_pinstate()
@@ -354,14 +365,14 @@ class Arduino(JPrint):
 
         for word in wordlist:
             for _pa in _pin_auction:
-                logging.debug(f'count points for {_pa[0]}')
+                Arduino.logger.debug(f'count points for {_pa[0]}')
                 for ct in _pa[1]:
                     if ct.lower() == word:
                         _pa[2] += 2
-                        logging.debug(f'word = {word} 2 points')
+                        Arduino.logger.debug(f'word = {word} 2 points')
                     elif ct.lower().find(word) > -1:
                         _pa[2] += 1
-                        logging.debug(f'word find {word} 1 point')
+                        Arduino.logger.debug(f'word find {word} 1 point')
 
         _max_includes = 0
         _winners = []
@@ -375,14 +386,14 @@ class Arduino(JPrint):
                     _winners.append(self.find_pin(_pa[0]))
 
         if len(_winners) == 1:
-            logging.debug(f'winner is {_winners[0].description}')
-            logging.debug(f'winner get {_max_includes} points')
+            Arduino.logger.debug(f'winner is {_winners[0].description}')
+            Arduino.logger.debug(f'winner get {_max_includes} points')
             return _winners[0]
         elif len(_winners) > 1:
-            logging.debug('_winners more than one')
-            logging.debug(f'its get {_max_includes} points')
+            Arduino.logger.debug('_winners more than one')
+            Arduino.logger.debug(f'its get {_max_includes} points')
             return _winners
         else:
-            logging.debug('winner not found')
-            logging.debug('winner not found')
+            Arduino.logger.debug('winner not found')
+            Arduino.logger.debug('winner not found')
             return None
