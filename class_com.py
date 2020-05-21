@@ -67,7 +67,10 @@ class CommunicationServer():
         debug = CommunicationServer.logger.debug
         info = CommunicationServer.logger.info
         server_socket = socket.socket()
-        server_socket.bind(self._own_server_adress)
+        try:
+            server_socket.bind(self._own_server_adress)
+        except:
+            raise Exception(f"Can't bind {self.ip}:{self.port}")
         server_socket.listen(1)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:

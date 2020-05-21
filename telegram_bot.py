@@ -199,6 +199,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
         error = TelegramBot.logger.error
         debug = TelegramBot.logger.debug
         info = TelegramBot.logger.info
+        warning = TelegramBot.logger.warning
         while self._started:
             try:
                 for _proxy in TelegramBot.PROXY_LIST_SITE_LIST:
@@ -206,7 +207,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
                         content = str(requests.get(_proxy).content)
                         break
                     except:
-                        error(f"can't load {_proxy}")
+                        warning(f"can't load {_proxy}")
                 content = content.replace(r'\r\n', ',')
                 content = content.replace("b'", '')
                 content = content.replace(",'", '')
