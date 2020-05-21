@@ -5,7 +5,8 @@ import threading
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
-LOG_LEVEL = logging.DEBUG
+#LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.INFO
 #LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
@@ -55,8 +56,8 @@ class CommunicationServer():
         self._started = False
 
     def handler(self, client, data):
-        self.logger.info('call handler')
-        return None
+        #self.logger.debug('call handler')
+        return 'None'
 
     def _tcp_server(self): # hendler take client:str and data:str parameters
         debug = self.logger.debug
@@ -68,16 +69,17 @@ class CommunicationServer():
         while self._started:
             connection, client_address = server_socket.accept()
             debug(f"new connection from {client_address}")
-            answer = ""
-            while answer is not None:
-                data = clear_str(connection.recv(1024).decode("utf-8"))
-                self.logger.debug(f"received data: {data}")
-                answer = self.handler(client=client_address, data=data)
-                debug(f'answer is {answer}')
-                if answer is not None:
-                    debug(f'send an answer to {client_address}')
-                    connection.send(bytes(answer, encoding='UTF-8'))
+            data = clear_str(connection.recv(1024).decode("utf-8"))
+            self.logger.debug(f"received data: {data}")
+            # отправляем данные обработчику и получает ответ
+            answer = self.handler(client=client_address, data=data)
+
+            debug(f'answer is "{answer}"')
+            if answer is not None:
+                debug(f'send an answer to {client_address}')
+                connection.send(bytes(answer, encoding='utf-8'))
             connection.close()
+            debug(f'connection from {client_address} closed')
 
 class CommunicationClient():
     def __init__(self, name:str, ip:str='127.0.0.1', port:int=8585):
@@ -90,13 +92,27 @@ class CommunicationClient():
             self.logger.critical("init error. 'port' is not 'int' type.")
             raise Exception("init error. 'port' is not 'int' type.")
         self._port = port
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def ip(self):
+        return self._ip
+
+    @property
+    def port(self):
+        return self._port
 
     def send(self, message):
         answer = None
         try:
             sock = socket.create_connection((self._ip, self._port), 10)
-            sock.sendall(bytes(message, encoding='UTF-8'))
-            answer = clear_str(sock.recv(1024).decode("utf-8"))
+            sock.sendall(bytes(message, encoding='utf-8'))
+            #answer = sock.recv(1024)
+            answer = clear_str(sock.recv(1024).decode('utf-8'))
         except:
             self.logger.error(f'error connection to {self._ip}')
         finally:
@@ -106,38 +122,5 @@ class CommunicationClient():
                 pass
         return answer
 
-
-if __name__ == '__main__':
-    from time import sleep
-    class Serverx(CommunicationServer):
-        def __init__(self, name:str='root', ip:str='127.0.0.1', port:int = 8585):
-            super().__init__(name, ip, port)
-            self._miners = JList
-
-        def add_miner(self, name):
-            if not self._miners.find(name):
-                self._miners.append(name)
-
-        def stop_miner(self, satellite=None):
-            pass
-
-
-        def handler(self, client, data):
-            answer = None
-            data = data.split(':')
-            if len(data) != 2:
-                return None
-            name = data[0]
-            message = data[1]
-            if name == 'serverx':
-                print(name+' '+message)
-                answer = 'ok'
-
-            return answer
-
-    server = Serverx(name='Jarvis')
-    server.start()
-
-    while True:
-        sleep(0.1)
-    server.stop()
+    def send_with_name(self, message):
+        return self.send(f'{self.name}:{message}')
