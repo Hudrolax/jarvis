@@ -24,7 +24,7 @@ else:
 
 class Jarvis_Satellite_client(CommunicationClient):
     logger = logging.getLogger('jarvis satellite')
-    #logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     def __init__(self, *args):
         super().__init__(*args)
