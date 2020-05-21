@@ -121,7 +121,7 @@ class CommunicationClient():
             #answer = sock.recv(1024)
             answer = clear_str(sock.recv(1024).decode('utf-8'))
         except:
-            error(f'error connection to {self._ip}')
+            error(f'error connection to {self._ip}:{self.port}')
         finally:
             try:
                 sock.close()
