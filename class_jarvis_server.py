@@ -102,7 +102,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
         for miner in self.miners:
             if miner.runned:
                 miner.stop()
-                if bcod_reaction:
+                if bcod_reaction and not miner.bcod_reaction:
                     miner.bcod_reaction = True
                     info(f"miner {miner.name} (bcod_reaction = {bcod_reaction}) is runned. Let's stop it.")
                     if bot is not None:

@@ -7,6 +7,7 @@ import queue
 import class_arduino
 import class_watchdog
 from gfunctions import JPrint
+from gfunctions import Runned
 from telegram_bot import TelegramBot
 from class_command_processing import CommandProcessing
 from class_jarvis_server import Jarvis_Satellite_Server
@@ -29,7 +30,7 @@ bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, 
 
 # Function of input in thread
 def read_kbd_input(__input_queue):
-    while True:
+    while Runned.runned:
         # Receive keyboard input from user.
         try:
             input_str = input()
@@ -188,6 +189,8 @@ def reglament_work():
 
 # ****** MAIN ******
 if __name__ == "__main__":
+    Runned.runned = True
+
     logger = logging.getLogger('main')
     logger.setLevel(logging.INFO)
 
@@ -225,7 +228,7 @@ if __name__ == "__main__":
     logger.info('start satellite server')
 
     # Main loop dunction
-    while True:
+    while Runned.runned:
         if arduino.initialized:
             if (input_queue.qsize() > 0):
                 queue_typle = input_queue.get()
@@ -239,3 +242,5 @@ if __name__ == "__main__":
         else:
             arduino.initialize()
         sleep(0.02)
+    satellite_server.stop()
+    bot.stop()

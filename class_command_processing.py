@@ -1,10 +1,10 @@
 import logging
-import sys
 import copy
-from datetime import datetime
 from config import *
+from gfunctions import Runned
 from gfunctions import JPrint
 from gfunctions import difference_between_date
+from datetime import datetime
 jprint = JPrint.jprint
 
 WRITE_LOG_TO_FILE = False
@@ -486,7 +486,7 @@ class CommandProcessing():
             elif cmd == 'exit':
                 if telegramuser is None:  # выходить можно только из консоли
                     jprint('bye...')
-                    sys.exit()
+                    Runned.runned = False
                 else:
                     answer += get_access_error()
             elif cmd == 'info':
