@@ -70,7 +70,11 @@ class CommunicationServer():
         try:
             server_socket.bind(self._own_server_adress)
         except:
-            raise Exception(f"Can't bind {self.ip}:{self.port}")
+            try:
+                server_socket.close()
+                server_socket.bind(self._own_server_adress)
+            except:
+                raise Exception(f"Can't bind {self.ip}:{self.port}")
         server_socket.listen(1)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
@@ -87,6 +91,7 @@ class CommunicationServer():
                 connection.send(bytes(answer, encoding='utf-8'))
             connection.close()
             debug(f'connection from {client_address} closed')
+        server_socket.close()
 
 class CommunicationClient():
     logger = logging.getLogger('Comm client')

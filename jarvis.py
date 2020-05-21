@@ -244,3 +244,4 @@ if __name__ == "__main__":
         sleep(0.02)
     satellite_server.stop()
     bot.stop()
+    sleep(3) # wait for stop threads
