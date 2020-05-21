@@ -2,7 +2,7 @@ from class_com import CommunicationClient
 from gfunctions import JPrint
 from gfunctions import JList
 from time import sleep
-#from datetime import datetime
+from config import *
 from config import *
 list = JList
 jprint = JPrint.jprint
@@ -94,7 +94,7 @@ class Jarvis_Satellite_client(CommunicationClient):
 
 
 if __name__ == '__main__':
-    tcp_client = Jarvis_Satellite_client('serverx','127.0.0.1',8585)
+    tcp_client = Jarvis_Satellite_client('zeon', SATELLITE_IP, SATELLITE_PORT)
     tcp_client.start()
 
     while True:
