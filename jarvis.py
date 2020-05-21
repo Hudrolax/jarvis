@@ -23,10 +23,6 @@ else:
 
 jprint = JPrint.jprint
 
-# init telegram bot
-bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
-
-
 # Function of input in thread
 def read_kbd_input(__input_queue):
     while True:
@@ -173,19 +169,23 @@ def reglament_work():
     else:
         # Включаем пины, если отключали их по уровню разряда
         for p in arduino.pins:
-            if p.output and not p.state and p.bcod_reaction and arduino.DCVoltageInPercent >= p.bcod:
+            if p.output and p.bcod_reaction:
                 p.bcod_reaction = False
-                jprint(f'Включил {p.description} обратно')
-                arduino.set_pin(p, 1)  # Вернем состояние пинов на последнее
-                for user in bot.get_users():
-                    if user.level <= 1:
-                        bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
+                if not p.state:
+                    jprint(f'Включил {p.description} обратно')
+                    arduino.set_pin(p, 1)  # Вернем состояние пинов на последнее
+                    for user in bot.get_users():
+                        if user.level <= 1:
+                            bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
 
 # ****** MAIN ******
 if __name__ == "__main__":
     # init watchdog
     watchdog = class_watchdog.CWatchDog('/dev/ttyACM0')
     watchdog.start_ping()
+
+    # init telegram bot
+    bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
 
     # init arduino
     arduino = class_arduino.Arduino(JARVIS_PATH + ARDUINO_CONFIG_NAME, JARVIS_PATH + ARDUINO_PINSTATE_FILENAME,
