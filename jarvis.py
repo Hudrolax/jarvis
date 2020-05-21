@@ -23,6 +23,9 @@ else:
 
 jprint = JPrint.jprint
 
+# init telegram bot
+bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
+
 # Function of input in thread
 def read_kbd_input(__input_queue):
     while True:
@@ -183,9 +186,6 @@ if __name__ == "__main__":
     # init watchdog
     watchdog = class_watchdog.CWatchDog('/dev/ttyACM0')
     watchdog.start_ping()
-
-    # init telegram bot
-    bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
 
     # init arduino
     arduino = class_arduino.Arduino(JARVIS_PATH + ARDUINO_CONFIG_NAME, JARVIS_PATH + ARDUINO_PINSTATE_FILENAME,
