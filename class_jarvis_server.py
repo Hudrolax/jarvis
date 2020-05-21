@@ -100,25 +100,20 @@ class Jarvis_Satellite_Server(CommunicationServer):
     def stop_miners(self, bcod_reaction = False):
         info = Jarvis_Satellite_Server.logger.info
         for miner in self.miners:
-            _info_message = f'miner {miner.name} (bcod_reaction = {bcod_reaction})'
             if miner.runned:
-                _info_message += f" is runned. Let's stop it."
                 miner.stop()
                 if bcod_reaction:
                     miner.bcod_reaction = True
-            info(_info_message)
+                    info(f"miner {miner.name} (bcod_reaction = {bcod_reaction}) is runned. Let's stop it.")
 
     def start_miners(self, bcod_reaction = False):
         info = Jarvis_Satellite_Server.logger.info
         for miner in self.miners:
-            _info_message = f'miner {miner.name} (bcod_reaction = {bcod_reaction})'
             if not miner.runned:
-                _info_message += f" is not runned. Let's start it."
                 if not bcod_reaction or bcod_reaction and miner.bcod_reaction:
                     miner.start()
                     miner.bcod_reaction = False
-                    _info_message += ' There is trying to start it.'
-            info(_info_message)
+                    info(f"miner {miner.name} (bcod_reaction = {bcod_reaction}) is not runned. Let's start it.")
 
     def _find_miner(self, miner):
         for m in self._miners:

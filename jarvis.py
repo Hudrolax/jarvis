@@ -172,9 +172,6 @@ def reglament_work():
                         bot.add_to_queue(user.id, f'Отключил {p.description} по разряду аккумулятора\n')
         # Отключаем майнеры, если они включены
         satellite_server.stop_miners(bcod_reaction=True)
-        for user in bot.get_users():
-            if user.level <= 0:
-                bot.add_to_queue(user.id, f'Отключил все майнеры по разряду аккумулятора\n')
     else:
         # Включаем пины, если отключали их по уровню разряда
         for p in arduino.pins:
@@ -188,9 +185,6 @@ def reglament_work():
                             bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
         # Включаем майнеры, если мы их отключали
         satellite_server.start_miners(bcod_reaction=True)
-        for user in bot.get_users():
-            if user.level <= 0:
-                bot.add_to_queue(user.id, f'Включил майнеры обратно\n')
 
 # ****** MAIN ******
 if __name__ == "__main__":
