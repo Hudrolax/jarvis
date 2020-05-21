@@ -189,7 +189,7 @@ def reglament_work():
 # ****** MAIN ******
 if __name__ == "__main__":
     logger = logging.getLogger('main')
-    logger.setLevel(logging.WARNING)
+    logger.setLevel(logging.INFO)
 
     logger.info('Start jarvis')
 
@@ -222,6 +222,7 @@ if __name__ == "__main__":
     satellite_server = Jarvis_Satellite_Server('Jarvis')
     satellite_server.add_miner('zeon')
     satellite_server.start()
+    logger.info('start satellite server')
 
     # Main loop dunction
     while True:
