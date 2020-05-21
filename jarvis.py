@@ -183,22 +183,31 @@ def reglament_work():
 
 # ****** MAIN ******
 if __name__ == "__main__":
+    logger = logging.getLogger('main')
+    logger.setLevel(logging.INFO)
+
+    logger.info('Start jarvis')
+
     # init watchdog
     watchdog = class_watchdog.CWatchDog('/dev/ttyACM0')
     watchdog.start_ping()
+    logger.info('init watchdog')
 
     # init arduino
     arduino = class_arduino.Arduino(JARVIS_PATH + ARDUINO_CONFIG_NAME, JARVIS_PATH + ARDUINO_PINSTATE_FILENAME,
                                     NOT_IMPORTANT_WORDS)
     arduino.load_config(bot)
+    logger.info('init arduino and load config')
 
     # Start keyboart queue thread
     input_queue = queue.Queue()
     inputThread = threading.Thread(target=read_kbd_input, args=(input_queue,), daemon=True)
     inputThread.start()
+    logger.info('start keyboard thread')
 
     # Start Telegram bot
     bot.start()
+    logger.info('start telegram bot')
 
     telegram_answer_queue = queue.Queue()
 
