@@ -219,7 +219,7 @@ if __name__ == "__main__":
     command_processing = CommandProcessing(arduino, telegram_answer_queue)
 
     #start satellite server
-    satellite_server = Jarvis_Satellite_Server('Jarvis')
+    satellite_server = Jarvis_Satellite_Server(name='Jarvis', ip=SATELLITE_IP, port=SATELLITE_PORT)
     satellite_server.add_miner('zeon')
     satellite_server.start()
     logger.info('start satellite server')

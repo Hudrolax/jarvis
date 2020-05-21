@@ -69,7 +69,7 @@ class CommunicationServer():
         server_socket = socket.socket()
         server_socket.bind(self._own_server_adress)
         server_socket.listen(1)
-        info('server is started')
+        info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
             connection, client_address = server_socket.accept()
             debug(f"new connection from {client_address}")
