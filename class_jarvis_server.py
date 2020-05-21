@@ -97,7 +97,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
     def miners(self):
         return self._miners
 
-    def stop_miners(self, bcod_reaction = False):
+    def stop_miners(self, bcod_reaction = False, bot=None):
         info = Jarvis_Satellite_Server.logger.info
         for miner in self.miners:
             if miner.runned:
@@ -105,8 +105,12 @@ class Jarvis_Satellite_Server(CommunicationServer):
                 if bcod_reaction:
                     miner.bcod_reaction = True
                     info(f"miner {miner.name} (bcod_reaction = {bcod_reaction}) is runned. Let's stop it.")
+                    if bot is not None:
+                        for user in bot.get_users():
+                            if user.level <= 0:
+                                bot.add_to_queue(user.id, f'Выключил miner "{miner.name}"\n')
 
-    def start_miners(self, bcod_reaction = False):
+    def start_miners(self, bcod_reaction = False, bot=None):
         info = Jarvis_Satellite_Server.logger.info
         for miner in self.miners:
             if not miner.runned:
@@ -114,6 +118,10 @@ class Jarvis_Satellite_Server(CommunicationServer):
                     miner.start()
                     miner.bcod_reaction = False
                     info(f"miner {miner.name} (bcod_reaction = {bcod_reaction}) is not runned. Let's start it.")
+                    if bot is not None:
+                        for user in bot.get_users():
+                            if user.level <= 0:
+                                bot.add_to_queue(user.id, f'Включил miner "{miner.name}"\n')
 
     def _find_miner(self, miner):
         for m in self._miners:
