@@ -2,14 +2,15 @@ from class_com import CommunicationServer
 import logging
 
 WRITE_LOG_TO_FILE = False
-LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
+LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
 #LOG_LEVEL = logging.DEBUG
-LOG_LEVEL = logging.WARNING
+LOG_LEVEL = logging.INFO
+#LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
-    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 else:
-    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
 class Miner():
     logger = logging.getLogger('Miner')
@@ -22,6 +23,18 @@ class Miner():
         self._runned = False
         self._start_it = False
         self._stop_it = False
+        self._bcod_reaction = False
+
+    @property
+    def bcod_reaction(self):
+        return self._bcod_reaction
+
+    @bcod_reaction.setter
+    def bcod_reaction(self, val):
+        if isinstance(val, bool):
+            self._bcod_reaction= val
+        else:
+            raise Exception(f'Miner class ERROR: "bcod_reaction" is {type(val)}, but "bool" expected')
 
     @property
     def runned(self):
@@ -42,9 +55,23 @@ class Miner():
     def start_it(self):
         return self._start_it
 
+    @start_it.setter
+    def start_it(self, val):
+        if isinstance(val, bool):
+            self._start_it = val
+        else:
+            raise Exception('start_it bool expected')
+
     @property
     def stop_it(self):
         return self._stop_it
+
+    @stop_it.setter
+    def stop_it(self, val):
+        if isinstance(val, bool):
+            self._stop_it = val
+        else:
+            raise Exception('stop_it bool expected')
 
     def __str__(self):
         return self._name
@@ -70,6 +97,20 @@ class Jarvis_Satellite_Server(CommunicationServer):
     def miners(self):
         return self._miners
 
+    def stop_miners(self, bcod_reaction = False):
+        for miner in self.miners:
+            if miner.runned:
+                miner.stop()
+                if bcod_reaction:
+                    miner.bcod_reaction = True
+
+    def start_miners(self, bcod_reaction = False):
+        for miner in self.miners:
+            if not miner.runned:
+                if not bcod_reaction or bcod_reaction and miner.bcod_reaction:
+                    miner.start()
+                    miner.bcod_reaction = False
+
     def _find_miner(self, miner):
         for m in self._miners:
             if isinstance(miner, Miner):
@@ -93,26 +134,25 @@ class Jarvis_Satellite_Server(CommunicationServer):
             return None
         name = data[0]
         message = data[1]
-        info(f'get "{message}" from {name}')
+        debug(f'get "{message}" from {name}')
         if message == 'ping':
             answer = 'ok'
-        elif message == 'miner':
-            miner = self._find_miner(name)
-            if miner is not None:
-                if miner.start_it:
-                    answer = 'start_miner'
-                elif miner.stop_it:
-                    answer = 'stop_miner'
         elif message == 'miner_is_runned':
             miner = self._find_miner(name)
             if miner is not None:
                 debug('miner is runned')
                 miner.runned = True
+                miner.start_it = False
+                if miner.stop_it:
+                    answer = 'stop_miner'
         elif message == 'miner_is_not_runned':
             miner = self._find_miner(name)
             if miner is not None:
                 debug("miner is not runned")
                 miner.runned = False
+                miner.stop_it = False
+                if miner.start_it:
+                    answer = 'start_miner'
 
         return answer
 
@@ -125,5 +165,8 @@ if __name__ == '__main__':
     server.start()
 
     while True:
-        sleep(0.1)
+        sleep(10)
+        server.stop_miners()
+        sleep(10)
+        server.start_miners()
     server.stop()

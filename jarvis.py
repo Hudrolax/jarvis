@@ -9,17 +9,18 @@ import class_watchdog
 from gfunctions import JPrint
 from telegram_bot import TelegramBot
 from class_command_processing import CommandProcessing
+from class_jarvis_server import Jarvis_Satellite_Server
 import logging
 
 WRITE_LOG_TO_FILE = False
-LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
+LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
 #LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
-    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 else:
-    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
 jprint = JPrint.jprint
 
@@ -169,6 +170,8 @@ def reglament_work():
                 for user in bot.get_users():
                     if user.level <= 1:
                         bot.add_to_queue(user.id, f'Отключил {p.description} по разряду аккумулятора\n')
+        # Отключаем майнеры, если они включены
+        satellite_server.stop_miners(bcod_reaction=True)
     else:
         # Включаем пины, если отключали их по уровню разряда
         for p in arduino.pins:
@@ -180,11 +183,13 @@ def reglament_work():
                     for user in bot.get_users():
                         if user.level <= 1:
                             bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
+        # Включаем майнеры, если мы их отключали
+        satellite_server.start_miners(bcod_reaction=True)
 
 # ****** MAIN ******
 if __name__ == "__main__":
     logger = logging.getLogger('main')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.WARNING)
 
     logger.info('Start jarvis')
 
@@ -212,6 +217,11 @@ if __name__ == "__main__":
     telegram_answer_queue = queue.Queue()
 
     command_processing = CommandProcessing(arduino, telegram_answer_queue)
+
+    #start satellite server
+    satellite_server = Jarvis_Satellite_Server('Jarvis')
+    satellite_server.add_miner('zeon')
+    satellite_server.start()
 
     # Main loop dunction
     while True:
