@@ -191,7 +191,7 @@ def reglament_work():
         for user in bot.get_users():
             if user.level <= 0:
                 bot.add_to_queue(user.id, f'Включил майнеры обратно\n')
-                
+
 # ****** MAIN ******
 if __name__ == "__main__":
     logger = logging.getLogger('main')
