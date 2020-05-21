@@ -73,7 +73,10 @@ class Message:
 
 
 class TelegramBot(telebot.TeleBot, JPrint):
-    PROXY_LIST_SITE = 'https://www.proxy-list.download/api/v1/get?type=http&anon=elite'
+    PROXY_LIST_SITE_LIST = []
+    PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http&anon=elite')
+    PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http')
+
     logger = logging.getLogger('Telegram_bot')
 
     def __init__(self, path, list_file, token, threaded=False):
@@ -198,7 +201,12 @@ class TelegramBot(telebot.TeleBot, JPrint):
         info = TelegramBot.logger.info
         while self._started:
             try:
-                content = str(requests.get(TelegramBot.PROXY_LIST_SITE).content)
+                for _proxy in TelegramBot.PROXY_LIST_SITE_LIST:
+                    try:
+                        content = str(requests.get(_proxy).content)
+                        break
+                    except:
+                        error(f"can't load {_proxy}")
                 content = content.replace(r'\r\n', ',')
                 content = content.replace("b'", '')
                 content = content.replace(",'", '')
@@ -210,10 +218,10 @@ class TelegramBot(telebot.TeleBot, JPrint):
                     contarr.extend(gp_list)
                     self.jprint('Good proxylist is loaded')
                 else:
-                    error('Cant load good proxylist :(')
+                    error('Cant load good proxylist from file :(')
                 contarr.extend(a)
             except:
-                error(f"can't load {TelegramBot.PROXY_LIST_SITE}")
+                error(f"error in parse proxy list content")
                 sleep(0.1)
                 continue
             for prox in contarr:
