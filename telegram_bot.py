@@ -1,8 +1,20 @@
 import telebot
-from gfunctions import JPrint
+from gfunctions import *
 from time import sleep
 import requests
 import threading
+import queue
+import logging
+
+WRITE_LOG_TO_FILE = False
+LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
+#LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.WARNING
+
+if WRITE_LOG_TO_FILE:
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
+else:
+    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 
 class TelegramUserClass:
     def __init__(self, name, id, level=3):
@@ -46,8 +58,26 @@ class TelegramUserClass:
         else:
             raise Exception(f'TelegramUserClass: level ожидается int. Получено {type(level)}')
 
+class Message:
+    def __init__(self, message, id=None):
+        self._message = message
+        self._id = id
+
+    @property
+    def message(self):
+        return self._message
+
+    @property
+    def id(self):
+        return self._id
+
+
 class TelegramBot(telebot.TeleBot, JPrint):
-    PROXY_LIST_SITE = 'https://www.proxy-list.download/api/v1/get?type=http'
+    PROXY_LIST_SITE_LIST = []
+    PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http&anon=elite')
+    PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http')
+
+    logger = logging.getLogger('Telegram_bot')
 
     def __init__(self, path, list_file, token, threaded=False):
         super().__init__(token, threaded)
@@ -56,6 +86,8 @@ class TelegramBot(telebot.TeleBot, JPrint):
         self._good_proxy_list_file = list_file
         self._started = False
         self._telegram_bot_thread = threading.Thread(target=self._telegram_bot, args=(), daemon=True)
+        self._messages_queue = queue.Queue()
+        self._send_messages_thread = threading.Thread(target=self._send_messages_with_queue, args=(), daemon=True)
 
     @property
     def users(self):
@@ -73,6 +105,21 @@ class TelegramBot(telebot.TeleBot, JPrint):
     def add_user(self, name, id, level=3):
         if self.find_user_by_id(id) == None:
             self._users.append(TelegramUserClass(name, id, level))
+
+    def _send_messages_with_queue(self):
+        while self._started:
+            if (self._messages_queue.qsize() > 0):
+                message = self._messages_queue.get()
+                if message.id is None:
+                    # send to all
+                    self.send_to_all(message.message)
+                else:
+                    # send to id
+                    self.send_to_telegram_id(message.id, message.message)
+            sleep(0.1)
+
+    def add_to_queue(self, id, message):
+        self._messages_queue.put(Message(message, id))
 
     def send_to_telegram_id(self, id, message):
         try:
@@ -102,6 +149,9 @@ class TelegramBot(telebot.TeleBot, JPrint):
             return None
 
     def _append_goodproxy(self, proxy):
+        error = TelegramBot.logger.error
+        debug = TelegramBot.logger.debug
+        info = TelegramBot.logger.info
         try:
             # in first read the list
             try:
@@ -116,13 +166,17 @@ class TelegramBot(telebot.TeleBot, JPrint):
                 f = open(self._prog_path + self._good_proxy_list_file, 'a')
             except:
                 self.jprint('good proxylist file is not exist. Im create new.')
+                info('good proxylist file is not exist. Im create new.')
                 f = open(self._prog_path + self._good_proxy_list_file, 'w')
             f.write(proxy + '\n')
             f.close()
         except:
-            self.jprint(f'cant write {self._prog_path + self._good_proxy_list_file}!!!')
+            error(f'cant write {self._prog_path + self._good_proxy_list_file}!!!')
 
     def _remove_bad_proxy(self, proxy):
+        error = TelegramBot.logger.error
+        debug = TelegramBot.logger.debug
+        info = TelegramBot.logger.info
         try:
             try:
                 f = open(self._prog_path + self._good_proxy_list_file, 'r')
@@ -139,12 +193,21 @@ class TelegramBot(telebot.TeleBot, JPrint):
                 f.write(gp + '\n')
             f.close()
         except:
-            self.jprint(f'cant write {self._prog_path + self._good_proxy_list_file}')
+            error(f'cant write {self._prog_path + self._good_proxy_list_file}')
 
     def _telegram_bot(self):
+        error = TelegramBot.logger.error
+        debug = TelegramBot.logger.debug
+        info = TelegramBot.logger.info
+        warning = TelegramBot.logger.warning
         while self._started:
             try:
-                content = str(requests.get(TelegramBot.PROXY_LIST_SITE).content)
+                for _proxy in TelegramBot.PROXY_LIST_SITE_LIST:
+                    try:
+                        content = str(requests.get(_proxy).content)
+                        break
+                    except:
+                        warning(f"can't load {_proxy}")
                 content = content.replace(r'\r\n', ',')
                 content = content.replace("b'", '')
                 content = content.replace(",'", '')
@@ -156,9 +219,10 @@ class TelegramBot(telebot.TeleBot, JPrint):
                     contarr.extend(gp_list)
                     self.jprint('Good proxylist is loaded')
                 else:
-                    self.jprint('Cant load good proxylist :(')
+                    error('Cant load good proxylist from file :(')
                 contarr.extend(a)
             except:
+                error(f"error in parse proxy list content")
                 sleep(0.1)
                 continue
             for prox in contarr:
@@ -169,7 +233,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
                         self.jprint('Try connect to Telegramm...')
                         self.polling(none_stop=True)
                     except:
-                        self.jprint('I am have some problem with connect to Telegramm')
+                        error('I am have some problem with connect to Telegramm')
                         self._remove_bad_proxy(prox)
                         sleep(0.1)
                         
@@ -178,6 +242,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
         if not self._started:
             self._started = True
             self._telegram_bot_thread.start()
+            self._send_messages_thread.start()
             return True
         else:
             return False
@@ -188,12 +253,14 @@ class TelegramBot(telebot.TeleBot, JPrint):
 
 
 if __name__ == '__main__':
-    from config import *
-    API_TOKEN = '1123277123:AAFz7b_joMY-4yGavFAE5o5MKstU5cz5Cfw'
-    bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
-    bot.add_user('ggg', 'fff5555', 0)
-    _user = None
-    for user in bot.users:
-        if 'fff5555' == user.id:
-            _user = user
-            print(_user.name)
+    # from config import *
+    # API_TOKEN = '1123277123:AAFz7b_joMY-4yGavFAE5o5MKstU5cz5Cfw'
+    # bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN, threaded=False)  # Конструктор бота
+    # bot.add_user('ggg', 'fff5555', 0)
+    # _user = None
+    # for user in bot.users:
+    #     if 'fff5555' == user.id:
+    #         _user = user
+    #         print(_user.name)
+    content = str(requests.get('https://www.prttoxy-list.download/api/v1/get?type=http').content)
+    print(content)

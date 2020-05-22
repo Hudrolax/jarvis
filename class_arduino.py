@@ -3,11 +3,25 @@ from time import sleep
 import serial.tools.list_ports as lp
 import gfunctions as gf
 from gfunctions import JPrint
+jprint = JPrint.jprint
 from class_pins import Pins
 import serial
+import logging
 
+WRITE_LOG_TO_FILE = False
+LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
+#LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.WARNING
+
+if WRITE_LOG_TO_FILE:
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
+else:
+    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
 class Arduino(JPrint):
+    logger = logging.getLogger('Arduino')
+    logger.setLevel(LOG_LEVEL)
+
     def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
         self.port = None
         self.initialized = False
@@ -18,13 +32,27 @@ class Arduino(JPrint):
         self.DCVol = 27
         self.DCVolLowAlertSended = False
         self.DCVoltageInPercent = 100
-        self.DCCheckTimer = 0
-        self.ACCExist = True
+        self._ac_exist = True
         self.ACAlertSended = False
-        self.ACNonExistStartTimer = datetime.now()
+        self._ac_non_exist_start_timer = datetime.now()
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
+
+    @staticmethod
+    def set_info():
+        Arduino.logger.setLevel(logging.INFO)
+        jprint('set INFO level in Arduino logger')
+
+    @staticmethod
+    def set_debug():
+        Arduino.logger.setLevel(logging.DEBUG)
+        jprint('set DEBUG level in Arduino logger')
+
+    @staticmethod
+    def set_warning():
+        Arduino.logger.setLevel(logging.WARNING)
+        jprint('set WARNING level in Arduino logger')
 
     def find_pin(self, __pin):
         for p in self.pins:
@@ -95,33 +123,41 @@ class Arduino(JPrint):
                 if allpins:
                     p.prevstate = p.state
                 self.pin_reaction(p)
-        if self.DCCheckTimer <= 0:
-            val = self.write_to_port('A', 1, 0)
-            voltage_now = round(gf.map_func(val, 0, 1023, 0, 40.1), 2)
-            self.DCVolArray.pop(0)
-            self.DCVolArray.append(voltage_now)
-            self.DCVol = round(gf.array_ma(self.DCVolArray), 2)
-            percent = round(gf.map_func(self.DCVol, 22, 27, 0, 100), 0)
-            if percent > 100:
-                percent = 100
-            elif percent < 0:
-                percent = 0
-            self.DCVoltageInPercent = percent
-            if self.DCVoltageInPercent == 100:
-                self.DCVolLowAlertSended = False
 
-            acc_exist = val = self.write_to_port('A', 0, 0)
-            # self.jprint(acc_exist)
-            if acc_exist > 500:
-                self.ACCExist = True
-            else:
-                if self.ACCExist:
-                    self.ACNonExistStartTimer = datetime.now()
-                self.ACCExist = False
-            # self.jprint(self.ACCExist)
-            self.DCCheckTimer = 50
+        val = self.write_to_port('A', 1, 0)
+        voltage_now = round(gf.map_func(val, 0, 1023, 0, 40.1), 2)
+        self.DCVolArray.pop(0)
+        self.DCVolArray.append(voltage_now)
+        self.DCVol = round(gf.array_ma(self.DCVolArray), 2)
+        percent = round(gf.map_func(self.DCVol, 22, 27, 0, 100), 0)
+        if percent > 100:
+            percent = 100
+        elif percent < 0:
+            percent = 0
+        self.DCVoltageInPercent = percent
+        if self.DCVoltageInPercent == 100:
+            self.DCVolLowAlertSended = False
+
+        val = self.write_to_port('A', 0, 0)
+        if val > 600:
+            if not self._ac_exist:
+                Arduino.logger.debug('Включилось напряжение на входе')
+                self._ac_exist = True
         else:
-            self.DCCheckTimer -= 1
+            if self._ac_exist:
+                Arduino.logger.debug('Отключилось напряжение на входе')
+                self._ac_non_exist_start_timer = datetime.now()
+                self._ac_exist = False
+
+    @property
+    def ac_exist(self):
+        return self._ac_exist
+
+    def time_without_ac(self, in_str:bool = False):
+        if in_str:
+            return gf.difference_between_date(self._ac_non_exist_start_timer, datetime.now())
+        else:
+            return (datetime.now() - self._ac_non_exist_start_timer).total_seconds()
 
     def pin_reaction(self, p):
         # p - swich (S-pin)
@@ -222,8 +258,8 @@ class Arduino(JPrint):
         if not self.initialized:
             self.jprint('I have not found the Arduino...')
             self.jprint("Sorry, but i can't work whithout Arduino subcontroller :(")
-            # self.jprint("I'm have to try to find it after one second pause")
-            #raise RuntimeError("can't load Arduino controller")
+            Arduino.logger.debug("I'm have to try to find it after one second pause")
+            Arduino.logger.debug("can't load Arduino controller")
         else:
             self.jprint(f'Arduino is initialized on port {self.port.name}')
             self.load_pinstate()
@@ -324,7 +360,7 @@ class Arduino(JPrint):
         for w in _wordlist:
             if w not in self.__not_important_words:
                 wordlist.append(w)
-        PinAuction = []
+        _pin_auction = []
         for p in self.pins:
             if p.output or allpins:  # добавляем выходы в аукцион
                 ct_all = []
@@ -333,40 +369,39 @@ class Arduino(JPrint):
                 ct_all.append(p.description)
                 ct_all.append(str(p.num))
                 ct_all.append(p.name.lower())
-                PinAuction.append([p.num, ct_all, 0])
+                _pin_auction.append([p.num, ct_all, 0])
 
         for word in wordlist:
-            for PA in PinAuction:
-                includes = 0
-                # self.jprint(f'count points for {PA[0]}')
-                for ct in PA[1]:
+            for _pa in _pin_auction:
+                Arduino.logger.debug(f'count points for {_pa[0]}')
+                for ct in _pa[1]:
                     if ct.lower() == word:
-                        PA[2] += 2
-                        # self.jprint(f'word = {word} 2 points')
+                        _pa[2] += 2
+                        Arduino.logger.debug(f'word = {word} 2 points')
                     elif ct.lower().find(word) > -1:
-                        PA[2] += 1
-                        # self.jprint(f'word find {word} 1 point')
+                        _pa[2] += 1
+                        Arduino.logger.debug(f'word find {word} 1 point')
 
-        MaxIncludes = 0
-        Winners = []
-        for PA in PinAuction:
-            if PA[2] > MaxIncludes:
-                MaxIncludes = PA[2]
+        _max_includes = 0
+        _winners = []
+        for _pa in _pin_auction:
+            if _pa[2] > _max_includes:
+                _max_includes = _pa[2]
 
-        if MaxIncludes > 0:
-            for PA in PinAuction:
-                if PA[2] == MaxIncludes:
-                    Winners.append(self.find_pin(PA[0]))
+        if _max_includes > 0:
+            for _pa in _pin_auction:
+                if _pa[2] == _max_includes:
+                    _winners.append(self.find_pin(_pa[0]))
 
-        if len(Winners) == 1:
-            # self.jprint(f'winner is {Winners[0].description}')
-            # self.jprint(f'winner get {MaxIncludes} points')
-            return Winners[0]
-        elif len(Winners) > 1:
-            #self.jprint('Winners more than one')
-            #self.jprint(f'its get {MaxIncludes} points')
-            return Winners
+        if len(_winners) == 1:
+            Arduino.logger.debug(f'winner is {_winners[0].description}')
+            Arduino.logger.debug(f'winner get {_max_includes} points')
+            return _winners[0]
+        elif len(_winners) > 1:
+            Arduino.logger.debug('_winners more than one')
+            Arduino.logger.debug(f'its get {_max_includes} points')
+            return _winners
         else:
-            #self.jprint('winner not found')
-            #self.jprint('winner not found')
+            Arduino.logger.debug('winner not found')
+            Arduino.logger.debug('winner not found')
             return None
