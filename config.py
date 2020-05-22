@@ -13,5 +13,6 @@ MINER_EXE_LIST = []
 MINER_EXE_LIST.append('EthDcrMiner64.exe')
 MINER_EXE_LIST.append('OhGodAnETHlargementPill-r2.exe')
 
+SATELLITE_NAME = ''
 SATELLITE_IP = '192.168.18.30'
 SATELLITE_PORT = 8585
