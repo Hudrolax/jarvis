@@ -169,18 +169,22 @@ class Jarvis_Satellite_Server(CommunicationServer):
         return answer
 
 if __name__ == '__main__':
-    from time import sleep
+    pass
 
-    server = Jarvis_Satellite_Server(name='Jarvis')
-    server.add_miner('serverx')
-    server.add_miner('zeon')
-    server.add_miner('tekilla')
+    print(isinstance(27.1, float))
 
-    server.start()
-
-    while True:
-        sleep(10)
-        server.stop_miners()
-        sleep(10)
-        server.start_miners()
-    server.stop()
+    # from time import sleep
+    #
+    # server = Jarvis_Satellite_Server(name='Jarvis')
+    # server.add_miner('serverx')
+    # server.add_miner('zeon')
+    # server.add_miner('tekilla')
+    #
+    # server.start()
+    #
+    # while True:
+    #     sleep(10)
+    #     server.stop_miners()
+    #     sleep(10)
+    #     server.start_miners()
+    # server.stop()

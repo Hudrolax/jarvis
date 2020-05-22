@@ -237,7 +237,7 @@ if __name__ == "__main__":
                 input_str = queue_typle[0]
                 user = queue_typle[1]
                 message = queue_typle[2]
-                answer = command_processing.command_processing(input_str, user, message, bot)
+                answer = command_processing.command_processing(input_str, user, message, bot, satellite_server)
                 jprint(answer)
             arduino.check_input_pins()
             reglament_work()

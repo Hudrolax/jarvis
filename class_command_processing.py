@@ -18,7 +18,7 @@ else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d/%m/%y %H:%M:%S')
 
 # Command processing class
-class CommandProcessing():
+class CommandProcessing:
     logger = logging.getLogger('Command processing')
     logger.setLevel(LOG_LEVEL)
 
@@ -42,7 +42,7 @@ class CommandProcessing():
         self._telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
 
-    def command_processing(self, cmd, telegramuser, message, bot):
+    def command_processing(self, cmd, telegramuser, message, bot, satellite_server):
         def get_access_error():
             return 'У вас нет доступа к этой команде\n'
         info = CommandProcessing.logger.info
@@ -80,7 +80,7 @@ class CommandProcessing():
                 if 'свет' in cmd_list and ('везде' in cmd_list or 'доме' in cmd_list or 'дома' in cmd_list):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                         for p in self._arduino.pins:
-                            if p.output and 'свет' in p.ConvertibleTerms and 'дом' in p.ConvertibleTerms:
+                            if p.output and 'свет' in p.convertible_terms and 'дом' in p.convertible_terms:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                     self._arduino.set_pin(p, 1)
                                     jprint(f'Включил свет в {p.description}')
@@ -92,8 +92,8 @@ class CommandProcessing():
                 elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                         for p in self._arduino.pins:
-                            if 'свет' in p.ConvertibleTerms and 'первый' in p.ConvertibleTerms and (
-                                    'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
+                            if 'свет' in p.convertible_terms and 'первый' in p.convertible_terms and (
+                                    'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                     self._arduino.set_pin(p, 1)
                                     jprint(f'Включил свет в {p.description}')
@@ -105,8 +105,8 @@ class CommandProcessing():
                 elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                         for p in self._arduino.pins:
-                            if 'свет' in p.ConvertibleTerms and 'втором' in p.ConvertibleTerms and (
-                                    'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
+                            if 'свет' in p.convertible_terms and 'втором' in p.convertible_terms and (
+                                    'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                     self._arduino.set_pin(p, 1)
                                     jprint(f'Включил свет в {p.description}')
@@ -143,7 +143,7 @@ class CommandProcessing():
                                 answer += get_access_error()
                         else:
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
-                                    telegramuser != None and telegramuser.name in WinnerPin.ConvertibleTerms):
+                                    telegramuser != None and telegramuser.name in WinnerPin.convertible_terms):
                                 if telegramuser != None and telegramuser.level <= 0 and WinnerPin.blocked or telegramuser == None or not WinnerPin.blocked:
                                     a = self._arduino.set_pin(WinnerPin, 1)
                                     if a == True:
@@ -162,7 +162,7 @@ class CommandProcessing():
                 if 'свет' in cmd_list and ('везде' in cmd_list or 'доме' in cmd_list or 'дома' in cmd_list):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                         for p in self._arduino.pins:
-                            if p.output and 'свет' in p.ConvertibleTerms and 'дом' in p.ConvertibleTerms:
+                            if p.output and 'свет' in p.convertible_terms and 'дом' in p.convertible_terms:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                     self._arduino.set_pin(p, 0)
                                     jprint(f'Выключил свет в {p.description}')
@@ -174,8 +174,8 @@ class CommandProcessing():
                 elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                         for p in self._arduino.pins:
-                            if 'свет' in p.ConvertibleTerms and 'первом' in p.ConvertibleTerms and (
-                                    'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
+                            if 'свет' in p.convertible_terms and 'первом' in p.convertible_terms and (
+                                    'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                     self._arduino.set_pin(p, 0)
                                     jprint(f'Выключил свет в {p.description}')
@@ -187,8 +187,8 @@ class CommandProcessing():
                 elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                         for p in self._arduino.pins:
-                            if 'свет' in p.ConvertibleTerms and 'втором' in p.ConvertibleTerms and (
-                                    'этаж' in p.ConvertibleTerms or 'этаже' in p.ConvertibleTerms) and p.output:
+                            if 'свет' in p.convertible_terms and 'втором' in p.convertible_terms and (
+                                    'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                     self._arduino.set_pin(p, 0)
                                     jprint(f'Выключил свет в {p.description}')
@@ -224,7 +224,7 @@ class CommandProcessing():
                                 answer += get_access_error()
                         else:
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
-                                    telegramuser != None and telegramuser.name in WinnerPin.ConvertibleTerms):
+                                    telegramuser != None and telegramuser.name in WinnerPin.convertible_terms):
                                 if telegramuser != None and telegramuser.level <= 0 and WinnerPin.blocked or telegramuser == None or not WinnerPin.blocked:
                                     a = self._arduino.set_pin(WinnerPin, 0)
                                     if a == True:
@@ -243,7 +243,7 @@ class CommandProcessing():
                     'было' in cmd_list or 'обратно' in cmd_list)) or 'пошутил' in cmd_list or 'шутка' in cmd_list:
                 if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                     for p in self._arduino.pins:
-                        if (datetime.now() - p.LastRevTime).total_seconds() <= 30:
+                        if (datetime.now() - p.last_rev_time).total_seconds() <= 30:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                 a = self._arduino.set_pin(p, p.prevstate)  # prev pin state
                                 jprint(f'pin {p.num} is {a}')
@@ -266,7 +266,7 @@ class CommandProcessing():
                                             self._arduino.set_pin(p, 1)
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
-                                    elif p.output and 'свет' in p.ConvertibleTerms and 'первый' in p.ConvertibleTerms and 'этаж' in p.ConvertibleTerms:
+                                    elif p.output and 'свет' in p.convertible_terms and 'первый' in p.convertible_terms and 'этаж' in p.convertible_terms:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                             self._arduino.set_pin(p, 0)
                                         else:
@@ -281,12 +281,12 @@ class CommandProcessing():
                             answer += 'Нужно уточнить, что конкретно оставить.\n'
                     else:
                         if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
-                                telegramuser != None and telegramuser.name in WinnerPin.ConvertibleTerms):
+                                telegramuser != None and telegramuser.name in WinnerPin.convertible_terms):
                             HouseLevel = 'первый'
-                            if 'второй' in WinnerPin.ConvertibleTerms:  # Определяем к какому этажу относится команда
+                            if 'второй' in WinnerPin.convertible_terms:  # Определяем к какому этажу относится команда
                                 HouseLevel = 'второй'
                             for p in self._arduino.pins:
-                                if p.output and 'свет' in p.ConvertibleTerms and HouseLevel in p.ConvertibleTerms and 'этаж' in p.ConvertibleTerms:
+                                if p.output and 'свет' in p.convertible_terms and HouseLevel in p.convertible_terms and 'этаж' in p.convertible_terms:
                                     if p == WinnerPin:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                             a = self._arduino.set_pin(p, 1)
@@ -456,7 +456,7 @@ class CommandProcessing():
                         answer += 'Включенный свет:\n'
                         k = 0
                         for p in self._arduino.pins:
-                            if p.output and 'свет' in p.ConvertibleTerms and p.state:
+                            if p.output and 'свет' in p.convertible_terms and p.state:
                                 if k > 0:
                                     answer += ' ,'
                                 answer += f'{p.description}'
@@ -476,11 +476,21 @@ class CommandProcessing():
                     else:
                         answer += "<не могу найти пин насосов  по description 'насосы'>"
                     answer += '\n'
+                    answer += 'майнеры: '
+                    k=0
+                    for miner in satellite_server.miners:
+                        if miner.runned:
+                            if k>0:
+                                answer += ', '
+                            k+1
+                            answer += miner.name
+                    answer += '\n'
+
                     ACNet = 'есть'
                     if not self._arduino.ac_exist:
                         ACNet = 'НЕТ'
                     answer += f'Напряжение в сети {ACNet}\n'
-                    answer += f'Напряжение аккумулятора {self._arduino.DCVol} V ({self._arduino.DCVoltageInPercent} %)\n'
+                    answer += f'Напряжение аккумулятора {self._arduino.dc_value} V ({self._arduino.DCVoltageInPercent} %)\n'
                 else:
                     answer += get_access_error()
             elif cmd == 'exit':
@@ -489,6 +499,13 @@ class CommandProcessing():
                     Runned.runned = False
                 else:
                     answer += get_access_error()
+            elif cmd.find('запусти') > -1 and cmd.find('майнинг') > -1:
+                satellite_server.start_miners()
+                answer += 'запустил майнинг\n'
+            elif (cmd.find('останови') > -1 or cmd.find('заверши') > -1 or cmd.find('выключи') > -1 or
+                  cmd.find('выруби') > -1) and cmd.find('майнинг') > -1:
+                satellite_server.stop_miners()
+                answer = 'остановил майнинг\n'
             elif cmd == 'info':
                 self._arduino.set_info()
                 CommandProcessing.set_info()
