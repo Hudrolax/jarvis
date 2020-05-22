@@ -173,6 +173,8 @@ if __name__ == '__main__':
 
     server = Jarvis_Satellite_Server(name='Jarvis')
     server.add_miner('serverx')
+    server.add_miner('zeon')
+    server.add_miner('tekilla')
 
     server.start()
 
