@@ -94,7 +94,7 @@ class Jarvis_Satellite_client(CommunicationClient):
 
 
 if __name__ == '__main__':
-    if SATELLITE_NAME is '':
+    if SATELLITE_NAME == '':
         raise Exception('SATELLITE_NAME is not exist')
     tcp_client = Jarvis_Satellite_client(SATELLITE_NAME, SATELLITE_IP, SATELLITE_PORT)
     tcp_client.start()
