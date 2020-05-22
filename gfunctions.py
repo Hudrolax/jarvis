@@ -1,5 +1,7 @@
 from datetime import datetime
 
+VERSION = "1.07"
+
 class Runned:
     _RUNNED = False
 

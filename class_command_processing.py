@@ -4,6 +4,7 @@ from config import *
 from gfunctions import Runned
 from gfunctions import JPrint
 from gfunctions import difference_between_date
+from gfunctions import VERSION
 from datetime import datetime
 jprint = JPrint.jprint
 
@@ -466,6 +467,7 @@ class CommandProcessing:
                         answer += '\n'
                     answer += '\n'
 
+                    # инфа по насосам
                     answer += "Насосы "
                     pumpsPin = self._arduino.find_pin("насосы")
                     if pumpsPin is not None:
@@ -476,6 +478,8 @@ class CommandProcessing:
                     else:
                         answer += "<не могу найти пин насосов  по description 'насосы'>"
                     answer += '\n'
+
+                    # инфа по майнерам
                     answer += 'майнеры: '
                     k=0
                     for miner in satellite_server.miners:
@@ -484,8 +488,11 @@ class CommandProcessing:
                                 answer += ', '
                             k += 1
                             answer += miner.name
+                    if k==0:
+                        answer += 'все выключены'
                     answer += '\n'
 
+                    # инфа по напряжениям
                     ACNet = 'есть'
                     if not self._arduino.ac_exist:
                         ACNet = 'НЕТ'
