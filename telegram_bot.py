@@ -249,7 +249,6 @@ class TelegramBot(telebot.TeleBot, JPrint):
 
     def stop(self):
         self._started = False
-        self.stop_bot()
 
 
 if __name__ == '__main__':
