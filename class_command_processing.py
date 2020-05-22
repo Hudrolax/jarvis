@@ -482,7 +482,7 @@ class CommandProcessing:
                         if miner.runned:
                             if k>0:
                                 answer += ', '
-                            k+1
+                            k += 1
                             answer += miner.name
                     answer += '\n'
 
