@@ -3,6 +3,7 @@ import socket
 import logging
 import threading
 from config import *
+from time import sleep
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
@@ -66,6 +67,7 @@ class CommunicationServer():
     def _tcp_server(self): # hendler take client:str and data:str parameters
         debug = CommunicationServer.logger.debug
         info = CommunicationServer.logger.info
+        error = CommunicationServer.logger.error
         server_socket = socket.socket()
         while True:
             try:
@@ -76,7 +78,7 @@ class CommunicationServer():
                     server_socket.close()
                 except:
                     pass
-            raise Exception(f"Can't bind {self.ip}:{self.port}")
+                error(f"Can't bind {self.ip}:{self.port}")
             sleep(1)
         server_socket.listen(1)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
