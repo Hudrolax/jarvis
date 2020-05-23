@@ -81,6 +81,8 @@ class CommunicationServer():
                     pass
                 error(f"Can't bind {self.ip}:{self.port}")
             sleep(1)
+        else:
+            return None
         self.server_socket.listen(1)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
