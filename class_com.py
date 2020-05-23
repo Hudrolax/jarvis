@@ -37,6 +37,7 @@ class CommunicationServer():
         self._own_server_adress = (ip, port)
         self._started = False
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
+        self.server_socket = socket.socket()
 
     def __str__(self):
         return self.name
@@ -59,6 +60,7 @@ class CommunicationServer():
 
     def stop(self):
         self._started = False
+        self.server_socket.close()
 
     def handler(self, client, data):
         #CommunicationServer.logger.debug('call handler')
@@ -68,22 +70,21 @@ class CommunicationServer():
         debug = CommunicationServer.logger.debug
         info = CommunicationServer.logger.info
         error = CommunicationServer.logger.error
-        server_socket = socket.socket()
-        while True:
+        while self._started:
             try:
-                server_socket.bind(self._own_server_adress)
+                self.server_socket.bind(self._own_server_adress)
                 break
             except:
                 try:
-                    server_socket.close()
+                    self.server_socket.close()
                 except:
                     pass
                 error(f"Can't bind {self.ip}:{self.port}")
             sleep(1)
-        server_socket.listen(1)
+        self.server_socket.listen(1)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
-            connection, client_address = server_socket.accept()
+            connection, client_address = self.server_socket.accept()
             debug(f"new connection from {client_address}")
             data = clear_str(connection.recv(1024).decode("utf-8"))
             debug(f"received data: {data}")
@@ -96,7 +97,7 @@ class CommunicationServer():
                 connection.send(bytes(answer, encoding='utf-8'))
             connection.close()
             debug(f'connection from {client_address} closed')
-        server_socket.close()
+        self.server_socket.close()
 
 class CommunicationClient():
     logger = logging.getLogger('Comm client')
