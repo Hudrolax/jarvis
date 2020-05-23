@@ -483,13 +483,13 @@ class CommandProcessing:
                     answer += 'майнеры: '
                     k=0
                     for miner in satellite_server.miners:
-                        if miner.runned:
+                        if miner.online:
                             if k>0:
                                 answer += ', '
                             k += 1
-                            answer += miner.name
+                            answer += miner.name + f'({miner.runned_text()})'
                     if k==0:
-                        answer += 'все выключены'
+                        answer += 'все offline'
                     answer += '\n'
 
                     # инфа по напряжениям
@@ -497,7 +497,7 @@ class CommandProcessing:
                     if not self._arduino.ac_exist:
                         ACNet = 'НЕТ'
                     answer += f'Напряжение в сети {ACNet}\n'
-                    answer += f'Напряжение аккумулятора {self._arduino.dc_value} V ({self._arduino.DCVoltageInPercent} %)\n'
+                    answer += f'Напряжение аккумулятора {self._arduino.dc_value} V ({self._arduino.dc_voltage_in_percent} %)\n'
                 else:
                     answer += get_access_error()
             elif cmd == 'exit':

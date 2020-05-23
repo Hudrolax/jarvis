@@ -30,14 +30,40 @@ class Arduino(JPrint):
         self.pinstate_file = pinstate_file
         self._dc_val_array = [27 for i in range(20)]
         self._dc_value = 27
-        self.DCVolLowAlertSended = False
-        self.DCVoltageInPercent = 100
+        self._dc_low_alert_sended = False
+        self._dc_voltage_in_percent = 100
         self._ac_exist = True
-        self.ACAlertSended = False
+        self._ac_alert_sended = False
         self._ac_non_exist_start_timer = datetime.now()
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
+
+    @property
+    def ac_alert_sended(self):
+        return self._ac_alert_sended
+
+    @ac_alert_sended.setter
+    def ac_alert_sended(self, val):
+        if isinstance(val, bool):
+            self._ac_alert_sended = val
+        else:
+            TypeError(f'Arduino exaption: ac_alert_sended unexpected {type(val)}, expected "bool"')
+
+    @property
+    def dc_voltage_in_percent(self):
+        return self._dc_voltage_in_percent
+
+    @property
+    def dc_low_alert_sended(self):
+        return self._dc_low_alert_sended
+
+    @dc_low_alert_sended.setter
+    def dc_low_alert_sended(self, val):
+        if isinstance(val, bool):
+            self._dc_low_alert_sended = val
+        else:
+            TypeError(f'Arduino exaption: dc_low_alert_sended unexpected {type(val)}, expected "bool"')
 
     @property
     def dc_value(self):
@@ -48,7 +74,7 @@ class Arduino(JPrint):
         if isinstance(val, int) or isinstance(val, float):
             self._dc_value = val
         else:
-            Exception(f'Arduino exaption: dc_value unexpected {type(val)}, expected "int" or "float"')
+            TypeError(f'Arduino exaption: dc_value unexpected {type(val)}, expected "int" or "float"')
 
     @staticmethod
     def set_info():
@@ -145,9 +171,9 @@ class Arduino(JPrint):
             percent = 100
         elif percent < 0:
             percent = 0
-        self.DCVoltageInPercent = percent
-        if self.DCVoltageInPercent == 100:
-            self.DCVolLowAlertSended = False
+        self._dc_voltage_in_percent = percent
+        if self._dc_voltage_in_percent == 100:
+            self._dc_low_alert_sended = False
 
         val = self.write_to_port('A', 0, 0)
         if val > 600:

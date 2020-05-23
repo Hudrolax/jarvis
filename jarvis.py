@@ -136,13 +136,13 @@ def reglament_work():
             arduino.LastSetStateOutDoorLight = False
 
     # Сообщим, что пропало напряжение на входе
-    if not arduino.ac_exist and not arduino.ACAlertSended:
+    if not arduino.ac_exist and not arduino.ac_alert_sended:
         for user in bot.get_users():
             if user.level == 0:
                 # if True or user.level == 0 or user.level == 3:
                 bot.add_to_queue(user.id, 'Отключилось напряжение на входе в дом!\n')
-        arduino.ACAlertSended = True
-    elif arduino.ac_exist and arduino.ACAlertSended:
+        arduino.ac_alert_sended = True
+    elif arduino.ac_exist and arduino.ac_alert_sended:
         for user in bot.get_users():
             # if True or user.level == 0 or user.level == 3:
             if user.level == 0:
@@ -150,21 +150,21 @@ def reglament_work():
                 _message += f'Электричества не было {arduino.time_without_ac(in_str=True)}'
 
                 bot.add_to_queue(user.id, _message)
-        arduino.ACAlertSended = False
+        arduino.ac_alert_sended = False
 
     # Сообщить, что напряжение аккумулятора низкое
-    if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
+    if arduino.dc_voltage_in_percent <= 20 and not arduino.dc_low_alert_sended:
         for user in bot.get_users():
             if True or user.level == 0 or user.level == 3:
                 bot.add_to_queue(user.id,
                                         'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
-        arduino.DCVolLowAlertSended = True
+        arduino.dc_low_alert_sended = True
 
     # Реакция пинов на разряд аккумулятора без входного напряжения
     if not arduino.ac_exist:
         # Отключаем пины по уровню разряда, если ни включены
         for p in arduino.pins:
-            if p.output and p.state and not p.bcod_reaction and arduino.DCVoltageInPercent <= p.bcod:
+            if p.output and p.state and not p.bcod_reaction and arduino.dc_voltage_in_percent <= p.bcod:
                 arduino.set_pin(p, 0)
                 jprint(f'Отключил {p.description} по разряду аккумулятора')
                 p.bcod_reaction = True
