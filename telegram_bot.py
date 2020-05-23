@@ -230,7 +230,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
                     try:
                         telebot.apihelper.proxy = {'https': prox}
                         self._append_goodproxy(prox)
-                        self.jprint('Try connect to Telegramm...')
+                        self.jprint(f'Try connect to Telegramm with proxy {prox}')
                         self.polling(none_stop=True)
                     except:
                         error('I am have some problem with connect to Telegramm')
