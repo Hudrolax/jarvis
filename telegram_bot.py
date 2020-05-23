@@ -74,8 +74,10 @@ class Message:
 
 class TelegramBot(telebot.TeleBot, JPrint):
     PROXY_LIST_SITE_LIST = []
+    PROXY_LIST_SITE_LIST.append('https://proxy11.com/api/proxy.txt?key=MTI1NA.XskQNw.D_-LUWh32lYWvpZI9Bb_AAHN0Yg')
     PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http')
     PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http&anon=elite')
+    PROXY_LIST_SITE_LIST.append('http://pubproxy.com/api/proxy?format=txt')
 
     logger = logging.getLogger('Telegram_bot')
 
@@ -205,13 +207,19 @@ class TelegramBot(telebot.TeleBot, JPrint):
                 for _proxy in TelegramBot.PROXY_LIST_SITE_LIST:
                     try:
                         content = str(requests.get(_proxy).content)
+                        content = content.replace(r'\r\n', ',')
+                        content = content.replace("b'", '')
+                        content = content.replace(",'", '')
+                        content = content.replace("'", '')
+                        if content == '':
+                            error(f'empty proxy list in {_proxy}')
+                            sleep(11)
+                            continue
                         break
                     except:
                         warning(f"can't load {_proxy}")
-                content = content.replace(r'\r\n', ',')
-                content = content.replace("b'", '')
-                content = content.replace(",'", '')
-                self.jprint(content)
+                        sleep(11)
+
                 a = content.split(',')
                 self.jprint('Im try load good proxylist')
                 gp_list = self._load_good_proxylist()
@@ -263,5 +271,9 @@ if __name__ == '__main__':
     #     if 'fff5555' == user.id:
     #         _user = user
     #         print(_user.name)
-    content = str(requests.get('https://www.prttoxy-list.download/api/v1/get?type=http').content)
+    content = str(requests.get('https://proxy11.com/api/proxy.txt?key=MTI1NA.XskQNw.D_-LUWh32lYWvpZI9Bb_AAHN0Yg').content)
+    content = content.replace(r'\r\n', ',')
+    content = content.replace("b'", '')
+    content = content.replace(",'", '')
+    content = content.replace("'", '')
     print(content)
