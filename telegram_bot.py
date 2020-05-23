@@ -211,6 +211,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
                 content = content.replace(r'\r\n', ',')
                 content = content.replace("b'", '')
                 content = content.replace(",'", '')
+                self.jprint(content)
                 a = content.split(',')
                 self.jprint('Im try load good proxylist')
                 gp_list = self._load_good_proxylist()
