@@ -80,6 +80,7 @@ class CommunicationServer():
                 except:
                     pass
                 error(f"Can't bind {self.ip}:{self.port}")
+                Runned.runned = False
             sleep(1)
         else:
             return None
