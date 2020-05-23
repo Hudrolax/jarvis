@@ -234,7 +234,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
                 error(f"error in parse proxy list content")
                 sleep(0.1)
                 continue
-            self.jprint(contarr)
+            #self.jprint(contarr)
             for prox in contarr:
                 if prox != '':
                     try:

@@ -32,6 +32,7 @@ class Jarvis_Satellite_client(CommunicationClient):
         self._runned = False
         self._handler_thread = threading.Thread(target=self._handler, args=(), daemon=True)
         self._ping_thread = threading.Thread(target=self._ping, args=(), daemon=True)
+        self._miner_is_runned = False
 
     @staticmethod
     def start_miner():
@@ -41,8 +42,39 @@ class Jarvis_Satellite_client(CommunicationClient):
     @staticmethod
     def kill_miner():
         warning = Jarvis_Satellite_client.logger.warning
+        critical = Jarvis_Satellite_client.logger.critical
+        try:
+            list_to_kill = MINER_EXE_LIST
+        except:
+            error_message = 'Нет константы MINER_EXE_LIST типа List в config.py\n'
+            error_message += 'нужно добавить:\n'
+            error_message += 'MINER_EXE_LIST = []\n'
+            error_message += 'MINER_EXE_LIST.append(<имя программы>)\n'
+            critical(error_message)
+
         for proc in psutil.process_iter():
-            for miner_exe in MINER_EXE_LIST:
+            for miner_exe in list_to_kill:
+                if proc.name() == miner_exe:
+                    try:
+                        proc.kill()
+                    except:
+                        warning(f"can't kill the {proc.name()}")
+
+    @staticmethod
+    def kill_programms_to_instant_kill():
+        warning = Jarvis_Satellite_client.logger.warning
+        critical = Jarvis_Satellite_client.logger.critical
+        try:
+            list_to_kill = PROGRAMMS_TO_INSTANT_KILL
+        except:
+            error_message = 'Нет константы ROGRAMMS_TO_INSTANT_KILL типа List в config.py\n'
+            error_message += 'нужно добавить:\n'
+            error_message += 'PROGRAMMS_TO_INSTANT_KILL = []\n'
+            error_message += 'PROGRAMMS_TO_INSTANT_KILL.append(<имя программы>)\n'
+            critical(error_message)
+
+        for proc in psutil.process_iter():
+            for miner_exe in list_to_kill:
                 if proc.name() == miner_exe:
                     try:
                         proc.kill()
@@ -62,7 +94,7 @@ class Jarvis_Satellite_client(CommunicationClient):
         self._ping_thread.start()
 
     def stop(self):
-        self._runned = True
+        self._runned = False
 
     def _ping(self):
         debug = Jarvis_Satellite_client.logger.debug
@@ -74,21 +106,32 @@ class Jarvis_Satellite_client(CommunicationClient):
     def _handler(self):
         debug = Jarvis_Satellite_client.logger.debug
         info = Jarvis_Satellite_client.logger.info
+        error = Jarvis_Satellite_client.logger.error
         while self._runned:
-            if self.miner_is_runned():
-                debug(f'send "miner_is_runned"')
-                answer = self.send_with_name('miner_is_runned')
-                debug(f'answer is "{answer}"')
-                if answer == 'stop_miner':
-                    info('get stop_miner command')
-                    self.kill_miner()
-            else:
-                debug(f'send "miner_is_not_runned"')
-                answer = self.send_with_name('miner_is_not_runned')
-                debug(f'answer is "{answer}"')
-                if answer == 'start_miner':
-                    info('get start_miner command')
-                    self.start_miner()
+            try:
+                if self.miner_is_runned():
+                    if not self._miner_is_runned:
+                        self._miner_is_runned = True
+                        jprint('Miner was runned')
+                    debug(f'send "miner_is_runned"')
+                    answer = self.send_with_name('miner_is_runned')
+                    debug(f'answer is "{answer}"')
+                    if answer == 'stop_miner':
+                        info('get stop_miner command')
+                        self.kill_miner()
+                else:
+                    if self._miner_is_runned:
+                        self._miner_is_runned = False
+                        jprint('Miner was stopped')
+                    debug(f'send "miner_is_not_runned"')
+                    answer = self.send_with_name('miner_is_not_runned')
+                    debug(f'answer is "{answer}"')
+                    if answer == 'start_miner':
+                        info('get start_miner command')
+                        self.start_miner()
+                self.kill_programms_to_instant_kill()
+            except:
+                error('i get some error in thread')
             sleep(1)
 
 
@@ -101,4 +144,4 @@ if __name__ == '__main__':
 
     while True:
         # do something
-        sleep(1)
+        sleep(10)
