@@ -74,8 +74,8 @@ class Message:
 
 class TelegramBot(telebot.TeleBot, JPrint):
     PROXY_LIST_SITE_LIST = []
-    PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http&anon=elite')
     PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http')
+    PROXY_LIST_SITE_LIST.append('https://www.proxy-list.download/api/v1/get?type=http&anon=elite')
 
     logger = logging.getLogger('Telegram_bot')
 
