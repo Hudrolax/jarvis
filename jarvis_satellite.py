@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../')
+
 from modules.class_com import CommunicationClient
 from modules.gfunctions import JPrint
 from modules.gfunctions import JList

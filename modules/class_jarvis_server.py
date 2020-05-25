@@ -180,10 +180,13 @@ class Jarvis_Satellite_Server(CommunicationServer):
         if self._find_miner(name) is None:
             self._miners.append(Miner(name))
 
-    def handler(self, client, data):
+    def handler(self, client_address, data):
+        # client_address - адрес клиента
+        # data - очищенные данные - только строка
         debug = Jarvis_Satellite_Server.logger.debug
         info = Jarvis_Satellite_Server.logger.info
-        answer = 'None'
+        answer = 'none'
+        # <<обработчик данных
         data = data.split(':')
         if len(data) != 2:
             return None
@@ -211,7 +214,6 @@ class Jarvis_Satellite_Server(CommunicationServer):
                 miner.stop_it = False
                 if miner.start_it:
                     answer = 'start_miner'
-
         return answer
 
 if __name__ == '__main__':

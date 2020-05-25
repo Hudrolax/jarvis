@@ -62,14 +62,37 @@ class CommunicationServer():
         self._started = False
         self.server_socket.close()
 
-    def handler(self, client, data):
-        #CommunicationServer.logger.debug('call handler')
-        return 'None'
+    def handler_wrapper(self, connection, client_address):
+        debug = self.logger.debug
+        data = clear_str(connection.recv(1024).decode("utf-8"))
+        logging.debug(f"received data: {data}")
+        answer = 'None'
+
+        # << Оборачиваемая функция
+        answer = self.handler(client_address, data)
+        # >> Оборачиваемая функция
+
+        debug(f'answer is "{answer}"')
+        if answer is not None:
+            debug(f'send an answer to {client_address}')
+            connection.sendall(bytes(answer, encoding='utf-8'))
+        connection.close()
+        debug(f'connection from {client_address} closed')
+
+    def handler(self, client_address, data):
+        # client_address - адрес клиента
+        # data - очищенные данные - только строка
+
+        # <<обработчик данных
+        answer = 'none'
+        pass
+        return answer
+        # >>
 
     def _tcp_server(self): # hendler take client:str and data:str parameters
-        debug = CommunicationServer.logger.debug
-        info = CommunicationServer.logger.info
-        error = CommunicationServer.logger.error
+        debug = self.logger.debug
+        info = self.logger.info
+        error = self.logger.error
         while self._started:
             try:
                 self.server_socket.bind(self._own_server_adress)
@@ -89,17 +112,9 @@ class CommunicationServer():
         while self._started:
             connection, client_address = self.server_socket.accept()
             debug(f"new connection from {client_address}")
-            data = clear_str(connection.recv(1024).decode("utf-8"))
-            debug(f"received data: {data}")
-            # отправляем данные обработчику и получает ответ
-            answer = self.handler(client=client_address, data=data)
+            handle_thread = threading.Thread(target=self.handler_wrapper, args=(connection, client_address), daemon=True)
+            handle_thread.start()
 
-            debug(f'answer is "{answer}"')
-            if answer is not None:
-                debug(f'send an answer to {client_address}')
-                connection.send(bytes(answer, encoding='utf-8'))
-            connection.close()
-            debug(f'connection from {client_address} closed')
         self.server_socket.close()
 
 class CommunicationClient():
@@ -148,23 +163,3 @@ class CommunicationClient():
 
     def send_with_name(self, message):
         return self.send(f'{self.name}:{message}')
-
-    if __name__ == '__main__':
-        class MyServer(CommunicationServer):
-            def __init__(self, *args):
-                super().__init__(*args)
-                self.b = False
-
-            def handler(self, client, data):
-                from gfunctions import JPrint
-                JPrint.jprint(data)
-                self.b = not self.b
-                if self.b:
-                    return 'on\r'
-                else:
-                    return 'off\r'
-
-        server = MyServer('root', '192.168.18.3', 8586)
-        server.start()
-        while True:
-            sleep(1)

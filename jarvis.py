@@ -1,4 +1,7 @@
 # Sergey Nazarov 17.05.2020
+import sys
+sys.path.append('../')
+
 from config import *
 from time import sleep
 from datetime import datetime
