@@ -1,5 +1,7 @@
-from class_com import CommunicationServer
+from .class_com import CommunicationServer
 import logging
+import threading
+from time import sleep
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
@@ -15,15 +17,37 @@ else:
 class Miner():
     logger = logging.getLogger('Miner')
     logger.setLevel(logging.DEBUG)
+    RESET_ONLINE_TIMER = 60
 
     def __init__(self, name:str):
         if not isinstance(name, str):
             raise Exception('miner name is not "str"')
         self._name = name
         self._runned = False
+        self._online = False
+        self._online_reset_timer = Miner.RESET_ONLINE_TIMER
+        self._online_reset_thread = threading.Thread(target=self._reset_online_timer, args=(), daemon=True)
+        self._online_reset_thread.start()
         self._start_it = False
         self._stop_it = False
         self._bcod_reaction = False
+        
+    @property
+    def online(self):
+        return self._online
+    
+    @online.setter
+    def online(self, val):
+        if isinstance(val, bool):
+            self._online = val
+        else:
+            raise TypeError(f'Miner class ERROR: "online" is {type(val)}, but "bool" expected')
+
+    def online_text(self):
+        if self.online:
+            return 'online'
+        else:
+            return 'offline'
 
     @property
     def bcod_reaction(self):
@@ -34,18 +58,24 @@ class Miner():
         if isinstance(val, bool):
             self._bcod_reaction= val
         else:
-            raise Exception(f'Miner class ERROR: "bcod_reaction" is {type(val)}, but "bool" expected')
+            raise TypeError(f'Miner class ERROR: "bcod_reaction" is {type(val)}, but "bool" expected')
 
     @property
     def runned(self):
         return self._runned
 
     @runned.setter
-    def runned(self, runned):
-        if isinstance(runned, bool):
-            self._runned = runned
+    def runned(self, val):
+        if isinstance(val, bool):
+            self._runned = val
         else:
-            raise Exception(f'Miner class ERROR: "runned" is {type(runned)}, but "bool" expected')
+            raise TypeError(f'Miner class ERROR: "runned" is {type(val)}, but "bool" expected')
+
+    def runned_text(self):
+        if self.runned:
+            return 'on'
+        else:
+            return 'off'
 
     @property
     def name(self):
@@ -60,7 +90,7 @@ class Miner():
         if isinstance(val, bool):
             self._start_it = val
         else:
-            raise Exception('start_it bool expected')
+            raise TypeError('start_it bool expected')
 
     @property
     def stop_it(self):
@@ -71,10 +101,23 @@ class Miner():
         if isinstance(val, bool):
             self._stop_it = val
         else:
-            raise Exception('stop_it bool expected')
+            raise TypeError('stop_it bool expected')
 
     def __str__(self):
         return self._name
+    
+    def _reset_online_timer(self):
+        while True:
+            sleep(1)
+            if self._online_reset_timer > 0:
+                self._online_reset_timer -= 1
+            else:
+                self._online_reset_timer = Miner.RESET_ONLINE_TIMER
+                self.online = False
+
+    def it_is_online(self):
+        self.online = True
+        self._online_reset_timer = Miner.RESET_ONLINE_TIMER
 
     def start(self):
         self._start_it = True
@@ -137,10 +180,13 @@ class Jarvis_Satellite_Server(CommunicationServer):
         if self._find_miner(name) is None:
             self._miners.append(Miner(name))
 
-    def handler(self, client, data):
+    def handler(self, client_address, data):
+        # client_address - адрес клиента
+        # data - очищенные данные - только строка
         debug = Jarvis_Satellite_Server.logger.debug
         info = Jarvis_Satellite_Server.logger.info
-        answer = 'None'
+        answer = 'none'
+        # <<обработчик данных
         data = data.split(':')
         if len(data) != 2:
             return None
@@ -148,6 +194,9 @@ class Jarvis_Satellite_Server(CommunicationServer):
         message = data[1]
         debug(f'get "{message}" from {name}')
         if message == 'ping':
+            miner = self._find_miner(name)
+            if miner is not None:
+                miner.it_is_online()
             answer = 'ok'
         elif message == 'miner_is_runned':
             miner = self._find_miner(name)
@@ -165,22 +214,25 @@ class Jarvis_Satellite_Server(CommunicationServer):
                 miner.stop_it = False
                 if miner.start_it:
                     answer = 'start_miner'
-
         return answer
 
 if __name__ == '__main__':
-    from time import sleep
+    pass
 
-    server = Jarvis_Satellite_Server(name='Jarvis')
-    server.add_miner('serverx')
-    server.add_miner('zeon')
-    server.add_miner('tekilla')
+    print(isinstance(27.1, float))
 
-    server.start()
-
-    while True:
-        sleep(10)
-        server.stop_miners()
-        sleep(10)
-        server.start_miners()
-    server.stop()
+    # from time import sleep
+    #
+    # server = Jarvis_Satellite_Server(name='Jarvis')
+    # server.add_miner('serverx')
+    # server.add_miner('zeon')
+    # server.add_miner('tekilla')
+    #
+    # server.start()
+    #
+    # while True:
+    #     sleep(10)
+    #     server.stop_miners()
+    #     sleep(10)
+    #     server.start_miners()
+    # server.stop()

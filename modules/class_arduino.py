@@ -1,10 +1,10 @@
 from datetime import datetime
 from time import sleep
 import serial.tools.list_ports as lp
-import gfunctions as gf
-from gfunctions import JPrint
+from . import gfunctions as gf
+from .gfunctions import JPrint
 jprint = JPrint.jprint
-from class_pins import Pins
+from .class_pins import Pins
 import serial
 import logging
 
@@ -28,16 +28,53 @@ class Arduino(JPrint):
         self.pins = []
         self.config_path = config_path
         self.pinstate_file = pinstate_file
-        self.DCVolArray = [27 for i in range(20)]
-        self.DCVol = 27
-        self.DCVolLowAlertSended = False
-        self.DCVoltageInPercent = 100
+        self._dc_val_array = [27 for i in range(20)]
+        self._dc_value = 27
+        self._dc_low_alert_sended = False
+        self._dc_voltage_in_percent = 100
         self._ac_exist = True
-        self.ACAlertSended = False
+        self._ac_alert_sended = False
         self._ac_non_exist_start_timer = datetime.now()
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
+
+    @property
+    def ac_alert_sended(self):
+        return self._ac_alert_sended
+
+    @ac_alert_sended.setter
+    def ac_alert_sended(self, val):
+        if isinstance(val, bool):
+            self._ac_alert_sended = val
+        else:
+            TypeError(f'Arduino exaption: ac_alert_sended unexpected {type(val)}, expected "bool"')
+
+    @property
+    def dc_voltage_in_percent(self):
+        return self._dc_voltage_in_percent
+
+    @property
+    def dc_low_alert_sended(self):
+        return self._dc_low_alert_sended
+
+    @dc_low_alert_sended.setter
+    def dc_low_alert_sended(self, val):
+        if isinstance(val, bool):
+            self._dc_low_alert_sended = val
+        else:
+            TypeError(f'Arduino exaption: dc_low_alert_sended unexpected {type(val)}, expected "bool"')
+
+    @property
+    def dc_value(self):
+        return self._dc_value
+
+    @dc_value.setter
+    def dc_value(self, val):
+        if isinstance(val, int) or isinstance(val, float):
+            self._dc_value = val
+        else:
+            TypeError(f'Arduino exaption: dc_value unexpected {type(val)}, expected "int" or "float"')
 
     @staticmethod
     def set_info():
@@ -101,7 +138,7 @@ class Arduino(JPrint):
                 # self.jprint(f'set_pin get answer {answer}')
 
         if answer is not None:
-            p.LastRevTime = datetime.now()
+            p.last_rev_time = datetime.now()
             if answer == 3001:
                 p.state = True
             elif answer == 3000:
@@ -126,17 +163,17 @@ class Arduino(JPrint):
 
         val = self.write_to_port('A', 1, 0)
         voltage_now = round(gf.map_func(val, 0, 1023, 0, 40.1), 2)
-        self.DCVolArray.pop(0)
-        self.DCVolArray.append(voltage_now)
-        self.DCVol = round(gf.array_ma(self.DCVolArray), 2)
-        percent = round(gf.map_func(self.DCVol, 22, 27, 0, 100), 0)
+        self._dc_val_array.pop(0)
+        self._dc_val_array.append(voltage_now)
+        self._dc_value = round(gf.array_ma(self._dc_val_array), 2)
+        percent = round(gf.map_func(self._dc_value, 22, 27, 0, 100), 0)
         if percent > 100:
             percent = 100
         elif percent < 0:
             percent = 0
-        self.DCVoltageInPercent = percent
-        if self.DCVoltageInPercent == 100:
-            self.DCVolLowAlertSended = False
+        self._dc_voltage_in_percent = percent
+        if self._dc_voltage_in_percent == 100:
+            self._dc_low_alert_sended = False
 
         val = self.write_to_port('A', 0, 0)
         if val > 600:
@@ -167,8 +204,8 @@ class Arduino(JPrint):
                 if not p.blocked and not b.blocked:
                     self.jprint(f'im set pin {b.description} to {p.state} by pin_reaction in {datetime.now().strftime("%X")}')
                     self.set_pin(b.num, p.state)
-                    p.LastRevTime = datetime.now()
-                    b.LastRevTime = datetime.now()
+                    p.last_rev_time = datetime.now()
+                    b.last_rev_time = datetime.now()
 
     def write_to_port(self, cmd, val1, val2):
         answer = None
@@ -285,12 +322,12 @@ class Arduino(JPrint):
                 _description = line[4]
                 _BCOD = int(line[5])
 
-                _CT = []
+                _ct = []
                 if len(line) > 5:
                     for i in range(6, len(line)):
-                        _CT.append(line[i])
+                        _ct.append(line[i])
                 if self.find_pin(_num) not in self.pins:
-                    self.pins.append(Pins(_output, int(_num), _BCOD, _name, _description, _CT))
+                    self.pins.append(Pins(_output, int(_num), _BCOD, _name, _description, _ct))
             elif line[0] == 'bind':
                 _pin = self.find_pin(line[1])
                 if _pin is not None:
@@ -321,7 +358,7 @@ class Arduino(JPrint):
             for p in self.pins:
                 if not p.output:
                     ct = ''
-                    for c in p.ConvertibleTerms:
+                    for c in p.convertible_terms:
                         ct += f' {c}'
                     f.write(f'pin {p.num} {p.name} input {p.description} {p.BCOD}{ct}' + '\n')
             f.write('\n')
@@ -329,7 +366,7 @@ class Arduino(JPrint):
             for p in self.pins:
                 if p.output:
                     ct = ''
-                    for c in p.ConvertibleTerms:
+                    for c in p.convertible_terms:
                         ct += f' {c}'
                     f.write(f'pin {p.num} {p.name} output {p.description} {p.BCOD}{ct}' + '\n')
             f.write('\n')
@@ -364,7 +401,7 @@ class Arduino(JPrint):
         for p in self.pins:
             if p.output or allpins:  # добавляем выходы в аукцион
                 ct_all = []
-                for c in p.ConvertibleTerms:
+                for c in p.convertible_terms:
                     ct_all.append(c)
                 ct_all.append(p.description)
                 ct_all.append(str(p.num))

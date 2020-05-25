@@ -1,8 +1,9 @@
-from gfunctions import *
+from .gfunctions import *
 import socket
 import logging
 import threading
 from config import *
+from time import sleep
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
@@ -36,6 +37,7 @@ class CommunicationServer():
         self._own_server_adress = (ip, port)
         self._started = False
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
+        self.server_socket = socket.socket()
 
     def __str__(self):
         return self.name
@@ -58,40 +60,62 @@ class CommunicationServer():
 
     def stop(self):
         self._started = False
+        self.server_socket.close()
 
-    def handler(self, client, data):
-        #CommunicationServer.logger.debug('call handler')
-        return 'None'
+    def handler_wrapper(self, connection, client_address):
+        debug = self.logger.debug
+        data = clear_str(connection.recv(1024).decode("utf-8"))
+        logging.debug(f"received data: {data}")
+        answer = 'None'
+
+        # << Оборачиваемая функция
+        answer = self.handler(client_address, data)
+        # >> Оборачиваемая функция
+
+        debug(f'answer is "{answer}"')
+        if answer is not None:
+            debug(f'send an answer to {client_address}')
+            connection.sendall(bytes(answer, encoding='utf-8'))
+        connection.close()
+        debug(f'connection from {client_address} closed')
+
+    def handler(self, client_address, data):
+        # client_address - адрес клиента
+        # data - очищенные данные - только строка
+
+        # <<обработчик данных
+        answer = 'none'
+        pass
+        return answer
+        # >>
 
     def _tcp_server(self): # hendler take client:str and data:str parameters
-        debug = CommunicationServer.logger.debug
-        info = CommunicationServer.logger.info
-        server_socket = socket.socket()
-        try:
-            server_socket.bind(self._own_server_adress)
-        except:
+        debug = self.logger.debug
+        info = self.logger.info
+        error = self.logger.error
+        while self._started:
             try:
-                server_socket.close()
-                server_socket.bind(self._own_server_adress)
+                self.server_socket.bind(self._own_server_adress)
+                break
             except:
-                raise Exception(f"Can't bind {self.ip}:{self.port}")
-        server_socket.listen(1)
+                try:
+                    self.server_socket.close()
+                except:
+                    pass
+                error(f"Can't bind {self.ip}:{self.port}")
+                Runned.runned = False
+            sleep(1)
+        else:
+            return None
+        self.server_socket.listen(1)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
-            connection, client_address = server_socket.accept()
+            connection, client_address = self.server_socket.accept()
             debug(f"new connection from {client_address}")
-            data = clear_str(connection.recv(1024).decode("utf-8"))
-            debug(f"received data: {data}")
-            # отправляем данные обработчику и получает ответ
-            answer = self.handler(client=client_address, data=data)
+            handle_thread = threading.Thread(target=self.handler_wrapper, args=(connection, client_address), daemon=True)
+            handle_thread.start()
 
-            debug(f'answer is "{answer}"')
-            if answer is not None:
-                debug(f'send an answer to {client_address}')
-                connection.send(bytes(answer, encoding='utf-8'))
-            connection.close()
-            debug(f'connection from {client_address} closed')
-        server_socket.close()
+        self.server_socket.close()
 
 class CommunicationClient():
     logger = logging.getLogger('Comm client')

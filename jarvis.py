@@ -1,16 +1,19 @@
 # Sergey Nazarov 17.05.2020
+import sys
+sys.path.append('../')
+
 from config import *
 from time import sleep
 from datetime import datetime
 import threading
 import queue
-import class_arduino
-import class_watchdog
-from gfunctions import JPrint
-from gfunctions import Runned
-from telegram_bot import TelegramBot
-from class_command_processing import CommandProcessing
-from class_jarvis_server import Jarvis_Satellite_Server
+import modules.class_arduino as class_arduino
+import modules.class_watchdog as class_watchdog
+from modules.gfunctions import JPrint
+from modules.gfunctions import Runned
+from modules.telegram_bot import TelegramBot
+from modules.class_command_processing import CommandProcessing
+from modules.class_jarvis_server import Jarvis_Satellite_Server
 import logging
 
 WRITE_LOG_TO_FILE = False
@@ -126,7 +129,10 @@ def handle_docs_audio(message):
 
 
 def reglament_work():
-    if datetime.now().hour >= 19 or datetime.now().hour <= 6:  # включим свет на улице
+    if (datetime.now().month >= 10 and datetime.now().month <= 4 and
+        (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or\
+            (datetime.now().month < 10 and datetime.now().month > 4 and
+         (datetime.now().hour >= 21 or datetime.now().hour <= 5)): # включим свет на улице
         if not arduino.LastSetStateOutDoorLight or arduino.LastSetStateOutDoorLight == None:
             arduino.set_pin(arduino.OutDoorLightPin, 1)
             arduino.LastSetStateOutDoorLight = True
@@ -136,13 +142,13 @@ def reglament_work():
             arduino.LastSetStateOutDoorLight = False
 
     # Сообщим, что пропало напряжение на входе
-    if not arduino.ac_exist and not arduino.ACAlertSended:
+    if not arduino.ac_exist and not arduino.ac_alert_sended:
         for user in bot.get_users():
             if user.level == 0:
                 # if True or user.level == 0 or user.level == 3:
                 bot.add_to_queue(user.id, 'Отключилось напряжение на входе в дом!\n')
-        arduino.ACAlertSended = True
-    elif arduino.ac_exist and arduino.ACAlertSended:
+        arduino.ac_alert_sended = True
+    elif arduino.ac_exist and arduino.ac_alert_sended:
         for user in bot.get_users():
             # if True or user.level == 0 or user.level == 3:
             if user.level == 0:
@@ -150,21 +156,21 @@ def reglament_work():
                 _message += f'Электричества не было {arduino.time_without_ac(in_str=True)}'
 
                 bot.add_to_queue(user.id, _message)
-        arduino.ACAlertSended = False
+        arduino.ac_alert_sended = False
 
     # Сообщить, что напряжение аккумулятора низкое
-    if arduino.DCVoltageInPercent <= 20 and not arduino.DCVolLowAlertSended:
+    if arduino.dc_voltage_in_percent <= 20 and not arduino.dc_low_alert_sended:
         for user in bot.get_users():
             if True or user.level == 0 or user.level == 3:
                 bot.add_to_queue(user.id,
                                         'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
-        arduino.DCVolLowAlertSended = True
+        arduino.dc_low_alert_sended = True
 
     # Реакция пинов на разряд аккумулятора без входного напряжения
     if not arduino.ac_exist:
         # Отключаем пины по уровню разряда, если ни включены
         for p in arduino.pins:
-            if p.output and p.state and not p.bcod_reaction and arduino.DCVoltageInPercent <= p.bcod:
+            if p.output and p.state and not p.bcod_reaction and arduino.dc_voltage_in_percent <= p.bcod:
                 arduino.set_pin(p, 0)
                 jprint(f'Отключил {p.description} по разряду аккумулятора')
                 p.bcod_reaction = True
@@ -237,7 +243,7 @@ if __name__ == "__main__":
                 input_str = queue_typle[0]
                 user = queue_typle[1]
                 message = queue_typle[2]
-                answer = command_processing.command_processing(input_str, user, message, bot)
+                answer = command_processing.command_processing(input_str, user, message, bot, satellite_server)
                 jprint(answer)
             arduino.check_input_pins()
             reglament_work()
@@ -246,4 +252,4 @@ if __name__ == "__main__":
         sleep(0.02)
     satellite_server.stop()
     bot.stop()
-    sleep(3) # wait for stop threads
+    sleep(2) # wait for stop threads

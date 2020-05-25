@@ -1,5 +1,5 @@
 import serial
-from gfunctions import JPrint
+from .gfunctions import JPrint
 import threading
 
 class CWatchDog(JPrint):
