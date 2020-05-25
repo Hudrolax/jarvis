@@ -1,4 +1,4 @@
-from class_com import CommunicationServer
+from .class_com import CommunicationServer
 import logging
 import threading
 from time import sleep

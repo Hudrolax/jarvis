@@ -1,5 +1,5 @@
 import telebot
-from gfunctions import *
+from .gfunctions import *
 from time import sleep
 import requests
 import threading

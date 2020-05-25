@@ -1,4 +1,4 @@
-from gfunctions import *
+from .gfunctions import *
 import socket
 import logging
 import threading
@@ -148,3 +148,23 @@ class CommunicationClient():
 
     def send_with_name(self, message):
         return self.send(f'{self.name}:{message}')
+
+    if __name__ == '__main__':
+        class MyServer(CommunicationServer):
+            def __init__(self, *args):
+                super().__init__(*args)
+                self.b = False
+
+            def handler(self, client, data):
+                from gfunctions import JPrint
+                JPrint.jprint(data)
+                self.b = not self.b
+                if self.b:
+                    return 'on\r'
+                else:
+                    return 'off\r'
+
+        server = MyServer('root', '192.168.18.3', 8586)
+        server.start()
+        while True:
+            sleep(1)

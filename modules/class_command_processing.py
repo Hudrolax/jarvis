@@ -1,10 +1,9 @@
 import logging
 import copy
-from config import *
-from gfunctions import Runned
-from gfunctions import JPrint
-from gfunctions import difference_between_date
-from gfunctions import VERSION
+from .gfunctions import Runned
+from .gfunctions import JPrint
+from .gfunctions import difference_between_date
+from .gfunctions import VERSION
 from datetime import datetime
 jprint = JPrint.jprint
 

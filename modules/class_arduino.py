@@ -1,10 +1,10 @@
 from datetime import datetime
 from time import sleep
 import serial.tools.list_ports as lp
-import gfunctions as gf
-from gfunctions import JPrint
+from . import gfunctions as gf
+from .gfunctions import JPrint
 jprint = JPrint.jprint
-from class_pins import Pins
+from .class_pins import Pins
 import serial
 import logging
 

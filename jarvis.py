@@ -4,13 +4,13 @@ from time import sleep
 from datetime import datetime
 import threading
 import queue
-import class_arduino
-import class_watchdog
-from gfunctions import JPrint
-from gfunctions import Runned
-from telegram_bot import TelegramBot
-from class_command_processing import CommandProcessing
-from class_jarvis_server import Jarvis_Satellite_Server
+import modules.class_arduino as class_arduino
+import modules.class_watchdog as class_watchdog
+from modules.gfunctions import JPrint
+from modules.gfunctions import Runned
+from modules.telegram_bot import TelegramBot
+from modules.class_command_processing import CommandProcessing
+from modules.class_jarvis_server import Jarvis_Satellite_Server
 import logging
 
 WRITE_LOG_TO_FILE = False
@@ -126,7 +126,10 @@ def handle_docs_audio(message):
 
 
 def reglament_work():
-    if datetime.now().hour >= 19 or datetime.now().hour <= 6:  # включим свет на улице
+    if (datetime.now().month >= 10 and datetime.now().month <= 4 and
+        (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or\
+            (datetime.now().month < 10 and datetime.now().month > 4 and
+         (datetime.now().hour >= 21 or datetime.now().hour <= 5)): # включим свет на улице
         if not arduino.LastSetStateOutDoorLight or arduino.LastSetStateOutDoorLight == None:
             arduino.set_pin(arduino.OutDoorLightPin, 1)
             arduino.LastSetStateOutDoorLight = True

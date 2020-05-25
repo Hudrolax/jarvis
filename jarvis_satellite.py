@@ -1,15 +1,15 @@
-from class_com import CommunicationClient
-from gfunctions import JPrint
-from gfunctions import JList
+from modules.class_com import CommunicationClient
+from modules.gfunctions import JPrint
+from modules.gfunctions import JList
 from time import sleep
 from config import *
-from config import *
-list = JList
-jprint = JPrint.jprint
 import logging
 import threading
 import psutil
 import subprocess
+
+list = JList
+jprint = JPrint.jprint
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
