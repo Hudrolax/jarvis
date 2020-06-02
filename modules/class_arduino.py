@@ -388,7 +388,7 @@ class Arduino(JPrint):
         return answer
 
     def find_by_auction(self, cmd, allpins=False):
-        if str(type(cmd)) != "<class 'list'>":
+        if not isinstance(cmd, list):
             cmd = str(cmd)
             _wordlist = cmd.split(' ')
         else:

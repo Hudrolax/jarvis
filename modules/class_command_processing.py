@@ -1,5 +1,7 @@
 import logging
 import copy
+from builtins import isinstance
+
 from .gfunctions import Runned
 from .gfunctions import JPrint
 from .gfunctions import difference_between_date
@@ -206,7 +208,7 @@ class CommandProcessing:
                         WinnerPin = self._arduino.find_by_auction(findlist)
                         if WinnerPin == None:
                             answer += 'Не понятно, что нужно выключить. Уточни команду.\n'
-                        elif str(type(WinnerPin)) == "<class 'list'>":
+                        elif isinstance(WinnerPin, list):
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                                 for p in WinnerPin:
                                     if p.output:
