@@ -17,32 +17,31 @@ if WRITE_LOG_TO_FILE:
 else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
+class TestTCPServer(CommunicationServer):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.b = False
+
+    def handler(self, client_address, data):
+        # client_address - адрес клиента
+        # data - очищенные данные - только строка
+        data = data.split(':')
+        if len(data) == 2:
+            name = data[0]
+            message = data[1]
+            if name == 'test':
+                answer = 'ok'
+            elif name == 'wemos1':
+                self.b = not self.b
+                if self.b:
+                    answer = 'on\r'
+                else:
+                    answer = 'off\r'
+        else:
+            answer = 'none'
+        return answer
+
 if __name__ == '__main__':
-    class TestTCPServer(CommunicationServer):
-        def __init__(self, *args):
-            super().__init__(*args)
-            self.b = False
-
-        def handler(self, client_address, data):
-            # client_address - адрес клиента
-            # data - очищенные данные - только строка
-            data = data.split(':')
-            if len(data) == 2:
-                name = data[0]
-                message = data[1]
-                if name == 'test':
-                    answer = 'ok'
-                elif name == 'wemos1':
-                    self.b = not self.b
-                    if self.b:
-                        answer = 'on\r'
-                    else:
-                        answer = 'off\r'
-            else:
-                answer = 'none'
-            return answer
-
-
     server = TestTCPServer('root', '192.168.18.3', 8586)
     server.start()
     while True:

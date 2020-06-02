@@ -132,7 +132,7 @@ def reglament_work():
     if (datetime.now().month >= 10 and datetime.now().month <= 4 and
         (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or\
             (datetime.now().month < 10 and datetime.now().month > 4 and
-         (datetime.now().hour >= 21 or datetime.now().hour <= 5)): # включим свет на улице
+         (datetime.now().hour >= 20 or datetime.now().hour <= 5)): # включим свет на улице
         if not arduino.LastSetStateOutDoorLight or arduino.LastSetStateOutDoorLight == None:
             arduino.set_pin(arduino.OutDoorLightPin, 1)
             arduino.LastSetStateOutDoorLight = True

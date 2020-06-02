@@ -193,27 +193,30 @@ class Jarvis_Satellite_Server(CommunicationServer):
         name = data[0]
         message = data[1]
         debug(f'get "{message}" from {name}')
-        if message == 'ping':
-            miner = self._find_miner(name)
-            if miner is not None:
-                miner.it_is_online()
+        if name.find('wemos') > -1: # подключается wemos
             answer = 'ok'
-        elif message == 'miner_is_runned':
-            miner = self._find_miner(name)
-            if miner is not None:
-                debug('miner is runned')
-                miner.runned = True
-                miner.start_it = False
-                if miner.stop_it:
-                    answer = 'stop_miner'
-        elif message == 'miner_is_not_runned':
-            miner = self._find_miner(name)
-            if miner is not None:
-                debug("miner is not runned")
-                miner.runned = False
-                miner.stop_it = False
-                if miner.start_it:
-                    answer = 'start_miner'
+        else: # подключается satellite
+            if message == 'ping':
+                miner = self._find_miner(name)
+                if miner is not None:
+                    miner.it_is_online()
+                answer = 'ok'
+            elif message == 'miner_is_runned':
+                miner = self._find_miner(name)
+                if miner is not None:
+                    debug('miner is runned')
+                    miner.runned = True
+                    miner.start_it = False
+                    if miner.stop_it:
+                        answer = 'stop_miner'
+            elif message == 'miner_is_not_runned':
+                miner = self._find_miner(name)
+                if miner is not None:
+                    debug("miner is not runned")
+                    miner.runned = False
+                    miner.stop_it = False
+                    if miner.start_it:
+                        answer = 'start_miner'
         return answer
 
 if __name__ == '__main__':
