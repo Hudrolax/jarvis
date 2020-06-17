@@ -1,6 +1,6 @@
 !.gitignore
-!game.txt
 *.txt
+!game.txt
 .idea/
 __pycache__/
 serial.pickle
