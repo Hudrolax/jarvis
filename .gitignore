@@ -1,4 +1,5 @@
 !.gitignore
+!game.txt
 *.txt
 .idea/
 __pycache__/
