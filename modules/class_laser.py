@@ -34,10 +34,9 @@ class Laser(Rectangle):
             return f'(x={self.x}, y={self.y}, x_speed={self.x_speed}, y_speed={self.y_speed})'
 
     def __init__(self, x_min:int=20, x_max:int=150, y_min:int=0, y_max:int=179):
-        super().__init__(x_min, x_max, y_min, y_max)
-        self._laser_on = False
-        self._distance = 0
         self.parking_point = self.Point(92, 0)
+        super().__init__(x_min, x_max, y_min, y_max, self.parking_point.x, self.parking_point.y)
+        self._laser_on = False
         self._game_mode = False
         self._game_coords = []
         self._game_coords_loaded = False
@@ -83,23 +82,6 @@ class Laser(Rectangle):
         return self._game_coords
 
     @property
-    def distance(self):
-        return self._distance
-
-    @distance.setter
-    def distance(self, val):
-        if isinstance(val, int) or isinstance(val, float):
-            if val > 0:
-                self._distance = val
-        else:
-            try:
-                _val = int(val)
-                if _val > 0:
-                    self._distance = int(val)
-            except TypeError:
-                self.logger.warning(f'distance type error val={val} type is {type(val)}')
-
-    @property
     def game_mode(self):
         return self._game_mode
 
@@ -110,16 +92,18 @@ class Laser(Rectangle):
 
     def homing(self):
         self.logger.info('start homing')
+        self.laser_on = False
+        self._game_mode = False
         while self.game_runned:
             sleep(0.1)
         self.logger.info('start moving axis for homing')
         self.move_axis_to_coord(self.parking_point.x, self.parking_point.y, 2, 2)
-        self.laser_on = False
         print(f'laser homed. Laser is {self.laser_on}')
 
     def rev_game_mode(self):
         self._game_mode = not self._game_mode
         if self._game_mode:
+            self.laser_on = True
             self.logger.info('game mode ON')
         else:
             self.homing()

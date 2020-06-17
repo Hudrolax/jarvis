@@ -1,11 +1,11 @@
 class Rectangle:
-    def __init__(self, x_min, x_max, y_min, y_max):
+    def __init__(self, x_min, x_max, y_min, y_max, init_x, init_y):
         self._x_min = x_min
         self._x_max = x_max
         self._y_min = y_min
         self._y_max = y_max
-        self._x = 90
-        self._y = 90
+        self._x = init_x
+        self._y = init_y
 
     @staticmethod
     def check_values(val, min, max):

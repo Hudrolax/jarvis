@@ -33,22 +33,6 @@ class LaserTCPServer(CommunicationServer):
         # data - очищенные данные - только строка
 
         # logging.info(data)
-        self.laser.distance = data
-        if (self.key_hook.queue.qsize() > 0):
-            queue_str = self.key_hook.queue.get()
-            if queue_str == 'l':
-                self.laser.rev_laser()
-            elif queue_str == 'g':
-                self.laser.rev_game_mode()
-            elif queue_str == 'h':
-                self.laser.homing()
-            elif queue_str == 'c':
-                print(f'X{self.laser.x} Y{self.laser.y}')
-            elif queue_str == 'd':
-                print(f'distance = {self.laser.distance}')
-            else:
-                self.laser.move_axis(direction=queue_str, speed_x=2, speed_y=2)
-
         answer = f'{self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
         return answer+'\r'
 
@@ -60,4 +44,15 @@ if __name__ == '__main__':
     server = LaserTCPServer(key_hook, laser, 'root', '192.168.18.3', 8585)
     server.start()
     while True:
-        sleep(1)
+        if (server.key_hook.queue.qsize() > 0):
+            queue_str = server.key_hook.queue.get()
+            if queue_str == 'l':
+                server.laser.rev_laser()
+            elif queue_str == 'g':
+                server.laser.rev_game_mode()
+            elif queue_str == 'h':
+                server.laser.homing()
+            elif queue_str == 'c':
+                print(f'X{server.laser.x} Y{server.laser.y}')
+            else:
+                server.laser.move_axis(direction=queue_str, speed_x=2, speed_y=2)
