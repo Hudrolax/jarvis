@@ -8,13 +8,6 @@
 #include <ESP8266WiFiMulti.h>
 #include <string.h>
 #include <Servo.h>
-#include <NewPing.h>
- 
-#define TRIGGER_PIN  2
-#define ECHO_PIN     13
-#define MAX_DISTANCE 400
-
-NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 #ifndef STASSID
 #define STASSID "hudnet"
@@ -38,8 +31,6 @@ Servo servo_y;  // create servo object to control a servo
 int servo_x_pin = 5;
 int servo_y_pin = 4;
 int laser_pin = 16;
-
-int distance_sm;
 
 void setup() {
   Serial.begin(115200);
@@ -70,11 +61,6 @@ void setup() {
 
 
 void loop() {
-  distance_sm = sonar.ping_cm();
-  Serial.print("Расстояние до объекта: ");
-  Serial.print(distance_sm);
-  Serial.println(" см.");
-  
   WiFiClient client;
 
   if (!client.connect(host, port)) {
@@ -85,8 +71,7 @@ void loop() {
   }
 
   // This will send the request to the server
-  String string = String(distance_sm);
-  //String string = client_name;
+  String string = client_name;
   client.println(string);
 
   unsigned long timeout = millis();
