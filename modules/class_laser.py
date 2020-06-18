@@ -130,6 +130,7 @@ class Laser(Rectangle):
             self.stop_game()
 
     def start_game(self):
+        self.game_mode = True
         _game_time = random.randint(self.game_time_range_sec[0], self.game_time_range_sec[1])
         self.logger.info(f'Game time is {_game_time} sec.')
         self._game_stop_time = datetime.now() + timedelta(seconds=_game_time)
@@ -139,6 +140,7 @@ class Laser(Rectangle):
         return _game_time
 
     def stop_game(self):
+        self.game_mode = False
         self.homing()
         self.logger.info('game mode OFF')
 
