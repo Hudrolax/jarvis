@@ -87,12 +87,31 @@ void loop() {
   }
 
   String line = client.readStringUntil('\r');
+  //Serial.println(line);
   int x_cord = 181;
   int y_cord = 181;
   int laser_state = 0;
-  char cord[12] = "";
-  line.toCharArray(cord, 12);
-  sscanf(cord, "%d %d %d", &x_cord, &y_cord, &laser_state);
+  String cmd = "";
+  int cmd_i = 1;
+  for(int i=0; i<line.length()+1; i++){
+    if (char_is_digit(line.charAt(i))){
+      cmd += line.charAt(i);
+    }else{
+       switch (cmd_i){
+        case 1:
+          x_cord = cmd.toInt();
+          break;
+        case 2:
+          y_cord = cmd.toInt();
+          break;
+        case 3:
+          laser_state = cmd.toInt();
+          break;
+       }   
+      cmd_i++;
+      cmd = "";
+    }
+  }
 
   Serial.println(String(x_cord) + " "+String(y_cord) + " laser "+String(laser_state));
   digitalWrite(laser_pin, laser_state);
@@ -102,4 +121,12 @@ void loop() {
   }
  
   client.stop();
+}
+
+bool char_is_digit(char c){
+  if (c > 47 && c < 58){ //ASCII codes
+    return true;
+  }else{
+    return false;
+  }
 }
