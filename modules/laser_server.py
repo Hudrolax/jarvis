@@ -19,14 +19,15 @@ else:
 class LaserTCPServer(CommunicationServer):
     logger = logging.getLogger('tcp server')
 
-    def __init__(self, *args):
+    def __init__(self, *args, jarvis=False):
         super().__init__(*args)
         from modules.class_laser import Laser
         self.laser = Laser(x_min=20, x_max=150, y_min=0, y_max=179)
-        import queue
-        output_queue = queue.Queue()
-        from modules.class_keyboard_hook import KeyBoardHook
-        self.key_hook = KeyBoardHook(output_queue)
+        if not jarvis:
+            import queue
+            output_queue = queue.Queue()
+            from modules.class_keyboard_hook import KeyBoardHook
+            self.key_hook = KeyBoardHook(output_queue)
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
