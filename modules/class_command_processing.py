@@ -117,6 +117,10 @@ class CommandProcessing:
                         answer += 'Включил свет на втором этаже.\n'
                     else:
                         answer += get_access_error()
+                elif 'выключи' in cmd_list and 'лазер' in cmd_list:
+                    laser_turret.laser.laser_on = False
+                    laser_turret.laser.stop_game()
+                    answer = 'ок\n'
                 else:
                     # elif 'свет' in cmd_list:
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:

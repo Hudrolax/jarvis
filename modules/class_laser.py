@@ -20,6 +20,7 @@ else:
 
 class Laser(Rectangle):
     logger = logging.getLogger('laser')
+    logger.setLevel(logging.INFO)
     class Point:
         def __init__(self, x, y):
             self.x = x
@@ -176,9 +177,9 @@ class Laser(Rectangle):
                 lines = file.readlines()
                 file.close()
             except FileNotFoundError:
-                print(f'file {GAME_FILE_PATH}{GAME_FILE_NAME}i{GAME_FILE_EXTENSION} not found')
+                raise FileNotFoundError(f'file {GAME_FILE_PATH}{GAME_FILE_NAME}i{GAME_FILE_EXTENSION} not found')
             except IOError:
-                print('Something else')
+                raise IOError('IOError')
 
             for line in lines:
                 if line[0].isdigit():
