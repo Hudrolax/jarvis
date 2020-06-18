@@ -19,6 +19,11 @@ else:
 class LaserTCPServer(CommunicationServer):
     logger = logging.getLogger('tcp server')
 
+    @staticmethod
+    def set_debug():
+        LaserTCPServer.logger.setLevel(logging.DEBUG)
+        print('set DEBUG level in CommandProcessiong logger')
+
     def __init__(self, *args, jarvis=False):
         super().__init__(*args)
         from modules.class_laser import Laser
@@ -33,7 +38,7 @@ class LaserTCPServer(CommunicationServer):
         # client_address - адрес клиента
         # data - очищенные данные - только строка
 
-        logging.info(data)
+        print(data)
         answer = f'{self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
         return answer+'\r'
 

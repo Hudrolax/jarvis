@@ -525,6 +525,9 @@ class CommandProcessing:
             elif cmd == 'debug':
                 self._arduino.set_debug()
                 CommandProcessing.set_debug()
+                satellite_server.set_debug()
+                laser_turret.set_debug()
+                laser_turret.laser.set_debug()
             elif cmd == 'warning':
                 self._arduino.warning()
                 CommandProcessing.set_warning()

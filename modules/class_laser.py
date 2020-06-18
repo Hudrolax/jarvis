@@ -21,6 +21,12 @@ else:
 class Laser(Rectangle):
     logger = logging.getLogger('laser')
     logger.setLevel(logging.INFO)
+
+    @staticmethod
+    def set_debug():
+        Laser.logger.setLevel(logging.DEBUG)
+        print('set DEBUG level in CommandProcessiong logger')
+
     class Point:
         def __init__(self, x, y):
             self.x = x
