@@ -527,8 +527,8 @@ class CommandProcessing:
             elif cmd == 'reload laser' or cmd == 'reload_laser':
                 answer += 'reload laser\n'
             elif ('поиграй' in cmd_list and 'котом' in cmd_list) or ('развлеки' in cmd_list and 'кота' in cmd_list):
-                laser_turret.laser.start_game()
-                answer = 'сейчас развлечем шерстяную жопу\n'
+                _game_time = laser_turret.laser.start_game()
+                answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд\n'
             elif ('стоп' in cmd_list or 'хватит' in cmd_list or 'остановись' in cmd_list) and laser_turret.laser.game_mode:
                 laser_turret.laser.stop_game()
                 answer = 'ок\n'

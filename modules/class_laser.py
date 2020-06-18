@@ -135,6 +135,7 @@ class Laser(Rectangle):
         self.load_game_coordinates()
         self.laser_on = True
         self.logger.info('game mode ON')
+        return _game_time
 
     def stop_game(self):
         self.homing()
