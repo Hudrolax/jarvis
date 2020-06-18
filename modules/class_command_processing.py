@@ -530,6 +530,12 @@ class CommandProcessing:
                 CommandProcessing.set_warning()
             elif cmd == 'reload laser' or cmd == 'reload_laser':
                 answer += 'reload laser\n'
+            elif cmd == 'homing':
+                laser_turret.laser.stop_game()
+                answer += 'ok\n'
+            elif cmd == 'coords':
+                print(f'{laser_turret.laser.x}, {laser_turret.laser.y}')
+                answer += 'ok\n'
             elif (cmd.find('поигра') > -1 or cmd.find('развлек') > -1) and cmd.find('кот') > -1:
                 _game_time = laser_turret.laser.start_game()
                 answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд\n'
