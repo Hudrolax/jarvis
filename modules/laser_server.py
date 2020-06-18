@@ -1,10 +1,6 @@
 import sys
 sys.path.append('../')
-import queue
 from modules.class_com import CommunicationServer
-from modules.class_laser import Laser
-from modules.class_keyboard_hook import KeyBoardHook
-from time import sleep
 
 import logging
 WRITE_LOG_TO_FILE = False
@@ -23,10 +19,14 @@ else:
 class LaserTCPServer(CommunicationServer):
     logger = logging.getLogger('tcp server')
 
-    def __init__(self, key_hook, laser, *args):
+    def __init__(self, *args):
         super().__init__(*args)
-        self.laser = laser
-        self.key_hook = key_hook
+        from modules.class_laser import Laser
+        self.laser = Laser(x_min=20, x_max=150, y_min=0, y_max=179)
+        import queue
+        output_queue = queue.Queue()
+        from modules.class_keyboard_hook import KeyBoardHook
+        self.key_hook = KeyBoardHook(output_queue)
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
@@ -37,11 +37,7 @@ class LaserTCPServer(CommunicationServer):
         return answer+'\r'
 
 if __name__ == '__main__':
-    output_queue = queue.Queue()
-    key_hook = KeyBoardHook(output_queue)
-    laser = Laser(x_min=20, x_max=150, y_min=0, y_max=179)
-
-    server = LaserTCPServer(key_hook, laser, 'root', '192.168.18.3', 8585)
+    server = LaserTCPServer('root', '192.168.18.3', 8585)
     server.start()
     while True:
         if (server.key_hook.queue.qsize() > 0):

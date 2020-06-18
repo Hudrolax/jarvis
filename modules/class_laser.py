@@ -3,6 +3,8 @@ from time import sleep
 import threading
 import logging
 from config import *
+from datetime import datetime, timedelta
+import random
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
@@ -23,7 +25,7 @@ class Laser(Rectangle):
             self.x = x
             self.y = y
 
-    class GameCorrdinate:
+    class GameCoordinate:
         def __init__(self, x, y, x_speed, y_speed):
             self.x = int(x)
             self.y = int(y)
@@ -40,10 +42,22 @@ class Laser(Rectangle):
         self._game_mode = False
         self._game_coords = []
         self._game_coords_loaded = False
-        self.load_game_coordinates()
         self.game_runned = False
+        self.games_amount = 2
+        self._game_time_range_sec = [30, 120]
+        self._game_stop_time = datetime.now()
         self._game_thread = threading.Thread(target=self.game, args=(), daemon=True)
         self._game_thread.start()
+
+    @property
+    def game_time_range_sec(self):
+        return [self._game_time_range_sec[0], self._game_time_range_sec[1]]
+
+    @game_time_range_sec.setter
+    def game_time_range_sec(self, val):
+        if isinstance(val, list) or isinstance(val, tuple):
+            self._game_time_range_sec[0] = val[0]
+            self._game_time_range_sec[1] = val[1]
 
     @property
     def laser_on(self):
@@ -85,6 +99,13 @@ class Laser(Rectangle):
     def game_mode(self):
         return self._game_mode
 
+    @game_mode.setter
+    def game_mode(self, val):
+        if isinstance(val, bool):
+            self._game_mode = val
+        else:
+            raise TypeError('game_mode type error')
+
     def rev_laser(self):
         self._laser_on = not self._laser_on
         self.logger.info(f'laser {self.laser_state_str}')
@@ -103,11 +124,21 @@ class Laser(Rectangle):
     def rev_game_mode(self):
         self._game_mode = not self._game_mode
         if self._game_mode:
-            self.laser_on = True
-            self.logger.info('game mode ON')
+            self.start_game()
         else:
-            self.homing()
-            self.logger.info('game mode OFF')
+            self.stop_game()
+
+    def start_game(self):
+        _game_time = random.randint(self.game_time_range_sec[0], self.game_time_range_sec[1])
+        self.logger.info(f'Game time is {_game_time} sec.')
+        self._game_stop_time = datetime.now() + timedelta(seconds=_game_time)
+        self.load_game_coordinates()
+        self.laser_on = True
+        self.logger.info('game mode ON')
+
+    def stop_game(self):
+        self.homing()
+        self.logger.info('game mode OFF')
 
     def move_axis_to_coord(self, x, y, speed_x, speed_y):
         x = self.check_values(x, self._x_min, self._x_max)
@@ -136,34 +167,50 @@ class Laser(Rectangle):
         sleep(0.01)
 
     def load_game_coordinates(self):
-        try:
-            file = open(GAME_FILE, "r")
-            lines = file.readlines()
-            file.close()
-        except FileNotFoundError:
-            print('Not found')
-        except IOError:
-            print('Something else')
+        self._game_coords = []
+        for i in range(0, self.games_amount):
+            new_coord_array = []
+            try:
+                file = open(f'{GAME_FILE_PATH}{GAME_FILE_NAME}{i}{GAME_FILE_EXTENSION}', "r")
+                lines = file.readlines()
+                file.close()
+            except FileNotFoundError:
+                print(f'file {GAME_FILE_PATH}{GAME_FILE_NAME}i{GAME_FILE_EXTENSION} not found')
+            except IOError:
+                print('Something else')
 
-        for line in lines:
-            if line[0].isdigit():
-                line = line.replace('\n', '')
-                line = line.replace(' ', '')
-                coord_array = line.split(',')
-                try:
-                    self._game_coords.append(self.GameCorrdinate(coord_array[0], coord_array[1], coord_array[2], coord_array[3]))
-                except IndexError:
-                    self.logger.error(f'Wrong data format in file {GAME_FILE}: {line} (need format: <X, Y, x_speed, y_speed>)')
-                    return
+            for line in lines:
+                if line[0].isdigit():
+                    line = line.replace('\n', '')
+                    line = line.replace(' ', '')
+                    _coord_array = line.split(',')
+                    try:
+                        new_coord_array.append(self.GameCoordinate(_coord_array[0], _coord_array[1], _coord_array[2], _coord_array[3]))
+                    except IndexError:
+                        self.logger.error(f'Wrong data format in file {GAME_FILE_PATH}{GAME_FILE_NAME}1{GAME_FILE_EXTENSION}: {line} (need format: <X, Y, x_speed, y_speed>)')
+                        return
+            self._game_coords.append(new_coord_array)
         self._game_coords_loaded = True
 
     def game(self):
+        _debug = False
         while True:
             if self.game_mode and self._game_coords_loaded:
                 self.game_runned = True
-                for coord in self._game_coords:
+                _game_number = random.randint(0, self.games_amount-1)
+                coord_array = self._game_coords[_game_number]
+                for coord in coord_array:
+                    if not self.game_mode:
+                        self.game_runned = False
+                        break
                     self.move_axis_to_coord(coord.x, coord.y, coord.x_speed, coord.y_speed)
-                # self.logger.info('alive')
+                    # self.logger.info(f'GAME: move to {coord.x}, {coord.y} speed {coord.x_speed}, {coord.y_speed}')
+                    if _debug:
+                        sleep(1)
+                if datetime.now() > self._game_stop_time:
+                    self.logger.info('Stop game mode by timer.')
+                    self.game_mode = False
+                    self.stop_game()
             else:
                 self.game_runned = False
             sleep(0.001)

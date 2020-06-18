@@ -44,7 +44,7 @@ class CommandProcessing:
         self._telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
 
-    def command_processing(self, cmd, telegramuser, message, bot, satellite_server):
+    def command_processing(self, cmd, telegramuser, message, bot, satellite_server, laser_turret):
         def get_access_error():
             return 'У вас нет доступа к этой команде\n'
         info = CommandProcessing.logger.info
@@ -524,6 +524,14 @@ class CommandProcessing:
             elif cmd == 'warning':
                 self._arduino.warning()
                 CommandProcessing.set_warning()
+            elif cmd == 'reload laser' or cmd == 'reload_laser':
+                answer += 'reload laser\n'
+            elif ('поиграй' in cmd_list and 'котом' in cmd_list) or ('развлеки' in cmd_list and 'кота' in cmd_list):
+                laser_turret.laser.start_game()
+                answer = 'сейчас развлечем шерстяную жопу\n'
+            elif ('стоп' in cmd_list or 'хватит' in cmd_list or 'остановись' in cmd_list) and laser_turret.laser.game_mode:
+                laser_turret.laser.stop_game()
+                answer = 'ок\n'
             else:
                 answer += 'неизвестная команда\n'
 
