@@ -33,7 +33,7 @@ class LaserTCPServer(CommunicationServer):
         # client_address - адрес клиента
         # data - очищенные данные - только строка
 
-        # logging.info(data)
+        logging.info(data)
         answer = f'{self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
         return answer+'\r'
 
