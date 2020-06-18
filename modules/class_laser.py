@@ -9,7 +9,7 @@ import random
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
 # LOG_LEVEL = logging.DEBUG
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.WARNING
 # LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
@@ -20,12 +20,17 @@ else:
 
 class Laser(Rectangle):
     logger = logging.getLogger('laser')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.WARNING)
 
     @staticmethod
     def set_debug():
-        Laser.logger.setLevel(logging.DEBUG)
+        Laser.logger.setLevel(logging.WARNING)
         print('set DEBUG level in CommandProcessiong logger')
+
+    @staticmethod
+    def set_warning():
+        Laser.logger.setLevel(logging.WARNING)
+        print(f'set WARNING level in {Laser.logger.name} logger')
 
     class Point:
         def __init__(self, x, y):
@@ -119,12 +124,12 @@ class Laser(Rectangle):
 
 
     def homing(self):
-        self.logger.info('start homing')
+        self.logger.debug('start homing')
         self.laser_on = False
         self._game_mode = False
         while self.game_runned:
             sleep(0.1)
-        self.logger.info('start moving axis for homing')
+        self.logger.debug('start moving axis for homing')
         self.move_axis_to_coord(self.parking_point.x, self.parking_point.y, 2, 2)
         print(f'laser homed. Laser is {self.laser_on}')
 

@@ -529,8 +529,11 @@ class CommandProcessing:
                 laser_turret.set_debug()
                 laser_turret.laser.set_debug()
             elif cmd == 'warning':
-                self._arduino.warning()
+                self._arduino.set_warning()
                 CommandProcessing.set_warning()
+                satellite_server.set_warning()
+                laser_turret.set_warning()
+                laser_turret.laser.set_warning()
             elif cmd == 'reload laser' or cmd == 'reload_laser':
                 answer += 'reload laser\n'
             elif cmd == 'homing':

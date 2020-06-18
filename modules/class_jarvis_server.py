@@ -137,6 +137,11 @@ class Jarvis_Satellite_Server(CommunicationServer):
         Jarvis_Satellite_Server.logger.setLevel(logging.DEBUG)
         print('set DEBUG level in CommandProcessiong logger')
 
+    @staticmethod
+    def set_warning():
+        Jarvis_Satellite_Server.logger.setLevel(logging.WARNING)
+        print(f'set WARNING level in {Jarvis_Satellite_Server.logger.name} logger')
+
     def __init__(self, name:str ='root', ip:str ='127.0.0.1', port:int = 8585):
         super().__init__(name, ip, port)
         self._miners = []
