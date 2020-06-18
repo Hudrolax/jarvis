@@ -191,8 +191,9 @@ class Laser(Rectangle):
                     try:
                         new_coord_array.append(self.GameCoordinate(_coord_array[0], _coord_array[1], _coord_array[2], _coord_array[3]))
                     except IndexError:
-                        self.logger.error(f'Wrong data format in file {GAME_FILE_PATH}{GAME_FILE_NAME}1{GAME_FILE_EXTENSION}: {line} (need format: <X, Y, x_speed, y_speed>)')
+                        self.logger.error(f'Wrong data format in file {GAME_FILE_PATH}{GAME_FILE_NAME}{i}{GAME_FILE_EXTENSION}: {line} (need format: <X, Y, x_speed, y_speed>)')
                         return
+            self.logger.info(f'game from {GAME_FILE_PATH}{GAME_FILE_NAME}{i}{GAME_FILE_EXTENSION} loaded')
             self._game_coords.append(new_coord_array)
         self._game_coords_loaded = True
 
@@ -202,6 +203,7 @@ class Laser(Rectangle):
             if self.game_mode and self._game_coords_loaded:
                 self.game_runned = True
                 _game_number = random.randint(0, self.games_amount-1)
+                self.logger.info(f'play game number {_game_number}')
                 coord_array = self._game_coords[_game_number]
                 for coord in coord_array:
                     if not self.game_mode:
