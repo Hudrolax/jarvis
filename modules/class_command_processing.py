@@ -44,7 +44,7 @@ class CommandProcessing:
         self._telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
 
-    def command_processing(self, cmd, telegramuser, message, bot, satellite_server):
+    def command_processing(self, cmd, telegramuser, message, bot, satellite_server, laser_turret):
         def get_access_error():
             return 'У вас нет доступа к этой команде\n'
         info = CommandProcessing.logger.info
@@ -199,6 +199,10 @@ class CommandProcessing:
                         answer += 'Выключил свет на втором этаже.\n'
                     else:
                         answer += get_access_error()
+                elif 'выключи' in cmd_list and 'лазер' in cmd_list:
+                    laser_turret.laser.laser_on = False
+                    laser_turret.laser.stop_game()
+                    answer = 'ок\n'
                 else:
                     # elif 'свет' in cmd_list:
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
@@ -521,9 +525,29 @@ class CommandProcessing:
             elif cmd == 'debug':
                 self._arduino.set_debug()
                 CommandProcessing.set_debug()
+                satellite_server.set_debug()
+                laser_turret.set_debug()
+                laser_turret.laser.set_debug()
             elif cmd == 'warning':
-                self._arduino.warning()
+                self._arduino.set_warning()
                 CommandProcessing.set_warning()
+                satellite_server.set_warning()
+                laser_turret.set_warning()
+                laser_turret.laser.set_warning()
+            elif cmd == 'reload laser' or cmd == 'reload_laser':
+                answer += 'reload laser\n'
+            elif cmd == 'homing':
+                laser_turret.laser.stop_game()
+                answer += 'ok\n'
+            elif cmd == 'coords':
+                print(f'{laser_turret.laser.x}, {laser_turret.laser.y}')
+                answer += 'ok\n'
+            elif (cmd.find('поигра') > -1 or cmd.find('развлек') > -1) and cmd.find('кот') > -1:
+                _game_time = laser_turret.laser.start_game()
+                answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд\n'
+            elif ('стоп' in cmd_list or 'хватит' in cmd_list or 'остановись' in cmd_list) and laser_turret.laser.game_mode:
+                laser_turret.laser.stop_game()
+                answer = 'ок\n'
             else:
                 answer += 'неизвестная команда\n'
 

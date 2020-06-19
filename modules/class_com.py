@@ -21,6 +21,16 @@ class CommunicationServer():
     logger = logging.getLogger(f'Comm server')
     logger.setLevel(logging.INFO)
 
+    @staticmethod
+    def set_debug():
+        CommunicationServer.logger.setLevel(logging.DEBUG)
+        print('set DEBUG level in CommandProcessiong logger')
+
+    @staticmethod
+    def set_warning():
+        CommunicationServer.logger.setLevel(logging.WARNING)
+        print(f'set WARNING level in {CommunicationServer.logger.name} logger')
+
     def __init__(self, name:str='root', ip:str=SATELLITE_IP, port:int = SATELLITE_PORT):
         critical = CommunicationServer.logger.critical
         if not isinstance(name, str):

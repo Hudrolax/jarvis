@@ -21,4 +21,5 @@ class Dependence:
 if __name__ == '__main__':
     Dependence.append('pyTelegramBotAPI')
     Dependence.append('psutil')
+    Dependence.append('keyboard')
     Dependence.init()

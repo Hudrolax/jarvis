@@ -1,7 +1,7 @@
 # Sergey Nazarov 17.05.2020
 import sys
 sys.path.append('../')
-
+from importlib import reload
 from config import *
 from time import sleep
 from datetime import datetime
@@ -14,6 +14,7 @@ from modules.gfunctions import Runned
 from modules.telegram_bot import TelegramBot
 from modules.class_command_processing import CommandProcessing
 from modules.class_jarvis_server import Jarvis_Satellite_Server
+from modules.laser_server import LaserTCPServer
 import logging
 
 WRITE_LOG_TO_FILE = False
@@ -225,8 +226,6 @@ if __name__ == "__main__":
 
     telegram_answer_queue = queue.Queue()
 
-    command_processing = CommandProcessing(arduino, telegram_answer_queue)
-
     #start satellite server
     satellite_server = Jarvis_Satellite_Server(name='Jarvis', ip=SATELLITE_IP, port=SATELLITE_PORT)
     satellite_server.add_miner('zeon')
@@ -234,6 +233,12 @@ if __name__ == "__main__":
     satellite_server.add_miner('tekilla')
     satellite_server.start()
     logger.info('start satellite server')
+
+    # laser turret server
+    laser_turret = LaserTCPServer('Jarvis', SATELLITE_IP, 8586, jarvis=True)
+    laser_turret.start()
+
+    command_processing = CommandProcessing(arduino, telegram_answer_queue)
 
     # Main loop dunction
     while Runned.runned:
@@ -243,7 +248,9 @@ if __name__ == "__main__":
                 input_str = queue_typle[0]
                 user = queue_typle[1]
                 message = queue_typle[2]
-                answer = command_processing.command_processing(input_str, user, message, bot, satellite_server)
+                answer = command_processing.command_processing(input_str, user, message, bot, satellite_server, laser_turret)
+                if answer == 'reload laser\n':
+                    LaserTCPServer = reload(LaserTCPServer)
                 jprint(answer)
             arduino.check_input_pins()
             reglament_work()
