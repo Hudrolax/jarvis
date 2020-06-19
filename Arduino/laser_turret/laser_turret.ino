@@ -62,6 +62,7 @@ void setup() {
 
 void loop() {
   WiFiClient client;
+  client.setTimeout(1000);
 
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
@@ -73,7 +74,6 @@ void loop() {
   // This will send the request to the server
   String string = client_name;
   client.println(string);
-  client.setTimeout(1000);
 
   unsigned long timeout = millis();
   

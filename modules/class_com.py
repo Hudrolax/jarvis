@@ -83,23 +83,25 @@ class CommunicationServer():
         debug = self.logger.debug
         try:
             data = clear_str(connection.recv(1024).decode("utf-8"))
+
+            logging.debug(f"received data: {data}")
+            # << Оборачиваемая функция
+            answer = self.handler(client_address, data)
+            # >> Оборачиваемая функция
+
+            debug(f'answer is "{answer}"')
+            if answer is not None:
+                debug(f'send an answer to {client_address}')
+                connection.sendall(bytes(answer, encoding='utf-8'))
         except ConnectionResetError:
             self.logger.error(f'Error with recieve data from {client_address}')
             return
         except UnicodeDecodeError:
             self.logger.error(f'Error with decode UTF-8 data from {client_address}')
             return
-        logging.debug(f"received data: {data}")
-        # << Оборачиваемая функция
-        answer = self.handler(client_address, data)
-        # >> Оборачиваемая функция
-
-        debug(f'answer is "{answer}"')
-        if answer is not None:
-            debug(f'send an answer to {client_address}')
-            connection.sendall(bytes(answer, encoding='utf-8'))
-        connection.close()
-        debug(f'connection from {client_address} closed')
+        finally:
+            connection.close()
+            debug(f'connection from {client_address} closed')
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
