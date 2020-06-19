@@ -34,8 +34,8 @@ class LaserTCPServer(CommunicationServer):
         LaserTCPServer.logger.setLevel(logging.INFO)
         print(f'set INFO level in {LaserTCPServer.logger.name} logger')
 
-    def __init__(self, name:str, ip:str, port:int, jarvis:bool=False):
-        super().__init__(name, ip, port)
+    def __init__(self, ip:str, port:int, jarvis:bool=False):
+        super().__init__(ip, port)
         from modules.class_laser import Laser
         self._name = 'laser_server'
         self.laser = Laser(x_min=20, x_max=150, y_min=0, y_max=179)
