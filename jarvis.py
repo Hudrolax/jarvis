@@ -238,7 +238,7 @@ if __name__ == "__main__":
     laser_turret = LaserTCPServer('Jarvis', SATELLITE_IP, 8586, jarvis=True)
     laser_turret.start()
 
-    command_processing = CommandProcessing(arduino, telegram_answer_queue)
+    command_processing = CommandProcessing(arduino, telegram_answer_queue, bot, satellite_server, laser_turret)
 
     # Main loop dunction
     while Runned.runned:
@@ -248,7 +248,7 @@ if __name__ == "__main__":
                 input_str = queue_typle[0]
                 user = queue_typle[1]
                 message = queue_typle[2]
-                answer = command_processing.command_processing(input_str, user, message, bot, satellite_server, laser_turret)
+                answer = command_processing.command_processing(input_str, user, message)
                 if answer == 'reload laser\n':
                     LaserTCPServer = reload(LaserTCPServer)
                 jprint(answer)

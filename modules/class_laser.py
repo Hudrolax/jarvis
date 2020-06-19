@@ -32,6 +32,11 @@ class Laser(Rectangle):
         Laser.logger.setLevel(logging.WARNING)
         print(f'set WARNING level in {Laser.logger.name} logger')
 
+    @staticmethod
+    def set_info():
+        Laser.logger.setLevel(logging.INFO)
+        print(f'set INFO level in {Laser.logger.name} logger')
+
     class Point:
         def __init__(self, x, y):
             self.x = x
@@ -50,6 +55,7 @@ class Laser(Rectangle):
     def __init__(self, x_min:int=20, x_max:int=150, y_min:int=0, y_max:int=179):
         self.parking_point = self.Point(92, 0)
         super().__init__(x_min, x_max, y_min, y_max, self.parking_point.x, self.parking_point.y)
+        self._name = 'laser'
         self.parent = None
         self._translate_data_to_laser = False
         self._laser_on = False
@@ -62,6 +68,10 @@ class Laser(Rectangle):
         self._game_stop_time = datetime.now()
         self._game_thread = threading.Thread(target=self.game, args=(), daemon=True)
         self._game_thread.start()
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def translate_data_to_laser(self):
@@ -219,7 +229,7 @@ class Laser(Rectangle):
                         new_coord_array.append(self.GameCoordinate(_coord_array[0], _coord_array[1], _coord_array[2], _coord_array[3]))
                     except IndexError:
                         self.logger.error(f'Wrong data format in file {GAME_FILE_PATH}{GAME_FILE_NAME}{i}{GAME_FILE_EXTENSION}: {line} (need format: <X, Y, x_speed, y_speed>)')
-                        return
+                        raise IndexError()
             self.logger.info(f'game from {GAME_FILE_PATH}{GAME_FILE_NAME}{i}{GAME_FILE_EXTENSION} loaded')
             self._game_coords.append(new_coord_array)
         self._game_coords_loaded = True
@@ -230,7 +240,7 @@ class Laser(Rectangle):
             if self.game_mode and self._game_coords_loaded:
                 self.game_runned = True
                 _game_number = random.randint(0, self.games_amount-1)
-                self.logger.info(f'play game number {_game_number}')
+                self.logger.debug(f'play game number {_game_number}')
                 coord_array = self._game_coords[_game_number]
                 for coord in coord_array:
                     if not self.game_mode:

@@ -81,8 +81,24 @@ class TelegramBot(telebot.TeleBot, JPrint):
 
     logger = logging.getLogger('Telegram_bot')
 
+    @staticmethod
+    def set_info():
+        TelegramBot.logger.setLevel(logging.INFO)
+        print('set INFO level in CommandProcessiong logger')
+
+    @staticmethod
+    def set_debug():
+        TelegramBot.logger.setLevel(logging.DEBUG)
+        print('set DEBUG level in CommandProcessiong logger')
+
+    @staticmethod
+    def set_warning():
+        TelegramBot.logger.setLevel(logging.WARNING)
+        print('set WARNING level in CommandProcessiong logger')
+
     def __init__(self, path, list_file, token, threaded=False):
         super().__init__(token, threaded)
+        self._name = 'bot'
         self._users = []
         self._prog_path = path
         self._good_proxy_list_file = list_file
@@ -90,6 +106,10 @@ class TelegramBot(telebot.TeleBot, JPrint):
         self._telegram_bot_thread = threading.Thread(target=self._telegram_bot, args=(), daemon=True)
         self._messages_queue = queue.Queue()
         self._send_messages_thread = threading.Thread(target=self._send_messages_with_queue, args=(), daemon=True)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def users(self):

@@ -39,14 +39,23 @@ class CommandProcessing:
         CommandProcessing.logger.setLevel(logging.WARNING)
         jprint('set WARNING level in CommandProcessiong logger')
 
-    def __init__(self, arduino, telegram_answer_queue):
+    def __init__(self, arduino, telegram_answer_queue, bot, satellite_server, laser_turret):
+        self._name = 'command_processing'
         self._arduino = arduino
+        self._bot = bot
+        self._satellite_server = satellite_server
+        self._laser_turret = laser_turret
         self._telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
+        self.modules = [self, arduino, bot, satellite_server, satellite_server.super(), laser_turret, laser_turret.laser]
 
-    def command_processing(self, cmd, telegramuser, message, bot, satellite_server, laser_turret):
+    @property
+    def name(self):
+        return self._name
+
+    def command_processing(self, cmd, telegramuser, message):
         def get_access_error():
-            return 'У вас нет доступа к этой команде\n'
+            return 'У вас нет доступа к этой команде'
         info = CommandProcessing.logger.info
         debug = CommandProcessing.logger.debug
         warning = CommandProcessing.logger.warning
@@ -88,7 +97,7 @@ class CommandProcessing:
                                     jprint(f'Включил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Включил свет везде.\n'
+                        answer += 'Включил свет везде.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
@@ -101,7 +110,7 @@ class CommandProcessing:
                                     jprint(f'Включил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Включил свет на первом этаже.\n'
+                        answer += 'Включил свет на первом этаже.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
@@ -114,7 +123,7 @@ class CommandProcessing:
                                     jprint(f'Включил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Включил свет на втором этаже.\n'
+                        answer += 'Включил свет на втором этаже.'
                     else:
                         answer += get_access_error()
                 else:
@@ -126,7 +135,7 @@ class CommandProcessing:
                             findlist.append(telegramuser.name)
                         WinnerPin = self._arduino.find_by_auction(findlist)
                         if WinnerPin == None:
-                            answer += 'Не понятно, что нужно включить. Уточни команду.\n'
+                            answer += 'Не понятно, что нужно включить. Уточни команду.'
                         elif str(type(WinnerPin)) == "<class 'list'>":
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                                 for p in WinnerPin:
@@ -134,11 +143,11 @@ class CommandProcessing:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                             a = self._arduino.set_pin(p, 1)
                                             if a == True:
-                                                answer += f'{p.description} включен\n'
+                                                answer += f'{p.description} включен'
                                             elif a == False:
-                                                answer += f'{p.description} выключен\n'
+                                                answer += f'{p.description} выключен'
                                             else:
-                                                answer += 'Ошибка передачи данных\n'
+                                                answer += 'Ошибка передачи данных'
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
                             else:
@@ -149,11 +158,11 @@ class CommandProcessing:
                                 if telegramuser != None and telegramuser.level <= 0 and WinnerPin.blocked or telegramuser == None or not WinnerPin.blocked:
                                     a = self._arduino.set_pin(WinnerPin, 1)
                                     if a == True:
-                                        answer += f'{WinnerPin.description} включен\n'
+                                        answer += f'{WinnerPin.description} включен'
                                     elif a == False:
-                                        answer += f'{WinnerPin.description} выключен\n'
+                                        answer += f'{WinnerPin.description} выключен'
                                     else:
-                                        answer += 'Ошибка передачи данных\n'
+                                        answer += 'Ошибка передачи данных'
                                 else:
                                     answer += f'{WinnerPin.description} заблокирован для вас'
                             else:
@@ -170,7 +179,7 @@ class CommandProcessing:
                                     jprint(f'Выключил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Выключил свет везде.\n'
+                        answer += 'Выключил свет везде.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
@@ -183,7 +192,7 @@ class CommandProcessing:
                                     jprint(f'Выключил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Выключил свет на первом этаже.\n'
+                        answer += 'Выключил свет на первом этаже.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
@@ -196,13 +205,13 @@ class CommandProcessing:
                                     jprint(f'Выключил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Выключил свет на втором этаже.\n'
+                        answer += 'Выключил свет на втором этаже.'
                     else:
                         answer += get_access_error()
                 elif 'выключи' in cmd_list and 'лазер' in cmd_list:
-                    laser_turret.laser.laser_on = False
-                    laser_turret.laser.stop_game()
-                    answer = 'ок\n'
+                    self.laser_turret.laser.laser_on = False
+                    self.laser_turret.laser.stop_game()
+                    answer = 'ок'
                 else:
                     # elif 'свет' in cmd_list:
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
@@ -211,7 +220,7 @@ class CommandProcessing:
                             findlist.append(telegramuser.name)
                         WinnerPin = self._arduino.find_by_auction(findlist)
                         if WinnerPin == None:
-                            answer += 'Не понятно, что нужно выключить. Уточни команду.\n'
+                            answer += 'Не понятно, что нужно выключить. Уточни команду.'
                         elif isinstance(WinnerPin, list):
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                                 for p in WinnerPin:
@@ -219,11 +228,11 @@ class CommandProcessing:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
                                             a = self._arduino.set_pin(p, 0)
                                             if a == True:
-                                                answer += f'{p.description} включен\n'
+                                                answer += f'{p.description} включен'
                                             elif a == False:
-                                                answer += f'{p.description} выключен\n'
+                                                answer += f'{p.description} выключен'
                                             else:
-                                                answer += 'Ошибка передачи данных\n'
+                                                answer += 'Ошибка передачи данных'
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
                             else:
@@ -234,11 +243,11 @@ class CommandProcessing:
                                 if telegramuser != None and telegramuser.level <= 0 and WinnerPin.blocked or telegramuser == None or not WinnerPin.blocked:
                                     a = self._arduino.set_pin(WinnerPin, 0)
                                     if a == True:
-                                        answer += f'{WinnerPin.description} включен\n'
+                                        answer += f'{WinnerPin.description} включен'
                                     elif a == False:
-                                        answer += f'{WinnerPin.description} выключен\n'
+                                        answer += f'{WinnerPin.description} выключен'
                                     else:
-                                        answer += 'Ошибка передачи данных\n'
+                                        answer += 'Ошибка передачи данных'
                                 else:
                                     answer += f'{WinnerPin.description} заблокирован для вас'
                             else:
@@ -255,14 +264,14 @@ class CommandProcessing:
                                 jprint(f'pin {p.num} is {a}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
-                    answer += 'Вернул все как было\n'
+                    answer += 'Вернул все как было'
                 else:
                     answer += get_access_error()
             elif 'оставь' in cmd_list and 'свет' in cmd_list:
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                     WinnerPin = self._arduino.find_by_auction(cmd_list)
                     if WinnerPin == None:
-                        answer += 'Не понятно, что нужно оставить включенным. Уточни команду.\n'
+                        answer += 'Не понятно, что нужно оставить включенным. Уточни команду.'
                     elif str(type(WinnerPin)) == "<class 'list'>":
                         if ('кухне' in cmd_list or 'кухня' in cmd_list) and len(WinnerPin) == 2:
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
@@ -277,14 +286,14 @@ class CommandProcessing:
                                             self._arduino.set_pin(p, 0)
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
-                                answer += 'Оставил включенным только свет на кухне.\n'
+                                answer += 'Оставил включенным только свет на кухне.'
                             else:
                                 answer += get_access_error()
                         else:
-                            answer += 'Я нашел более одного объекта для оставления:\n'
+                            answer += 'Я нашел более одного объекта для оставления:'
                             for w in WinnerPin:
                                 answer += f'{w.description}\n'
-                            answer += 'Нужно уточнить, что конкретно оставить.\n'
+                            answer += 'Нужно уточнить, что конкретно оставить.'
                     else:
                         if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
                                 telegramuser != None and telegramuser.name in WinnerPin.convertible_terms):
@@ -303,7 +312,7 @@ class CommandProcessing:
                                             a = self._arduino.set_pin(p, 0)
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
-                            answer += f'Оставил включенным только {WinnerPin.description}\n'
+                            answer += f'Оставил включенным только {WinnerPin.description}'
                         else:
                             answer += get_access_error()
                 else:
@@ -313,18 +322,18 @@ class CommandProcessing:
                     for p in self._arduino.pins:
                         if not p.output:
                             p.blocked = True
-                    answer += f'Заблокировал все выключатели\n'
+                    answer += f'Заблокировал все выключатели'
                 elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                     WinnerPin = self._arduino.find_by_auction(cmd_list, True)
                     if WinnerPin == None:
-                        answer += 'Не понятно, что нужно заблокировать. Уточни команду.\n'
+                        answer += 'Не понятно, что нужно заблокировать. Уточни команду.'
                     elif str(type(WinnerPin)) == "<class 'list'>":
                         for p in WinnerPin:
                             p.blocked = True
-                            answer += f'Заблокировал {p.description}\n'
+                            answer += f'Заблокировал {p.description}'
                     else:
                         WinnerPin.blocked = True
-                        answer += f'Заблокировал {WinnerPin.description}\n'
+                        answer += f'Заблокировал {WinnerPin.description}'
                     self._arduino.write_pinstate(None)
                 else:
                     answer += get_access_error()
@@ -333,18 +342,18 @@ class CommandProcessing:
                     for p in self._arduino.pins:
                         if not p.output:
                             p.blocked = False
-                    answer += f'Заблокировал все выключатели\n'
+                    answer += f'Заблокировал все выключатели'
                 elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                     WinnerPin = self._arduino.find_by_auction(cmd_list, True)
                     if WinnerPin == None:
-                        answer += 'Не понятно, что нужно разблокировать. Уточни команду.\n'
+                        answer += 'Не понятно, что нужно разблокировать. Уточни команду.'
                     elif str(type(WinnerPin)) == "<class 'list'>":
                         for p in WinnerPin:
                             p.blocked = False
-                            answer += f'Разблокировал {p.description}\n'
+                            answer += f'Разблокировал {p.description}'
                     else:
                         WinnerPin.blocked = False
-                        answer += f'Разблокировал {WinnerPin.description}\n'
+                        answer += f'Разблокировал {WinnerPin.description}'
                     self._arduino.write_pinstate(None)
                 else:
                     answer += get_access_error()
@@ -357,23 +366,23 @@ class CommandProcessing:
                     pin = self._arduino.find_pin(val)
                     if pin != None:
                         if pin.state:
-                            answer = f'pin {pin.num} is ON\n'
+                            answer = f'pin {pin.num} is ON'
                         else:
-                            answer = f'pin {pin.num} is OFF\n'
+                            answer = f'pin {pin.num} is OFF'
                     else:
-                        answer = f"Can't find the pin with number {val}\n"
+                        answer = f"Can't find the pin with number {val}"
                 else:
                     answer += get_access_error()
             elif cmd.find('loadconfig') > -1 or cmd.find('загрузи конфиг') > -1:
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    answer = self._arduino.load_config(bot)
+                    answer = self._arduino.load_config(self.bot)
                 else:
                     answer += get_access_error()
             elif cmd.find('pinlist') > -1 or cmd.find('list pins') > -1 or cmd.find('listpins') > -1 or cmd.find(
                     'список пинов') > -1 or cmd.find('пинлист') > -1:
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    answer += '*** Pin list: ***' + '\n'
-                    answer += 'Inputs:' + '\n'
+                    answer += '*** Pin list: ***\n'
+                    answer += 'Inputs:\n'
                     for p in self._arduino.pins:
                         if not p.output:
                             answer += f'   pin {p.num} ({p.name})'
@@ -387,14 +396,12 @@ class CommandProcessing:
                                         answer += ','
                                     answer += f' {b.num} ({b.description})'
                                     k += 1
-                            answer += '\n'
-                    answer += 'Outputs:' + '\n'
+                    answer += 'Outputs:\n'
                     for p in self._arduino.pins:
                         if p.output:
                             answer += f'   pin {p.num} ({p.name})'
                             if p.blocked:
                                 answer += '(blocked)'
-                            answer += '\n'
                 else:
                     answer += get_access_error()
             elif cmd.startswith('bind '):
@@ -409,18 +416,18 @@ class CommandProcessing:
                                     if not addpin in bindto.binds:
                                         bindto.binds.append(addpin)
                                     else:
-                                        answer += f'pin {addpin.name} is already in {bindto.name}.binds' + '\n'
+                                        answer += f'pin {addpin.name} is already in {bindto.name}.binds'
                                 else:
-                                    answer += f'pin {addpin.name} is INPUT pin and connot binded to pin {bindto.name}\n'
-                            answer += 'pins is binded!\n'
+                                    answer += f'pin {addpin.name} is INPUT pin and connot binded to pin {bindto.name}'
+                            answer += 'pins is binded!'
                             if self._arduino.save_config() == None:
-                                answer += 'config is saved\n'
+                                answer += 'config is saved'
                             else:
-                                answer += 'error save config\n'
+                                answer += 'error save config'
                         else:
-                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.\n'
+                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.'
                     except:
-                        answer += 'error bind pins\n'
+                        answer += 'error bind pins'
                 else:
                     answer += get_access_error()
             elif cmd.startswith('unbind '):
@@ -431,15 +438,15 @@ class CommandProcessing:
                         if not bindto.output:
                             for i in range(2, len(val)):
                                 bindto.binds.remove(self._arduino.find_pin(val[i]))
-                            answer = 'pins is unbinded!\n'
+                            answer = 'pins is unbinded!'
                             if self._arduino.save_config() == None:
-                                answer += 'config is saved\n'
+                                answer += 'config is saved'
                             else:
-                                answer += 'error save config\n'
+                                answer += 'error save config'
                         else:
-                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.\n'
+                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.'
                     except:
-                        answer = 'error unbind pins\n'
+                        answer = 'error unbind pins'
                 else:
                     answer += get_access_error()
             elif (cmd.find('print') > -1 and cmd.find('config') > -1) or (
@@ -450,7 +457,7 @@ class CommandProcessing:
                         answer += f.read()
                         f.close()
                     except:
-                        answer += 'не могу прочесть конфиг\n'
+                        answer += 'не могу прочесть конфиг'
                 else:
                     answer += get_access_error()
             elif cmd == 'state' or cmd == 'status' or 'статус' in cmd_list:
@@ -470,7 +477,6 @@ class CommandProcessing:
                         if k == 0:
                             answer += 'весь свет выключен\n'
                         answer += '\n'
-                    answer += '\n'
 
                     # инфа по насосам
                     answer += "Насосы "
@@ -482,13 +488,12 @@ class CommandProcessing:
                             answer += "ВЫКЛЮЧЕНЫ"
                     else:
                         answer += "<не могу найти пин насосов  по description 'насосы'>"
-                    answer += '\n'
 
                     # инфа по майнерам
                     if telegramuser != None and telegramuser.level == 0 or telegramuser == None:
                         answer += 'майнеры: '
                         k=0
-                        for miner in satellite_server.miners:
+                        for miner in self.satellite_server.miners:
                             if miner.online:
                                 if k>0:
                                     answer += ', '
@@ -496,14 +501,13 @@ class CommandProcessing:
                                 answer += miner.name + f'({miner.runned_text()})'
                         if k==0:
                             answer += 'все offline'
-                        answer += '\n'
 
                     # инфа по напряжениям
                     ACNet = 'есть'
                     if not self._arduino.ac_exist:
                         ACNet = 'НЕТ'
-                    answer += f'Напряжение в сети {ACNet}\n'
-                    answer += f'Напряжение аккумулятора {self._arduino.dc_value} V ({self._arduino.dc_voltage_in_percent} %)\n'
+                    answer += f'Напряжение в сети {ACNet}'
+                    answer += f'Напряжение аккумулятора {self._arduino.dc_value} V ({self._arduino.dc_voltage_in_percent} %)'
                 else:
                     answer += get_access_error()
             elif cmd == 'exit':
@@ -513,44 +517,62 @@ class CommandProcessing:
                 else:
                     answer += get_access_error()
             elif cmd.find('запусти') > -1 and cmd.find('майнинг') > -1:
-                satellite_server.start_miners()
-                answer += 'запустил майнинг\n'
+                self.satellite_server.start_miners()
+                answer += 'запустил майнинг'
             elif (cmd.find('останови') > -1 or cmd.find('заверши') > -1 or cmd.find('выключи') > -1 or
                   cmd.find('выруби') > -1) and cmd.find('майнинг') > -1:
-                satellite_server.stop_miners()
-                answer = 'остановил майнинг\n'
-            elif cmd == 'info':
-                self._arduino.set_info()
-                CommandProcessing.set_info()
-            elif cmd == 'debug':
-                self._arduino.set_debug()
-                CommandProcessing.set_debug()
-                satellite_server.set_debug()
-                laser_turret.set_debug()
-                laser_turret.laser.set_debug()
-            elif cmd == 'warning':
-                self._arduino.set_warning()
-                CommandProcessing.set_warning()
-                satellite_server.set_warning()
-                laser_turret.set_warning()
-                laser_turret.laser.set_warning()
+                self.satellite_server.stop_miners()
+                answer = 'остановил майнинг'
+            elif 'debug' in cmd_list:
+                if len(cmd_list) == 1:
+                    for module in self.modules:
+                        module.set_info()
+                elif len(cmd_list) == 2:
+                    for module in self.modules:
+                        if module.name == cmd_list[1]:
+                            module.set_info()
+                else:
+                    self.logger.error('DEBUG command is wrong format, <debug <modulename>')
+            elif 'debug' in cmd_list:
+                if len(cmd_list) == 1:
+                    for module in self.modules:
+                        module.set_debug()
+                elif len(cmd_list) == 2:
+                    for module in self.modules:
+                        if module.name == cmd_list[1]:
+                            module.set_debug()
+                else:
+                    self.logger.error('DEBUG command is wrong format, <debug <modulename>')
+            elif 'warning' in cmd_list:
+                if len(cmd_list) == 1:
+                    for module in self.modules:
+                        module.set_warning()
+                elif len(cmd_list) == 2:
+                    for module in self.modules:
+                        if module.name == cmd_list[1]:
+                            module.set_warning()
+                else:
+                    self.logger.error('WARNING command is wrong format, <debug <modulename>')
             elif cmd == 'reload laser' or cmd == 'reload_laser':
-                answer += 'reload laser\n'
+                answer += 'reload laser'
             elif cmd == 'homing':
-                laser_turret.laser.stop_game()
-                answer += 'ok\n'
+                self.laser_turret.laser.stop_game()
+                answer += 'ok'
             elif cmd == 'coords':
-                print(f'{laser_turret.laser.x}, {laser_turret.laser.y}')
-                answer += 'ok\n'
+                print(f'{self.laser_turret.laser.x}, {self.laser_turret.laser.y}')
+                answer += 'ok'
             elif (cmd.find('поигра') > -1 or cmd.find('развлек') > -1) and cmd.find('кот') > -1:
-                _game_time = laser_turret.laser.start_game()
-                answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд\n'
-            elif ('стоп' in cmd_list or 'хватит' in cmd_list or 'остановись' in cmd_list) and laser_turret.laser.game_mode:
-                laser_turret.laser.stop_game()
-                answer = 'ок\n'
+                _game_time = self.laser_turret.laser.start_game()
+                answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд'
+            elif 'стоп' in cmd_list or 'хватит' in cmd_list or 'остановись' in cmd_list:
+                if self.laser_turret.laser.game_mode:
+                    self.laser_turret.laser.stop_game()
+                    answer = 'ок'
+                else:
+                    answer = 'ок'
             else:
                 answer += 'неизвестная команда\n'
 
         if message != None:
             self._telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
-        return answer
+        return answer + '\n'

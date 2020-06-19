@@ -31,6 +31,11 @@ class CommunicationServer():
         CommunicationServer.logger.setLevel(logging.WARNING)
         print(f'set WARNING level in {CommunicationServer.logger.name} logger')
 
+    @staticmethod
+    def set_info():
+        CommunicationServer.logger.setLevel(logging.INFO)
+        print(f'set INFO level in {CommunicationServer.logger.name} logger')
+
     def __init__(self, name:str='root', ip:str=SATELLITE_IP, port:int = SATELLITE_PORT):
         critical = CommunicationServer.logger.critical
         if not isinstance(name, str):

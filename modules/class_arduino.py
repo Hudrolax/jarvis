@@ -23,6 +23,7 @@ class Arduino(JPrint):
     logger.setLevel(LOG_LEVEL)
 
     def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
+        self._name = 'arduino'
         self.port = None
         self.initialized = False
         self.pins = []
@@ -38,6 +39,10 @@ class Arduino(JPrint):
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def ac_alert_sended(self):

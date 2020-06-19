@@ -29,9 +29,15 @@ class LaserTCPServer(CommunicationServer):
         LaserTCPServer.logger.setLevel(logging.WARNING)
         print(f'set WARNING level in {LaserTCPServer.logger.name} logger')
 
+    @staticmethod
+    def set_info():
+        LaserTCPServer.logger.setLevel(logging.INFO)
+        print(f'set INFO level in {LaserTCPServer.logger.name} logger')
+
     def __init__(self, name:str, ip:str, port:int, jarvis:bool=False):
         super().__init__(name, ip, port)
         from modules.class_laser import Laser
+        self._name = 'laser_server'
         self.laser = Laser(x_min=20, x_max=150, y_min=0, y_max=179)
         self.laser.parent = self
         self.jarvis = jarvis
@@ -40,6 +46,10 @@ class LaserTCPServer(CommunicationServer):
             output_queue = queue.Queue()
             from modules.class_keyboard_hook import KeyBoardHook
             self.key_hook = KeyBoardHook(self, output_queue)
+
+    @property
+    def name(self):
+        return self._name
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
