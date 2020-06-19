@@ -24,7 +24,7 @@ class CommunicationServer():
     @staticmethod
     def set_debug():
         CommunicationServer.logger.setLevel(logging.DEBUG)
-        print('set DEBUG level in CommandProcessiong logger')
+        print(f'set DEBUG level in {CommunicationServer.logger.name} logger')
 
     @staticmethod
     def set_warning():

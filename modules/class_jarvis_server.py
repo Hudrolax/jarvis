@@ -135,7 +135,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
     @staticmethod
     def set_debug():
         Jarvis_Satellite_Server.logger.setLevel(logging.DEBUG)
-        print('set DEBUG level in CommandProcessiong logger')
+        print(f'set DEBUG level in {Jarvis_Satellite_Server.logger.name} logger')
 
     @staticmethod
     def set_warning():
