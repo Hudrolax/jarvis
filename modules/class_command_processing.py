@@ -578,5 +578,5 @@ class CommandProcessing:
                 answer += 'неизвестная команда\n'
 
         if message != None:
-            self._telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
+            self.telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
         return answer + '\n'
