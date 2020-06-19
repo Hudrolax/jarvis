@@ -47,7 +47,7 @@ class CommandProcessing:
         self._laser_turret = laser_turret
         self._telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
-        self.modules = [self, arduino, bot, satellite_server, satellite_server.super(), laser_turret, laser_turret.laser]
+        self.modules = [self, arduino, bot, satellite_server, laser_turret, laser_turret.laser]
 
     @property
     def name(self):
