@@ -1,5 +1,5 @@
 from .gfunctions import *
-import socket
+from socket import *
 import logging
 import threading
 from config import *
@@ -51,7 +51,7 @@ class CommunicationServer():
         self._own_server_adress = (ip, port)
         self._started = False
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
-        self.server_socket = socket.socket()
+        self.server_socket = socket(AF_INET, SOCK_STREAM, proto=0)
 
     @property
     def name(self):
@@ -83,17 +83,19 @@ class CommunicationServer():
     def handler_wrapper(self, connection, client_address):
         debug = self.logger.debug
         try:
-            data = clear_str(connection.recv(1024).decode("utf-8"))
-
-            logging.debug(f"received data: {data}")
-            # << Оборачиваемая функция
-            answer = self.handler(client_address, data)
-            # >> Оборачиваемая функция
-
-            debug(f'answer is "{answer}"')
-            if answer is not None:
-                debug(f'send an answer to {client_address}')
-                connection.sendall(bytes(answer, encoding='utf-8'))
+            while True:
+                data = connection.recv(1024)
+                if not data:
+                    break
+                else:
+                    data = clear_str(data.decode("utf-8"))
+                    debug(f"received data: {data}")
+                    # << Оборачиваемая функция
+                    answer = self.handler(client_address, data)
+                    # >> Оборачиваемая функция
+                    debug(f'answer is "{answer}"')
+                    # connection.send(answer.encode('ascii'))
+                    connection.sendall(bytes(answer, encoding='utf-8'))
         except ConnectionResetError:
             self.logger.error(f'Error with recieve data from {client_address}')
             return
@@ -132,7 +134,7 @@ class CommunicationServer():
             sleep(1)
         else:
             return None
-        self.server_socket.listen(1)
+        self.server_socket.listen(10)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
             connection, client_address = self.server_socket.accept()

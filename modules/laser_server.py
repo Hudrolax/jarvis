@@ -1,8 +1,10 @@
 import sys
+
 sys.path.append('../')
 from modules.class_com import CommunicationServer
 
 import logging
+
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
 # LOG_LEVEL = logging.DEBUG
@@ -19,7 +21,7 @@ else:
 class LaserTCPServer(CommunicationServer):
     logger = logging.getLogger('laser server')
 
-    def __init__(self, ip:str, port:int, threded:bool=True, jarvis:bool=False):
+    def __init__(self, ip: str, port: int, threded: bool = True, jarvis: bool = False):
         super().__init__(ip, port, threded)
         from modules.class_laser import Laser
         self._name = 'laser_server'
@@ -39,10 +41,12 @@ class LaserTCPServer(CommunicationServer):
             answer = f'cmd={self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
         else:
             answer = 'none'
-        return answer+'#'
+        return answer + '#'
+
 
 if __name__ == '__main__':
-    server = LaserTCPServer('192.168.18.3', 8586, jarvis=False)
+    server = LaserTCPServer('192.168.18.3', 8586)
+    server.logger.setLevel(logging.INFO)
     server.start()
     while True:
         if (server.key_hook.queue.qsize() > 0):
