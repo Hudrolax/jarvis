@@ -139,7 +139,7 @@ class CommunicationServer():
             sleep(1)
         else:
             return None
-        self.server_socket.listen(1)
+        self.server_socket.listen(10000)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
             debug('wait for connection')
@@ -168,6 +168,7 @@ class CommunicationClient():
         self._name = name
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.settimeout(5)
+        self.connect()
 
     @property
     def name(self):
@@ -205,5 +206,6 @@ class CommunicationClient():
         return self.send(f'{self.name}:{message}')
 
 if __name__ == '__main__':
-    client = CommunicationClient('test', '192.168.18.30', 8586)
+    client = CommunicationClient('test', '192.168.18.30', 8585)
+    print(client.send('test'))
     print(client.send('test'))
