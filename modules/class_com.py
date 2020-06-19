@@ -74,10 +74,12 @@ class CommunicationServer():
 
     def handler_wrapper(self, connection, client_address):
         debug = self.logger.debug
-        data = clear_str(connection.recv(1024).decode("utf-8"))
+        try:
+            data = clear_str(connection.recv(1024).decode("utf-8"))
+        except ConnectionResetError:
+            self.logger.error(f'Error with recieve data from {client_address}')
+            return
         logging.debug(f"received data: {data}")
-        answer = 'None'
-
         # << Оборачиваемая функция
         answer = self.handler(client_address, data)
         # >> Оборачиваемая функция

@@ -50,6 +50,8 @@ class Laser(Rectangle):
     def __init__(self, x_min:int=20, x_max:int=150, y_min:int=0, y_max:int=179):
         self.parking_point = self.Point(92, 0)
         super().__init__(x_min, x_max, y_min, y_max, self.parking_point.x, self.parking_point.y)
+        self.parent = None
+        self._translate_data_to_laser = False
         self._laser_on = False
         self._game_mode = False
         self._game_coords = []
@@ -60,6 +62,17 @@ class Laser(Rectangle):
         self._game_stop_time = datetime.now()
         self._game_thread = threading.Thread(target=self.game, args=(), daemon=True)
         self._game_thread.start()
+
+    @property
+    def translate_data_to_laser(self):
+        return self._translate_data_to_laser
+
+    @translate_data_to_laser.setter
+    def translate_data_to_laser(self, val):
+        if isinstance(val, bool):
+            self._translate_data_to_laser = val
+        else:
+            raise TypeError(f'_translate_data_to_laser type error. Need bool, but {type(val)} recieved')
 
     @property
     def game_time_range_sec(self):
@@ -136,8 +149,11 @@ class Laser(Rectangle):
     def rev_game_mode(self):
         self._game_mode = not self._game_mode
         if self._game_mode:
+            self.translate_data_to_laser = True
             self.start_game()
         else:
+            if not self.parent.key_hook.hook_on:
+                self.translate_data_to_laser = False
             self.stop_game()
 
     def start_game(self):

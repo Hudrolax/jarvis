@@ -87,32 +87,32 @@ void loop() {
   }
 
   String line = client.readStringUntil('\r');
-  Serial.println(line);
-  if (line.length()>0){
+  //Serial.println(line);
+  if (line.length()>0 && !(line == "None" || line == "none")){
     int x_cord = 181;
     int y_cord = 181;
     int laser_state = 0;
     String cmd = "";
     int cmd_i = 1;
-//    for(int i=0; i<line.length()+1; i++){
-//      if (char_is_digit(line.charAt(i))){
-//        cmd += line.charAt(i);
-//      }else{
-//         switch (cmd_i){
-//          case 1:
-//            x_cord = cmd.toInt();
-//            break;
-//          case 2:
-//            y_cord = cmd.toInt();
-//            break;
-//          case 3:
-//            laser_state = cmd.toInt();
-//            break;
-//         }   
-//        cmd_i++;
-//        cmd = "";
-//      }
-//    }
+    for(int i=0; i<line.length()+1; i++){
+      if (char_is_digit(line.charAt(i))){
+        cmd += line.charAt(i);
+      }else{
+         switch (cmd_i){
+          case 1:
+            x_cord = cmd.toInt();
+            break;
+          case 2:
+            y_cord = cmd.toInt();
+            break;
+          case 3:
+            laser_state = cmd.toInt();
+            break;
+         }   
+        cmd_i++;
+        cmd = "";
+      }
+    }
     //Serial.println(String(x_cord) + " "+String(y_cord) + " laser "+String(laser_state));
     digitalWrite(laser_pin, laser_state);
     if (x_cord < 181 && y_cord < 181){
@@ -120,12 +120,10 @@ void loop() {
       servo_y.write(y_cord);   
     }
   }else{
+    //Serial.println("none");
     delay(1000);
   }
-
- 
   client.stop();
-  delay(20);
 }
 
 bool char_is_digit(char c){

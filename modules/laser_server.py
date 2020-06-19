@@ -29,26 +29,29 @@ class LaserTCPServer(CommunicationServer):
         LaserTCPServer.logger.setLevel(logging.WARNING)
         print(f'set WARNING level in {LaserTCPServer.logger.name} logger')
 
-    def __init__(self, *args, jarvis=False):
-        super().__init__(*args)
+    def __init__(self, name:str, ip:str, port:int, jarvis:bool=False):
+        super().__init__(name, ip, port)
         from modules.class_laser import Laser
         self.laser = Laser(x_min=20, x_max=150, y_min=0, y_max=179)
+        self.laser.parent = self
+        self.jarvis = jarvis
         if not jarvis:
             import queue
             output_queue = queue.Queue()
             from modules.class_keyboard_hook import KeyBoardHook
-            self.key_hook = KeyBoardHook(output_queue)
+            self.key_hook = KeyBoardHook(self, output_queue)
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
         # data - очищенные данные - только строка
-
-        self.logger.debug(data)
-        answer = f'{self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
+        if self.laser.translate_data_to_laser:
+            answer = f'{self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
+        else:
+            answer = 'none'
         return answer+'\r'
 
 if __name__ == '__main__':
-    server = LaserTCPServer('root', '192.168.18.3', 8585)
+    server = LaserTCPServer('root', '192.168.18.3', 8586, jarvis=False)
     server.start()
     while True:
         if (server.key_hook.queue.qsize() > 0):
