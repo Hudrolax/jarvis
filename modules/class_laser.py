@@ -52,13 +52,12 @@ class Laser(Rectangle):
         def __str__(self):
             return f'(x={self.x}, y={self.y}, x_speed={self.x_speed}, y_speed={self.y_speed})'
 
-    def __init__(self, x_min:int=20, x_max:int=150, y_min:int=0, y_max:int=179):
+    def __init__(self, laser_server, x_min:int=20, x_max:int=150, y_min:int=0, y_max:int=179):
         self.parking_point = self.Point(92, 0)
         super().__init__(x_min, x_max, y_min, y_max, self.parking_point.x, self.parking_point.y)
         self._name = 'laser'
-        self.parent = None
-        self._translate_data_to_laser = False
-        self._laser_on = False
+        self.laser_server = laser_server
+        self._laser = False
         self._game_mode = False
         self._game_coords = []
         self._game_coords_loaded = False
@@ -74,17 +73,6 @@ class Laser(Rectangle):
         return self._name
 
     @property
-    def translate_data_to_laser(self):
-        return self._translate_data_to_laser
-
-    @translate_data_to_laser.setter
-    def translate_data_to_laser(self, val):
-        if isinstance(val, bool):
-            self._translate_data_to_laser = val
-        else:
-            raise TypeError(f'_translate_data_to_laser type error. Need bool, but {type(val)} recieved')
-
-    @property
     def game_time_range_sec(self):
         return [self._game_time_range_sec[0], self._game_time_range_sec[1]]
 
@@ -95,33 +83,27 @@ class Laser(Rectangle):
             self._game_time_range_sec[1] = val[1]
 
     @property
-    def laser_on(self):
-        return self._laser_on
+    def laser(self):
+        return self._laser
 
-    @laser_on.setter
-    def laser_on(self, val):
-        if isinstance(val, bool):
-            self._laser_on = val
-        elif isinstance(val, int) or isinstance(val, float):
-            self._laser_on = bool(val)
-        elif isinstance(val, str):
-            if val.lower() == 'on':
-                self._laser_on = True
-            elif val.lower() == 'off':
-                self._laser_on = False
-        else:
-            self.logger.error(f'laser_on setter type error. Need bool, int, float or str, but got {type(val)}')
+    def laser_on(self):
+        self._laser = True
+        self.add_translate_command()
+
+    def laser_off(self):
+        self._laser = False
+        self.add_translate_command()
 
     @property
     def laser_state_str(self):
-        if self._laser_on:
+        if self._laser:
             return 'ON'
         else:
             return 'OFF'
 
     @property
     def laser_state_int(self):
-        if self._laser_on:
+        if self._laser:
             return 1
         else:
             return 0
@@ -142,45 +124,40 @@ class Laser(Rectangle):
             raise TypeError('game_mode type error')
 
     def rev_laser(self):
-        self._laser_on = not self._laser_on
+        self._laser = not self._laser
+        self.add_translate_command()
         self.logger.info(f'laser {self.laser_state_str}')
 
 
     def homing(self):
         self.logger.debug('start homing')
-        self.laser_on = False
+        self.laser_off()
         self._game_mode = False
         while self.game_runned:
             sleep(0.1)
         self.logger.debug('start moving axis for homing')
         self.move_axis_to_coord(self.parking_point.x, self.parking_point.y, 2, 2)
-        print(f'laser homed. Laser is {self.laser_on}')
+        print(f'laser homed. Laser is {self.laser}')
 
     def rev_game_mode(self):
         self._game_mode = not self._game_mode
         if self._game_mode:
-            self.translate_data_to_laser = True
             self.start_game()
         else:
-            if not self.parent.key_hook.hook_on:
-                self.translate_data_to_laser = False
             self.stop_game()
 
     def start_game(self):
         self.game_mode = True
-        self.translate_data_to_laser = True
         _game_time = random.randint(self.game_time_range_sec[0], self.game_time_range_sec[1])
         self.logger.info(f'Game time is {_game_time} sec.')
         self._game_stop_time = datetime.now() + timedelta(seconds=_game_time)
         self.load_game_coordinates()
-        self.laser_on = True
+        self.laser_on()
         self.logger.info('game mode ON')
         return _game_time
 
     def stop_game(self):
         self.game_mode = False
-        if self.parent.jarvis or not self.parent.key_hook.hook_on:
-            self.translate_data_to_laser = False
         self.homing()
         self.logger.info('game mode OFF')
 
@@ -197,6 +174,7 @@ class Laser(Rectangle):
                 self.y += speed_y
             elif self.y > y:
                 self.y -= speed_y
+            self.add_translate_command()
             sleep(0.03)
 
     def move_axis(self, direction, speed_x, speed_y):
@@ -208,7 +186,11 @@ class Laser(Rectangle):
             self.x += speed_x
         elif direction == 'right':
             self.x -= speed_x
+        self.add_translate_command()
         sleep(0.01)
+
+    def add_translate_command(self):
+        self.laser_server.translate_queue.put((self.x, self.y, self.laser_state_int))
 
     def load_game_coordinates(self):
         self._game_coords = []

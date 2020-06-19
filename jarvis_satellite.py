@@ -139,12 +139,12 @@ class Jarvis_Satellite_client(CommunicationClient):
             sleep(1)
 
 
-
 if __name__ == '__main__':
     if SATELLITE_NAME == '':
         raise Exception('SATELLITE_NAME is not exist')
     tcp_client = Jarvis_Satellite_client(SATELLITE_NAME, SATELLITE_IP, SATELLITE_PORT)
     tcp_client.start()
+    # tcp_client.logger.setLevel(logging.DEBUG)
 
     while True:
         # do something

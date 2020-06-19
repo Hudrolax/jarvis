@@ -208,6 +208,6 @@ class CommunicationClient():
         return self.send(f'{self.name}:{message}')
 
 if __name__ == '__main__':
-    client = CommunicationClient('test', '192.168.18.3', 8586)
+    client = CommunicationClient('test', '192.168.18.30', 8586)
     print(client.send('ping'))
     print(client.send('ping'))
