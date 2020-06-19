@@ -41,11 +41,11 @@ class CommandProcessing:
 
     def __init__(self, arduino, telegram_answer_queue, bot, satellite_server, laser_turret):
         self._name = 'command_processing'
-        self._arduino = arduino
-        self._bot = bot
-        self._satellite_server = satellite_server
-        self._laser_turret = laser_turret
-        self._telegram_answer_queue = telegram_answer_queue
+        self.arduino = arduino
+        self.bot = bot
+        self.satellite_server = satellite_server
+        self.laser_turret = laser_turret
+        self.telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
         self.modules = [self, arduino, bot, satellite_server, laser_turret, laser_turret.laser]
 
