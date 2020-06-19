@@ -132,29 +132,11 @@ class Jarvis_Satellite_Server(CommunicationServer):
     logger = logging.getLogger('Jarvis_Satellite_Server')
     logger.setLevel(logging.INFO)
 
-    @staticmethod
-    def set_debug():
-        Jarvis_Satellite_Server.logger.setLevel(logging.DEBUG)
-        print(f'set DEBUG level in {Jarvis_Satellite_Server.logger.name} logger')
-
-    @staticmethod
-    def set_warning():
-        Jarvis_Satellite_Server.logger.setLevel(logging.WARNING)
-        print(f'set WARNING level in {Jarvis_Satellite_Server.logger.name} logger')
-
-    @staticmethod
-    def set_info():
-        Jarvis_Satellite_Server.logger.setLevel(logging.INFO)
-        print(f'set INFO level in {Jarvis_Satellite_Server.logger.name} logger')
-
-    def __init__(self, ip:str ='127.0.0.1', port:int = 8585):
-        super().__init__(ip, port)
+    def __init__(self, ip:str ='127.0.0.1', port:int = 8585, threded:bool=True):
+        super().__init__(ip, port, threded)
         self._name = 'satellite_server'
         self._miners = []
 
-    @property
-    def name(self):
-        return self._name
 
     @property
     def miners(self):

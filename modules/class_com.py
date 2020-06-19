@@ -36,9 +36,10 @@ class CommunicationServer():
         CommunicationServer.logger.setLevel(logging.INFO)
         print(f'set INFO level in {CommunicationServer.logger.name} logger')
 
-    def __init__(self, ip:str=SATELLITE_IP, port:int = SATELLITE_PORT):
+    def __init__(self, ip:str=SATELLITE_IP, port:int = SATELLITE_PORT, threded:bool=True):
         critical = CommunicationServer.logger.critical
         self._name = 'class_com'
+        self._threded = threded
 
         if not isinstance(ip, str):
             critical("init error. 'ip' is not 'str' type.")
@@ -138,6 +139,8 @@ class CommunicationServer():
             debug(f"new connection from {client_address}")
             handle_thread = threading.Thread(target=self.handler_wrapper, args=(connection, client_address), daemon=True)
             handle_thread.start()
+            if not self._threded:
+                handle_thread.join()
 
         self.server_socket.close()
 

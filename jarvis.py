@@ -235,7 +235,7 @@ if __name__ == "__main__":
     logger.info('start satellite server')
 
     # laser turret server
-    laser_turret = LaserTCPServer(SATELLITE_IP, 8586, jarvis=True)
+    laser_turret = LaserTCPServer(SATELLITE_IP, 8586, threded=False, jarvis=True)
     laser_turret.start()
 
     command_processing = CommandProcessing(arduino, telegram_answer_queue, bot, satellite_server, laser_turret)
