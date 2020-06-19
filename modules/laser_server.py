@@ -46,7 +46,7 @@ class LaserTCPServer(CommunicationServer):
 
 if __name__ == '__main__':
     server = LaserTCPServer('192.168.18.3', 8586)
-    server.logger.setLevel(logging.INFO)
+    server.logger.setLevel(logging.DEBUG)
     server.start()
     while True:
         if (server.key_hook.queue.qsize() > 0):

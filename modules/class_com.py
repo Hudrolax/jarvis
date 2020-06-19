@@ -56,7 +56,6 @@ class CommunicationServer():
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
         self.server_socket = socket(AF_INET, SOCK_STREAM, proto=0)
         self.server_socket.settimeout(5)
-        # self.server_socket = socket()
 
     @property
     def name(self):
@@ -142,11 +141,11 @@ class CommunicationServer():
         self.server_socket.listen(10000)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
-            debug('wait for connection')
             try:
                 connection, client_address = self.server_socket.accept()
-            except TimeoutError:
+            except Exception:
                 debug(f'connection timeout')
+                continue
             debug(f"new connection from {client_address}")
             handle_thread = threading.Thread(target=self.handler_wrapper, args=(connection, client_address), daemon=True)
             handle_thread.start()
@@ -158,7 +157,7 @@ class CommunicationServer():
 class CommunicationClient():
     logger = logging.getLogger('Comm client')
 
-    def __init__(self, name:str, ip:str='127.0.0.1', port:int=8585):
+    def __init__(self, name:str, ip:str='192.168.18.3', port:int=8586):
         critical = CommunicationClient.logger.critical
         if not isinstance(ip, str):
             critical("init error. 'ip' is not 'str' type.")
@@ -169,9 +168,7 @@ class CommunicationClient():
             raise Exception("init error. 'port' is not 'int' type.")
         self._port = port
         self._name = name
-        self.sock = socket(AF_INET, SOCK_STREAM)
-        self.sock.settimeout(5)
-        self.connect()
+        self.sock = create_connection((self.ip, self.port), 5)
 
     @property
     def name(self):
@@ -194,14 +191,16 @@ class CommunicationClient():
 
     def send(self, message):
         error = CommunicationClient.logger.error
-        answer = None
+        answer = 'none'
         try:
-            self.sock.sendall(bytes(message, encoding='utf-8'))
-            #answer = sock.recv(1024)
+            self.sock.sendall(str.encode(message))
+            # self.sock.sendall(bytes(message, encoding='utf-8'))
+            # return self.sock.recv(1024)
             answer = clear_str(self.sock.recv(1024).decode('utf-8'))
+
         except OSError:
             error(f'error connection to {self._ip}:{self.port}')
-            self.connect()
+            # self.connect()
 
         return answer
 
@@ -209,6 +208,6 @@ class CommunicationClient():
         return self.send(f'{self.name}:{message}')
 
 if __name__ == '__main__':
-    client = CommunicationClient('test', '192.168.18.30', 8585)
-    print(client.send('test'))
-    print(client.send('test'))
+    client = CommunicationClient('test', '192.168.18.3', 8586)
+    print(client.send('ping'))
+    print(client.send('ping'))
