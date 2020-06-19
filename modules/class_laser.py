@@ -130,12 +130,12 @@ class Laser(Rectangle):
 
 
     def homing(self):
-        self.logger.debug('start homing')
+        self.logger.info('start homing')
         self.laser_off()
         self._game_mode = False
         while self.game_runned:
             sleep(0.1)
-        self.logger.debug('start moving axis for homing')
+        self.logger.info('start moving axis for homing')
         self.move_axis_to_coord(self.parking_point.x, self.parking_point.y, 2, 2)
         print(f'laser homed. Laser is {self.laser}')
 
@@ -231,13 +231,14 @@ class Laser(Rectangle):
                         self.game_runned = False
                         break
                     self.move_axis_to_coord(coord.x, coord.y, coord.x_speed, coord.y_speed)
-                    self.logger.info(f'GAME: move to {coord.x}, {coord.y} speed {coord.x_speed}, {coord.y_speed}')
+                    self.logger.debug(f'GAME: move to {coord.x}, {coord.y} speed {coord.x_speed}, {coord.y_speed}')
                     if self.logger.level == logging.DEBUG:
                         print('sleep 1 sec (because DEBUG level)')
                         sleep(1)
                 if datetime.now() > self._game_stop_time:
                     self.logger.info('Stop game mode by timer.')
                     self.game_mode = False
+                    self.game_runned = False
                     self.stop_game()
             else:
                 self.game_runned = False
