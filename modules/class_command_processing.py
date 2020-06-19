@@ -48,9 +48,10 @@ class CommandProcessing:
         self.telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
         self.modules = [self, arduino, bot, satellite_server, laser_turret, laser_turret.laser]
-        # set info logger level in default
+        # set info logger level by default
         for module in self.modules:
             module.set_info()
+        self.logger.info('Set INFO logger level for all modules by default.')
 
     @property
     def name(self):
