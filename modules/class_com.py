@@ -55,7 +55,7 @@ class CommunicationServer():
         self._started = False
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
         self.server_socket = socket(AF_INET, SOCK_STREAM, proto=0)
-        self.server_socket.settimeout(5)
+        self.server_socket.settimeout(3)
 
     @property
     def name(self):
