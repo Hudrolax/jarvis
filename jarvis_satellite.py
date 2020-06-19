@@ -98,6 +98,7 @@ class Jarvis_Satellite_client(CommunicationClient):
 
     def stop(self):
         self._runned = False
+        self.stop()
 
     def _ping(self):
         debug = Jarvis_Satellite_client.logger.debug
