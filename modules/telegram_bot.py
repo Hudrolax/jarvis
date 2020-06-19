@@ -9,7 +9,7 @@ import logging
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
 #LOG_LEVEL = logging.DEBUG
-LOG_LEVEL = logging.WARNING
+LOG_LEVEL = logging.INFO
 
 if WRITE_LOG_TO_FILE:
     logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
@@ -80,6 +80,7 @@ class TelegramBot(telebot.TeleBot, JPrint):
     PROXY_LIST_SITE_LIST.append('http://pubproxy.com/api/proxy?format=txt')
 
     logger = logging.getLogger('Telegram_bot')
+    logger.setLevel(logging.INFO)
 
     @staticmethod
     def set_info():
