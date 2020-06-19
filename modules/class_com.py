@@ -143,7 +143,10 @@ class CommunicationServer():
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
             debug('wait for connection')
-            connection, client_address = self.server_socket.accept()
+            try:
+                connection, client_address = self.server_socket.accept()
+            except TimeoutError:
+                debug(f'connection timeout')
             debug(f"new connection from {client_address}")
             handle_thread = threading.Thread(target=self.handler_wrapper, args=(connection, client_address), daemon=True)
             handle_thread.start()
