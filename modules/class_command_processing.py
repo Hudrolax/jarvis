@@ -48,6 +48,9 @@ class CommandProcessing:
         self.telegram_answer_queue = telegram_answer_queue
         self.START_TIME = datetime.now()
         self.modules = [self, arduino, bot, satellite_server, laser_turret, laser_turret.laser]
+        # set info logger level in default
+        for module in self.modules:
+            module.set_info()
 
     @property
     def name(self):
@@ -523,7 +526,7 @@ class CommandProcessing:
                   cmd.find('выруби') > -1) and cmd.find('майнинг') > -1:
                 self.satellite_server.stop_miners()
                 answer = 'остановил майнинг'
-            elif 'debug' in cmd_list:
+            elif 'info' in cmd_list:
                 if len(cmd_list) == 1:
                     for module in self.modules:
                         module.set_info()

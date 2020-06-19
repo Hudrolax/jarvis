@@ -87,7 +87,7 @@ void loop() {
   }
 
   String line = client.readStringUntil('\r');
-  //Serial.println(line);
+  Serial.println(line);
   if (line.length()>0 && !(line == "None" || line == "none")){
     int x_cord = 181;
     int y_cord = 181;
@@ -120,7 +120,7 @@ void loop() {
       servo_y.write(y_cord);   
     }
   }else{
-    //Serial.println("none");
+    Serial.println("none");
     delay(1000);
   }
   client.stop();

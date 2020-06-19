@@ -168,6 +168,7 @@ class Laser(Rectangle):
 
     def start_game(self):
         self.game_mode = True
+        self.translate_data_to_laser = True
         _game_time = random.randint(self.game_time_range_sec[0], self.game_time_range_sec[1])
         self.logger.info(f'Game time is {_game_time} sec.')
         self._game_stop_time = datetime.now() + timedelta(seconds=_game_time)
@@ -178,6 +179,8 @@ class Laser(Rectangle):
 
     def stop_game(self):
         self.game_mode = False
+        if self.parent.jarvis or not self.parent.key_hook.hook_on:
+            self.translate_data_to_laser = False
         self.homing()
         self.logger.info('game mode OFF')
 
