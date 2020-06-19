@@ -490,6 +490,7 @@ class CommandProcessing:
                             answer += "включены"
                         else:
                             answer += "ВЫКЛЮЧЕНЫ"
+                        answer += '\n'
                     else:
                         answer += "<не могу найти пин насосов  по description 'насосы'>"
 
@@ -505,12 +506,12 @@ class CommandProcessing:
                                 answer += miner.name + f'({miner.runned_text()})'
                         if k==0:
                             answer += 'все offline'
-
+                    answer += '\n'
                     # инфа по напряжениям
                     ACNet = 'есть'
                     if not self.arduino.ac_exist:
                         ACNet = 'НЕТ'
-                    answer += f'Напряжение в сети {ACNet}'
+                    answer += f'Напряжение в сети {ACNet}\n'
                     answer += f'Напряжение аккумулятора {self.arduino.dc_value} V ({self.arduino.dc_voltage_in_percent} %)'
                 else:
                     answer += get_access_error()

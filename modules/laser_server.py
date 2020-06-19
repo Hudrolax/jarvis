@@ -55,13 +55,13 @@ class LaserTCPServer(CommunicationServer):
         # client_address - адрес клиента
         # data - очищенные данные - только строка
         if self.laser.translate_data_to_laser:
-            answer = f'{self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
+            answer = f'cmd={self.laser.x} {self.laser.y} {self.laser.laser_state_int}'
         else:
             answer = 'none'
-        return answer+'\r'
+        return answer+'#'
 
 if __name__ == '__main__':
-    server = LaserTCPServer('root', '192.168.18.3', 8586, jarvis=False)
+    server = LaserTCPServer('192.168.18.3', 8586, jarvis=False)
     server.start()
     while True:
         if (server.key_hook.queue.qsize() > 0):

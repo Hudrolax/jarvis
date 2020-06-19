@@ -86,6 +86,9 @@ class CommunicationServer():
         except ConnectionResetError:
             self.logger.error(f'Error with recieve data from {client_address}')
             return
+        except UnicodeDecodeError:
+            self.logger.error(f'Error with decode UTF-8 data from {client_address}')
+            return
         logging.debug(f"received data: {data}")
         # << Оборачиваемая функция
         answer = self.handler(client_address, data)

@@ -73,6 +73,7 @@ void loop() {
   // This will send the request to the server
   String string = client_name;
   client.println(string);
+  client.setTimeout(1000);
 
   unsigned long timeout = millis();
   
@@ -86,15 +87,16 @@ void loop() {
     }
   }
 
-  String line = client.readStringUntil('\r');
+  //String line = "";
+  String line = client.readStringUntil('#');
   Serial.println(line);
-  if (line.length()>0 && !(line == "None" || line == "none")){
+  if (line.length()>0 && line.charAt(0)=='c' && line.charAt(1)=='m' && line.charAt(2)=='d' && line.charAt(3)=='=' && !(line == "None" || line == "none")){
     int x_cord = 181;
     int y_cord = 181;
     int laser_state = 0;
     String cmd = "";
     int cmd_i = 1;
-    for(int i=0; i<line.length()+1; i++){
+    for(int i=4; i<line.length()+1; i++){
       if (char_is_digit(line.charAt(i))){
         cmd += line.charAt(i);
       }else{
@@ -119,6 +121,7 @@ void loop() {
       servo_x.write(x_cord);
       servo_y.write(y_cord);   
     }
+    delay(10);
   }else{
     Serial.println("none");
     delay(1000);

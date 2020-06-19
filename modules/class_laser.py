@@ -238,7 +238,6 @@ class Laser(Rectangle):
         self._game_coords_loaded = True
 
     def game(self):
-        _debug = False
         while True:
             if self.game_mode and self._game_coords_loaded:
                 self.game_runned = True
@@ -250,8 +249,9 @@ class Laser(Rectangle):
                         self.game_runned = False
                         break
                     self.move_axis_to_coord(coord.x, coord.y, coord.x_speed, coord.y_speed)
-                    # self.logger.info(f'GAME: move to {coord.x}, {coord.y} speed {coord.x_speed}, {coord.y_speed}')
-                    if _debug:
+                    self.logger.info(f'GAME: move to {coord.x}, {coord.y} speed {coord.x_speed}, {coord.y_speed}')
+                    if self.logger.level == logging.DEBUG:
+                        print('sleep 1 sec (because DEBUG level)')
                         sleep(1)
                 if datetime.now() > self._game_stop_time:
                     self.logger.info('Stop game mode by timer.')
