@@ -147,8 +147,8 @@ class Jarvis_Satellite_Server(CommunicationServer):
         Jarvis_Satellite_Server.logger.setLevel(logging.INFO)
         print(f'set INFO level in {Jarvis_Satellite_Server.logger.name} logger')
 
-    def __init__(self, name:str ='root', ip:str ='127.0.0.1', port:int = 8585):
-        super().__init__(name, ip, port)
+    def __init__(self, ip:str ='127.0.0.1', port:int = 8585):
+        super().__init__(ip, port)
         self._name = 'satellite_server'
         self._miners = []
 

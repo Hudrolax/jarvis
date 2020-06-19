@@ -36,11 +36,9 @@ class CommunicationServer():
         CommunicationServer.logger.setLevel(logging.INFO)
         print(f'set INFO level in {CommunicationServer.logger.name} logger')
 
-    def __init__(self, name:str='root', ip:str=SATELLITE_IP, port:int = SATELLITE_PORT):
+    def __init__(self, ip:str=SATELLITE_IP, port:int = SATELLITE_PORT):
         critical = CommunicationServer.logger.critical
-        if not isinstance(name, str):
-            raise Exception("CommunicationServer init error. 'name' is not 'str' type.")
-        self.name = name
+        self._name = 'class_com'
 
         if not isinstance(ip, str):
             critical("init error. 'ip' is not 'str' type.")
@@ -53,6 +51,10 @@ class CommunicationServer():
         self._started = False
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
         self.server_socket = socket.socket()
+
+    @property
+    def name(self):
+        return self._name
 
     def __str__(self):
         return self.name

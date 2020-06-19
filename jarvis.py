@@ -227,7 +227,7 @@ if __name__ == "__main__":
     telegram_answer_queue = queue.Queue()
 
     #start satellite server
-    satellite_server = Jarvis_Satellite_Server(name='Jarvis', ip=SATELLITE_IP, port=SATELLITE_PORT)
+    satellite_server = Jarvis_Satellite_Server(ip=SATELLITE_IP, port=SATELLITE_PORT)
     satellite_server.add_miner('zeon')
     satellite_server.add_miner('serverx')
     satellite_server.add_miner('tekilla')
