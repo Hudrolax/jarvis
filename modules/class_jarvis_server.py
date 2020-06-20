@@ -132,8 +132,8 @@ class Jarvis_Satellite_Server(CommunicationServer):
     logger = logging.getLogger('Jarvis_Satellite_Server')
     logger.setLevel(logging.INFO)
 
-    def __init__(self, ip:str ='127.0.0.1', port:int = 8585, threded:bool=True):
-        super().__init__(ip, port, threded)
+    def __init__(self, ip:str ='127.0.0.1', port:int = 8585):
+        super().__init__(ip, port)
         self._name = 'satellite_server'
         self._miners = []
 

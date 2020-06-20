@@ -39,10 +39,9 @@ class CommunicationServer():
         CommunicationServer.logger.setLevel(logging.INFO)
         print(f'set INFO level in {CommunicationServer.logger.name} logger')
 
-    def __init__(self, ip:str=SATELLITE_IP, port:int = SATELLITE_PORT, threded:bool=True):
+    def __init__(self, ip:str='0.0.0.0', port:int = SATELLITE_PORT):
         critical = CommunicationServer.logger.critical
         self._name = 'class_com'
-        self._threded = threded
 
         if not isinstance(ip, str):
             critical("init error. 'ip' is not 'str' type.")
@@ -55,7 +54,7 @@ class CommunicationServer():
         self._started = False
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
         self.server_socket = socket(AF_INET, SOCK_STREAM)
-        self.server_socket.settimeout(5)
+        self.server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
     @property
     def name(self):
@@ -92,14 +91,14 @@ class CommunicationServer():
                 if not data:
                     break
                 else:
-                    data = clear_str(data.decode("utf-8"))
+                    data = clear_str(data.decode())
                     debug(f"received data: {data}")
                     # << Оборачиваемая функция
                     answer = self.handler(client_address, data)
                     # >> Оборачиваемая функция
                     debug(f'answer is "{answer}"')
                     # connection.send(answer.encode('ascii'))
-                    connection.sendall(bytes(answer, encoding='utf-8'))
+                    connection.sendall(answer.encode())
         except ConnectionResetError:
             self.logger.error(f'Error with recieve data from {client_address}')
             return
@@ -107,8 +106,9 @@ class CommunicationServer():
             self.logger.error(f'Error with decode UTF-8 data from {client_address}')
             return
         finally:
-            connection.close()
-            debug(f'connection from {client_address} closed')
+            pass
+            # connection.close()
+            # debug(f'connection from {client_address} closed')
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
@@ -129,16 +129,12 @@ class CommunicationServer():
                 self.server_socket.bind(self._own_server_adress)
                 break
             except:
-                try:
-                    self.server_socket.close()
-                except:
-                    pass
+                pass
                 error(f"Can't bind {self.ip}:{self.port}")
-                Runned.runned = False
-            sleep(1)
+            sleep(5)
         else:
             return None
-        self.server_socket.listen(10000)
+        self.server_socket.listen(20)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
             try:
@@ -149,8 +145,6 @@ class CommunicationServer():
             debug(f"new connection from {client_address}")
             handle_thread = threading.Thread(target=self.handler_wrapper, args=(connection, client_address), daemon=True)
             handle_thread.start()
-            if not self._threded:
-                handle_thread.join()
 
         self.server_socket.close()
 
@@ -168,7 +162,8 @@ class CommunicationClient():
             raise Exception("init error. 'port' is not 'int' type.")
         self._port = port
         self._name = name
-        self.sock = create_connection((self.ip, self.port), 5)
+        self.sock = socket(AF_INET, SOCK_STREAM)
+        # self.sock.settimeout(5)
 
     @property
     def name(self):
@@ -183,24 +178,29 @@ class CommunicationClient():
         return self._port
 
     def connect(self):
-        # print(type(self.sock))
-        self.sock.connect((self.ip, self.port))
+        try:
+            self.sock.connect((self.ip, self.port))
+        except OSError:
+            self.logger.error(f'connection error to {self._ip}:{self.port}')
+            sleep(1)
 
     def close(self):
         self.sock.close()
 
     def send(self, message):
-        error = CommunicationClient.logger.error
         answer = 'none'
-        try:
-            self.sock.sendall(str.encode(message))
-            # self.sock.sendall(bytes(message, encoding='utf-8'))
-            # return self.sock.recv(1024)
-            answer = clear_str(self.sock.recv(1024).decode('utf-8'))
-
-        except OSError:
-            error(f'error connection to {self._ip}:{self.port}')
-            # self.connect()
+        attempt = 10
+        while attempt > 0:
+            try:
+                self.logger.debug('try to send')
+                self.sock.sendall(str.encode(message))
+                self.logger.debug('try to get answer')
+                answer = clear_str(self.sock.recv(1024).decode())
+                break
+            except OSError:
+                attempt -= 1
+                self.logger.warning(f'send error to {self._ip}:{self.port}. Try to reconnect to server.')
+                self.connect()
 
         return answer
 
@@ -208,6 +208,7 @@ class CommunicationClient():
         return self.send(f'{self.name}:{message}')
 
 if __name__ == '__main__':
-    client = CommunicationClient('test', '192.168.18.30', 8586)
+    client = CommunicationClient('test', '192.168.18.3', 8586)
+    client.logger.setLevel(logging.DEBUG)
     print(client.send('ping'))
     print(client.send('ping'))

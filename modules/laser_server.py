@@ -21,8 +21,8 @@ else:
 class LaserTCPServer(CommunicationServer):
     logger = logging.getLogger('laser server')
 
-    def __init__(self, ip: str, port: int, threded: bool = True, jarvis: bool = False):
-        super().__init__(ip, port, threded)
+    def __init__(self, ip: str, port: int, jarvis: bool = False):
+        super().__init__(ip, port)
         from modules.class_laser import Laser
         self._name = 'laser_server'
         self.laser = Laser(self, x_min=20, x_max=150, y_min=0, y_max=179)
@@ -46,8 +46,8 @@ class LaserTCPServer(CommunicationServer):
 
 
 if __name__ == '__main__':
-    server = LaserTCPServer('192.168.18.3', 8586)
-    # server.logger.setLevel(logging.DEBUG)
+    server = LaserTCPServer('0.0.0.0', 8586)
+    server.logger.setLevel(logging.DEBUG)
     server.start()
     while True:
         if (server.key_hook.queue.qsize() > 0):

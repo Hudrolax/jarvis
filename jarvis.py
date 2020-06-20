@@ -227,7 +227,7 @@ if __name__ == "__main__":
     telegram_answer_queue = queue.Queue()
 
     #start satellite server
-    satellite_server = Jarvis_Satellite_Server(ip=SATELLITE_IP, port=SATELLITE_PORT)
+    satellite_server = Jarvis_Satellite_Server(ip='0.0.0.0', port=SATELLITE_PORT)
     satellite_server.add_miner('zeon')
     satellite_server.add_miner('serverx')
     satellite_server.add_miner('tekilla')
@@ -235,7 +235,7 @@ if __name__ == "__main__":
     logger.info('start satellite server')
 
     # laser turret server
-    laser_turret = LaserTCPServer(SATELLITE_IP, 8586, threded=True, jarvis=True)
+    laser_turret = LaserTCPServer('0.0.0.0', 8586, jarvis=True)
     laser_turret.start()
 
     command_processing = CommandProcessing(arduino, telegram_answer_queue, bot, satellite_server, laser_turret)
