@@ -196,6 +196,11 @@ def reglament_work():
 
 # ****** MAIN ******
 if __name__ == "__main__":
+    import psutil
+    for proc in psutil.process_iter():
+        print(proc.name())
+    sys.exit()
+
     Runned.runned = True
 
     logger = logging.getLogger('main')
