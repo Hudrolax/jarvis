@@ -162,7 +162,7 @@ class CommunicationClient():
             raise Exception("init error. 'port' is not 'int' type.")
         self._port = port
         self._name = name
-        self.sock = socket(AF_INET, SOCK_STREAM)
+        self.connect()
         # self.sock.settimeout(5)
 
     @property
@@ -179,10 +179,12 @@ class CommunicationClient():
 
     def connect(self):
         try:
+            self.sock = socket(AF_INET, SOCK_STREAM)
             self.sock.connect((self.ip, self.port))
         except OSError:
-            self.logger.error(f'connection error to {self._ip}:{self.port}')
-            sleep(1)
+            _sleeptime = 10
+            self.logger.error(f'connection error to {self._ip}:{self.port}. Sleep {_sleeptime} sec.')
+            sleep(_sleeptime)
 
     def close(self):
         self.sock.close()
