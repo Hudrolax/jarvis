@@ -63,7 +63,7 @@ class Laser(Rectangle):
         self._game_coords_loaded = False
         self.game_runned = False
         self.games_amount = 2
-        self._game_time_range_sec = [30, 120]
+        self._game_time_range_sec = [10, 30]
         self._game_stop_time = datetime.now()
         self._game_thread = threading.Thread(target=self.game, args=(), daemon=True)
         self._game_thread.start()
