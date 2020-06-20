@@ -224,7 +224,7 @@ class Laser(Rectangle):
             if self.game_mode and self._game_coords_loaded:
                 self.game_runned = True
                 _game_number = random.randint(0, self.games_amount-1)
-                self.logger.debug(f'play game number {_game_number}')
+                self.logger.info(f'play game number {_game_number}')
                 coord_array = self._game_coords[_game_number]
                 for coord in coord_array:
                     if not self.game_mode:
