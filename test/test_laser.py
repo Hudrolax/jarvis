@@ -77,3 +77,5 @@ class LaserTCPServer(CommunicationServer):
 
 if __name__ == '__main__':
     server = LaserTCPServer(jarvis=True)
+    while True:
+        sleep(1)
