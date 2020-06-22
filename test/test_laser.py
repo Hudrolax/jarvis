@@ -75,4 +75,4 @@ class LaserTCPServer(CommunicationServerTest):
         return answer + '#'
 
 if __name__ == '__main__':
-    server = LaserTCPServer(jarvis=False)
+    server = LaserTCPServer(jarvis=True)
