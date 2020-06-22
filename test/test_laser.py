@@ -1,6 +1,7 @@
 import sys
 sys.path.append('../')
 from modules.gfunctions import *
+from modules.class_com import CommunicationServer
 from socket import *
 from time import sleep
 import logging
@@ -50,7 +51,7 @@ class CommunicationServerTest():
     def handler(self, client_address, data):
         pass
 
-class LaserTCPServer(CommunicationServerTest):
+class LaserTCPServer(CommunicationServer):
     def __init__(self, port: int = 8587, jarvis: bool = False):
         from modules.class_laser import Laser
         self._name = 'laser_server'
