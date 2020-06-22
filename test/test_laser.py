@@ -23,8 +23,8 @@ info = logging.info
 debug = logging.debug
 
 class CommunicationServerTest():
-    def __init__(self, port:int = 8587):
-        self._own_server_adress = ('0.0.0.0', port)
+    def __init__(self, ip:str='0.0.0.0', port:int = 8587):
+        self._own_server_adress = (ip, port)
         self.server_socket = socket(AF_INET, SOCK_STREAM)
         self.server_socket.bind(self._own_server_adress)
         info('port binded')
@@ -63,7 +63,7 @@ class LaserTCPServer(CommunicationServer):
             from modules.class_keyboard_hook import KeyBoardHook
             output_queue = queue.Queue()
             self.key_hook = KeyBoardHook(self, output_queue)
-        super().__init__(port)
+        super().__init__('0.0.0.0', port)
 
     def handler(self, client_address, data):
         x = random.randint(60, 65)
