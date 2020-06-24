@@ -32,27 +32,32 @@ int servo_x_pin = 5;
 int servo_y_pin = 4;
 int laser_pin = 16;
 
+bool use_serial = false;
 
 void setup() {
-  Serial.begin(115200);
+  if (use_serial) Serial.begin(115200);
 
   // We start by connecting to a WiFi network
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(ssid, password);
 
-  Serial.println();
-  Serial.println();
-  Serial.print("Wait for WiFi... ");
+  if (use_serial){
+    Serial.println();
+    Serial.println();
+    Serial.print("Wait for WiFi... ");
+  }
 
   while (WiFiMulti.run() != WL_CONNECTED) {
-    Serial.print(".");
+    if (use_serial) Serial.print(".");
     delay(500);
   }
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  if (use_serial){
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
 
   servo_x.attach(servo_x_pin);  
   servo_y.attach(servo_y_pin);
@@ -66,9 +71,11 @@ void loop() {
   client.setTimeout(5000);
 
   if (!client.connect(host, port)) {
-    Serial.println("connection failed");
-    Serial.println("wait 10 sec...");
-    delay(10000);
+    if (use_serial){
+      Serial.println("connection failed");
+      Serial.println("wait 10 sec...");
+    }
+    delay(5000);
     return;
   }
 
@@ -83,7 +90,7 @@ void loop() {
     {
       if(millis() - timeout > 5000) // если нет ответа в течении 1 сек, то разрывает соединение
       {
-        Serial.println("Client Timeout");
+        if (use_serial) Serial.println("Client Timeout");
         client.stop();
         return;
       }
@@ -91,7 +98,7 @@ void loop() {
   
     //String line = "";
     String line = client.readStringUntil('\r');
-    Serial.println(line);
+    if (use_serial) Serial.println(line);
     if (line.length()>0 && line.charAt(0)=='c' && line.charAt(1)=='m' && line.charAt(2)=='d' && line.charAt(3)=='=' && !(line == "None" || line == "none")){
       int x_cord = 181;
       int y_cord = 181;
@@ -124,9 +131,9 @@ void loop() {
         servo_y.write(y_cord);   
       }
     }else{
-      Serial.println("none");
+      if (use_serial) Serial.println("none");
     }
-    delay(100);
+    delay(15);
   }
 }
 
