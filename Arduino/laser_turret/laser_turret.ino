@@ -32,6 +32,7 @@ int servo_x_pin = 5;
 int servo_y_pin = 4;
 int laser_pin = 16;
 
+
 void setup() {
   Serial.begin(115200);
 
@@ -62,71 +63,71 @@ void setup() {
 
 void loop() {
   WiFiClient client;
-  client.setTimeout(1000);
+  client.setTimeout(5000);
 
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
-    Serial.println("wait 5 sec...");
-    delay(5000);
+    Serial.println("wait 10 sec...");
+    delay(10000);
     return;
   }
 
-  // This will send the request to the server
-  String string = client_name;
-  client.println(string);
-
-  unsigned long timeout = millis();
+  while(client.connected()){
+    // This will send the request to the server
+    String string = client_name;
+    client.print(string);
   
-  while(client.available() == 0) // ждёт ответ от сервера
-  {
-    if(millis() - timeout > 5000) // если нет ответа в течении 5 сек, то разрывает соединение
+    unsigned long timeout = millis();
+    
+    while(client.available() == 0) // ждёт ответ от сервера
     {
-      Serial.println("Client Timeout");
-      client.stop();
-      return;
-    }
-  }
-
-  //String line = "";
-  String line = client.readStringUntil('#');
-  Serial.println(line);
-  if (line.length()>0 && line.charAt(0)=='c' && line.charAt(1)=='m' && line.charAt(2)=='d' && line.charAt(3)=='=' && !(line == "None" || line == "none")){
-    int x_cord = 181;
-    int y_cord = 181;
-    int laser_state = 0;
-    String cmd = "";
-    int cmd_i = 1;
-    for(int i=4; i<line.length()+1; i++){
-      if (char_is_digit(line.charAt(i))){
-        cmd += line.charAt(i);
-      }else{
-         switch (cmd_i){
-          case 1:
-            x_cord = cmd.toInt();
-            break;
-          case 2:
-            y_cord = cmd.toInt();
-            break;
-          case 3:
-            laser_state = cmd.toInt();
-            break;
-         }   
-        cmd_i++;
-        cmd = "";
+      if(millis() - timeout > 5000) // если нет ответа в течении 1 сек, то разрывает соединение
+      {
+        Serial.println("Client Timeout");
+        client.stop();
+        return;
       }
     }
-    //Serial.println(String(x_cord) + " "+String(y_cord) + " laser "+String(laser_state));
-    digitalWrite(laser_pin, laser_state);
-    if (x_cord < 181 && y_cord < 181){
-      servo_x.write(x_cord);
-      servo_y.write(y_cord);   
+  
+    //String line = "";
+    String line = client.readStringUntil('\r');
+    Serial.println(line);
+    if (line.length()>0 && line.charAt(0)=='c' && line.charAt(1)=='m' && line.charAt(2)=='d' && line.charAt(3)=='=' && !(line == "None" || line == "none")){
+      int x_cord = 181;
+      int y_cord = 181;
+      int laser_state = 0;
+      String cmd = "";
+      int cmd_i = 1;
+      for(int i=4; i<line.length()+1; i++){
+        if (char_is_digit(line.charAt(i))){
+          cmd += line.charAt(i);
+        }else{
+           switch (cmd_i){
+            case 1:
+              x_cord = cmd.toInt();
+              break;
+            case 2:
+              y_cord = cmd.toInt();
+              break;
+            case 3:
+              laser_state = cmd.toInt();
+              break;
+           }   
+          cmd_i++;
+          cmd = "";
+        }
+      }
+      //Serial.println(String(x_cord) + " "+String(y_cord) + " laser "+String(laser_state));
+      digitalWrite(laser_pin, laser_state);
+      if (x_cord < 181 && y_cord < 181){
+        servo_x.write(x_cord);
+        servo_y.write(y_cord);   
+      }
+    }else{
+      Serial.println("none");
     }
-    delay(10);
-  }else{
-    Serial.println("none");
-    delay(1000);
+    delay(100);
   }
-  client.stop();
 }
 
 bool char_is_digit(char c){
