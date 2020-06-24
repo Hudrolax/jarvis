@@ -1,7 +1,8 @@
 import sys
+from time import sleep
 
 sys.path.append('../')
-from modules.class_com import CommunicationServerThreadless
+from modules.class_com import CommunicationServer
 
 import logging
 
@@ -18,7 +19,7 @@ else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
 
-class LaserTCPServer(CommunicationServerThreadless):
+class LaserTCPServer(CommunicationServer):
     logger = logging.getLogger('laser server')
 
     def __init__(self, ip: str, port: int, jarvis: bool = False):
@@ -42,23 +43,25 @@ class LaserTCPServer(CommunicationServerThreadless):
             answer = f'cmd={translate_data[0]} {translate_data[1]} {translate_data[2]}'
         else:
             answer = 'none'
-        return answer + '#'
+        return answer + '\r'
 
 
 if __name__ == '__main__':
-    server = LaserTCPServer('0.0.0.0', 8586)
+    server = LaserTCPServer('0.0.0.0', 8587, True)
     server.logger.setLevel(logging.DEBUG)
     server.start()
+    server.laser.start_game()
     while True:
-        if (server.key_hook.queue.qsize() > 0):
-            queue_str = server.key_hook.queue.get()
-            if queue_str == 'l':
-                server.laser.rev_laser()
-            elif queue_str == 'g':
-                server.laser.rev_game_mode()
-            elif queue_str == 'h':
-                server.laser.homing()
-            elif queue_str == 'c':
-                print(f'X{server.laser.x} Y{server.laser.y}')
-            else:
-                server.laser.move_axis(direction=queue_str, speed_x=2, speed_y=2)
+        sleep(1)
+        # if (server.key_hook.queue.qsize() > 0):
+        #     queue_str = server.key_hook.queue.get()
+        #     if queue_str == 'l':
+        #         server.laser.rev_laser()
+        #     elif queue_str == 'g':
+        #         server.laser.rev_game_mode()
+        #     elif queue_str == 'h':
+        #         server.laser.homing()
+        #     elif queue_str == 'c':
+        #         print(f'X{server.laser.x} Y{server.laser.y}')
+        #     else:
+        #         server.laser.move_axis(direction=queue_str, speed_x=2, speed_y=2)
