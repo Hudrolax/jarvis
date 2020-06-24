@@ -73,9 +73,10 @@ class LaserTCPServer(CommunicationServer):
         #     answer = f'cmd={translate_data[0]} {translate_data[1]} {translate_data[2]}'
         # else:
         #     answer = 'none'
-        return answer + '#'
+        return answer + '\r'
 
 if __name__ == '__main__':
     server = LaserTCPServer(jarvis=True)
+    server.start()
     while True:
         sleep(1)
