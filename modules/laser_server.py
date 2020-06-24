@@ -2,7 +2,7 @@ import sys
 from time import sleep
 
 sys.path.append('../')
-from modules.class_com import CommunicationServerThreadless
+from modules.class_com import CommunicationServer
 
 import logging
 
@@ -19,7 +19,7 @@ else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
 
-class LaserTCPServer(CommunicationServerThreadless):
+class LaserTCPServer(CommunicationServer):
     logger = logging.getLogger('laser server')
 
     def __init__(self, ip: str, port: int, jarvis: bool = False):

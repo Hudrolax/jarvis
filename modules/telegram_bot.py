@@ -274,7 +274,11 @@ class TelegramBot(telebot.TeleBot, JPrint):
                             sleep(0.1)
             else:
                 self.logger.info('Connect to telegram without proxy')
-                self.polling(none_stop=True)
+                try:
+                    self.polling(none_stop=True)
+                except:
+                    error('I am have some problem with connect to Telegramm')
+                    sleep(0.1)
 
                         
     def start(self):

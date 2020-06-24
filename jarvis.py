@@ -82,7 +82,7 @@ def get_text_messages(message):
     else:
         if _user is not None:
             input_queue.put((message.text, _user, message))  # Поместили сообщение в оцередь на обработку
-            __answe_wait_time = 10
+            __answe_wait_time = 5
             while __answe_wait_time > 0:
                 if (telegram_answer_queue.qsize() > 0):
                     queue_typle = telegram_answer_queue.get()
