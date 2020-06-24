@@ -7,3 +7,4 @@ __pycache__/
 serial.pickle
 config.py
 *.lnk
+*.log
