@@ -34,13 +34,13 @@ class Jarvis:
     logger.setLevel(logging.INFO)
 
     # Function of input in thread
-    def read_kbd_input(self):
-        while self.runned.runned:
+    def read_kbd_input():
+        while Jarvis.runned.runned:
             # Receive keyboard input from user.
             try:
                 input_str = input()
                 jprint('Enter command: ' + input_str)
-                self.input_queue.put((input_str, None, None))
+                Jarvis.input_queue.put((input_str, None, None))
             except:
                 continue
 
