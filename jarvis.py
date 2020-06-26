@@ -101,7 +101,5 @@ if __name__ == '__main__':
         else:
             jarvis.bot.reply_to(message, "Кто ты чудовище?")
 
-        # ****** MAIN ******
-        jarvis.main_loop()
-        while True:
-            sleep(1)
+    # ****** MAIN ******
+    jarvis.main_loop()
