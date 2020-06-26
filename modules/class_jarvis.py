@@ -155,7 +155,7 @@ class Jarvis:
 
     def main_loop(self):
         # Main loop dunction
-        while self.runned:
+        while True:
             if self.arduino.initialized:
                 if (self.input_queue.qsize() > 0):
                     queue_typle = self.input_queue.get()
