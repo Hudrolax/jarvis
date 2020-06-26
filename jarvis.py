@@ -103,3 +103,5 @@ if __name__ == '__main__':
 
         # ****** MAIN ******
         jarvis.main_loop()
+        while True:
+            sleep(1)
