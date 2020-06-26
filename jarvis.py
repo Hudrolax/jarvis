@@ -34,7 +34,7 @@ class Jarvis:
 
     def __init__(self):
         # init telegram bot
-        self.bot = TelegramBot(path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN,
+        self.bot = TelegramBot(self, path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN,
                           threaded=False)  # Конструктор бота
 
         self.runned = True

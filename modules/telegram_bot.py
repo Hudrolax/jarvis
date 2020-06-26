@@ -97,12 +97,13 @@ class TelegramBot(telebot.TeleBot, JPrint):
         TelegramBot.logger.setLevel(logging.WARNING)
         print(f'set WARNING level in {TelegramBot.logger.name} logger')
 
-    def __init__(self, path, list_file, token, threaded=False, use_proxy = False):
+    def __init__(self, jarvis, path, list_file, token, threaded=False, use_proxy = False):
         super().__init__(token, threaded)
         if isinstance(use_proxy, bool):
             self.use_proxy = use_proxy
         else:
             raise TypeError
+        self.jarvis = jarvis
         self._name = 'bot'
         self._users = []
         self._prog_path = path
