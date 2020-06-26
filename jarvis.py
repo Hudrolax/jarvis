@@ -262,6 +262,9 @@ def handle_docs_audio(message):
 
 # ****** MAIN ******
 if __name__ == "__main__":
-    Runned.runned = True
-    jarvis = Jarvis()
-    jarvis.main_loop()
+    bot = TelegramBot(1, path=JARVIS_PATH, list_file=GOOD_PROXY_LIST, token=API_TOKEN,
+                      threaded=False)  # Конструктор бота
+    bot.start()
+    # Runned.runned = True
+    # jarvis = Jarvis()
+    # jarvis.main_loop()
