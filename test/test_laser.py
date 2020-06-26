@@ -76,7 +76,5 @@ class LaserTCPServer(CommunicationServer):
         return answer + '\r'
 
 if __name__ == '__main__':
-    server = LaserTCPServer(jarvis=True)
-    server.start()
-    while True:
-        sleep(1)
+    class test1:
+        print('fff')

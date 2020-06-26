@@ -47,21 +47,21 @@ class LaserTCPServer(CommunicationServer):
 
 
 if __name__ == '__main__':
-    server = LaserTCPServer('0.0.0.0', 8587, True)
+    server = LaserTCPServer('0.0.0.0', 8587, False)
     server.logger.setLevel(logging.DEBUG)
     server.start()
     server.laser.start_game()
     while True:
-        sleep(1)
-        # if (server.key_hook.queue.qsize() > 0):
-        #     queue_str = server.key_hook.queue.get()
-        #     if queue_str == 'l':
-        #         server.laser.rev_laser()
-        #     elif queue_str == 'g':
-        #         server.laser.rev_game_mode()
-        #     elif queue_str == 'h':
-        #         server.laser.homing()
-        #     elif queue_str == 'c':
-        #         print(f'X{server.laser.x} Y{server.laser.y}')
-        #     else:
-        #         server.laser.move_axis(direction=queue_str, speed_x=2, speed_y=2)
+        pass
+        if (server.key_hook.queue.qsize() > 0):
+            queue_str = server.key_hook.queue.get()
+            if queue_str == 'l':
+                server.laser.rev_laser()
+            elif queue_str == 'g':
+                server.laser.rev_game_mode()
+            elif queue_str == 'h':
+                server.laser.homing()
+            elif queue_str == 'c':
+                print(f'X{server.laser.x} Y{server.laser.y}')
+            else:
+                server.laser.move_axis(direction=queue_str, speed_x=2, speed_y=2)

@@ -6,11 +6,13 @@ class Runned:
     _RUNNED = False
 
     @property
-    def runned(self):
+    @staticmethod
+    def runned():
         return Runned._RUNNED
 
     @runned.setter
-    def runned(self, val):
+    @staticmethod
+    def runned(val):
         if isinstance(val, bool):
             Runned._RUNNED = val
         else:
