@@ -19,7 +19,7 @@ class Miner():
     logger.setLevel(logging.DEBUG)
     RESET_ONLINE_TIMER = 60
 
-    def __init__(self, name:str):
+    def __init__(self, name:str, instant_off_by_powerof):
         if not isinstance(name, str):
             raise Exception('miner name is not "str"')
         self._name = name
@@ -31,6 +31,7 @@ class Miner():
         self._start_it = False
         self._stop_it = False
         self._bcod_reaction = False
+        self.instant_off_by_powerof = instant_off_by_powerof
         
     @property
     def online(self):
@@ -145,7 +146,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
     def stop_miners(self, bcod_reaction = False, bot=None):
         info = Jarvis_Satellite_Server.logger.info
         for miner in self.miners:
-            if miner.runned:
+            if miner.instant_off_by_powerof and miner.runned:
                 miner.stop()
                 if bcod_reaction and not miner.bcod_reaction:
                     miner.bcod_reaction = True
@@ -178,9 +179,9 @@ class Jarvis_Satellite_Server(CommunicationServer):
                     return m
         return None
 
-    def add_miner(self, name):
+    def add_miner(self, name, instant_off_by_powerof):
         if self._find_miner(name) is None:
-            self._miners.append(Miner(name))
+            self._miners.append(Miner(name, instant_off_by_powerof))
 
     def handler(self, client_address, data):
         # client_address - адрес клиента

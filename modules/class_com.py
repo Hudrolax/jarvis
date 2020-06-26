@@ -1,11 +1,9 @@
 import sys
 
 sys.path.append('../')
-from modules.gfunctions import *
 from socket import *
 import logging
 import threading
-from config import *
 from time import sleep
 
 WRITE_LOG_TO_FILE = False
@@ -20,7 +18,7 @@ if WRITE_LOG_TO_FILE:
 else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
-class CommunicationServer():
+class CommunicationServer:
     logger = logging.getLogger(f'Comm server')
     logger.setLevel(logging.INFO)
 
@@ -39,7 +37,7 @@ class CommunicationServer():
         CommunicationServer.logger.setLevel(logging.INFO)
         print(f'set INFO level in {CommunicationServer.logger.name} logger')
 
-    def __init__(self, ip:str='0.0.0.0', port:int = SATELLITE_PORT):
+    def __init__(self, ip:str, port):
         critical = CommunicationServer.logger.critical
         self._name = 'class_com'
 
@@ -91,7 +89,7 @@ class CommunicationServer():
                 if not data:
                     break
                 else:
-                    data = clear_str(data.decode())
+                    data = data.decode()
                     debug(f"received data: {data}")
                     # << Оборачиваемая функция
                     answer = self.handler(client_address, data)
@@ -151,10 +149,10 @@ class CommunicationServer():
 
         self.server_socket.close()
 
-class CommunicationClient():
+class CommunicationClient:
     logger = logging.getLogger('Comm client')
 
-    def __init__(self, name:str, ip:str='192.168.18.3', port:int=8586):
+    def __init__(self, name:str, ip:str, port:int):
         critical = CommunicationClient.logger.critical
         if not isinstance(ip, str):
             critical("init error. 'ip' is not 'str' type.")
@@ -200,7 +198,7 @@ class CommunicationClient():
                 self.logger.debug('try to send')
                 self.sock.sendall(str.encode(message))
                 self.logger.debug('try to get answer')
-                answer = clear_str(self.sock.recv(1024).decode())
+                answer = self.sock.recv(1024).decode()
                 break
             except OSError:
                 attempt -= 1

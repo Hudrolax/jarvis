@@ -65,9 +65,11 @@ class Jarvis:
 
         # start satellite server
         self.satellite_server = Jarvis_Satellite_Server(ip='0.0.0.0', port=SATELLITE_PORT)
-        self.satellite_server.add_miner('zeon')
-        self.satellite_server.add_miner('serverx')
-        self.satellite_server.add_miner('tekilla')
+        self.satellite_server.add_miner('zeon', instant_off_by_powerof=True)
+        self.satellite_server.add_miner('serverx', instant_off_by_powerof=True)
+        self.satellite_server.add_miner('tekilla', instant_off_by_powerof=True)
+        self.satellite_server.add_miner('LK_rig1', instant_off_by_powerof=False)
+        self.satellite_server.add_miner('LK_rig2', instant_off_by_powerof=False)
         self.satellite_server.start()
         self.logger.info('start satellite server')
 
