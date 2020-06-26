@@ -1,5 +1,6 @@
 # Sergey Nazarov 17.05.2020
 import sys
+
 sys.path.append('../')
 from time import sleep
 from modules.class_jarvis import Jarvis
@@ -8,11 +9,12 @@ import logging
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
-#LOG_LEVEL = logging.DEBUG
+# LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.WARNING
 
 if WRITE_LOG_TO_FILE:
-    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
+    logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL,
+                        datefmt='%d.%m.%y %H:%M:%S')
 else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
@@ -20,7 +22,8 @@ if __name__ == '__main__':
 
     jarvis = Jarvis()
 
-     # Telegram bot
+
+    # Telegram bot
     @jarvis.bot.message_handler(content_types=['text'])
     def get_text_messages(message):
         _user = None
@@ -72,6 +75,7 @@ if __name__ == '__main__':
             else:
                 jarvis.bot.reply_to(message, "Кто ты чудовище?")
 
+
     @jarvis.bot.message_handler(content_types=["sticker", 'document'])
     def handle_docs_audio(message):
         _user = None
@@ -97,9 +101,10 @@ if __name__ == '__main__':
                         jarvis.bot.reply_to(message, "почему-то не вышло загрузить конфиг")
                 else:
                     jarvis.bot.send_message(message.from_user.id,
-                                     'Не знаю что за файл такой ты мне шлешь. Мне нужен config.txt.')
+                                            'Не знаю что за файл такой ты мне шлешь. Мне нужен config.txt.')
         else:
             jarvis.bot.reply_to(message, "Кто ты чудовище?")
+
 
     # ****** MAIN ******
     jarvis.main_loop()
