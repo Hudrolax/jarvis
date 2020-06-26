@@ -19,5 +19,5 @@ class Sensors:
 
     def _update_thread_func(self):
         while self.jarvis.runned:
-            self.sonoff1.update_info()
+            # self.sonoff1.update_info()
             sleep(1)
