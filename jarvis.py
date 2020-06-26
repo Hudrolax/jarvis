@@ -228,7 +228,7 @@ def get_text_messages(message):
                 __answe_wait_time -= 1
                 sleep(1)
         else:
-            Jarvis.bot.reply_to(message, "Кто ты чудовище?")
+            jarvis.bot.reply_to(message, "Кто ты чудовище?")
 
 @jarvis.bot.message_handler(content_types=["sticker", 'document'])
 def handle_docs_audio(message):
