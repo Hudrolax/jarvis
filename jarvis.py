@@ -92,10 +92,9 @@ class Jarvis:
 
     # Telegram bot
     @bot.message_handler(content_types=['text'])
-    def get_text_messages(self, message):
-
+    def get_text_messages(message):
         _user = None
-        for user in self.bot.users:
+        for user in Jarvis.bot.users:
             if str(message.from_user.id) == user.id:
                 _user = user
                 break
@@ -119,7 +118,7 @@ class Jarvis:
             Jarvis.bot.reply_to(message, "Ваш ID: %s" % message.from_user.id)
         elif message.text == 'getconfig':
             if _user != None:
-                doc = open(self.arduino.config_path, 'rb')
+                doc = open(Jarvis.arduino.config_path, 'rb')
                 Jarvis.bot.send_document(message.from_user.id, doc)
             else:
                 Jarvis.bot.reply_to(message, "Кто ты чудовище?")
@@ -172,7 +171,7 @@ class Jarvis:
         else:
             Jarvis.bot.reply_to(message, "Кто ты чудовище?")
 
-    def reglament_work(self):
+    def reglament_work():
         if (datetime.now().month >= 10 and datetime.now().month <= 4 and
             (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or \
                 (datetime.now().month < 10 and datetime.now().month > 4 and
