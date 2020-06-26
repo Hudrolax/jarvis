@@ -106,6 +106,10 @@ class CommunicationServer:
         except TimeoutError:
             self.logger.error(f'Time out recieve from {client_address}')
             return
+        except AttributeError:
+            self.logger.error(f"Can't encode answer {answer}")
+            return
+
         finally:
             pass
             # connection.close()
