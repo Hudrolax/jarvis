@@ -53,6 +53,16 @@ class Jarvis:
 
     # Start keyboart queue thread
     input_queue = queue.Queue()
+    # Function of input in thread
+    def read_kbd_input():
+        while Jarvis.runned.runned:
+            # Receive keyboard input from user.
+            try:
+                input_str = input()
+                jprint('Enter command: ' + input_str)
+                Jarvis.input_queue.put((input_str, None, None))
+            except:
+                continue
     inputThread = threading.Thread(target=read_kbd_input, args=(), daemon=True)
     inputThread.start()
     logger.info('start keyboard thread')
@@ -78,17 +88,6 @@ class Jarvis:
     command_processing = CommandProcessing(arduino, telegram_answer_queue, bot,
                                                   satellite_server, laser_turret)
 
-    # Function of input in thread
-    def read_kbd_input():
-        while Jarvis.runned.runned:
-            # Receive keyboard input from user.
-            try:
-                input_str = input()
-                jprint('Enter command: ' + input_str)
-                Jarvis.input_queue.put((input_str, None, None))
-            except:
-                continue
-                
     # Telegram bot
     @bot.message_handler(content_types=['text'])
     def get_text_messages(message):
