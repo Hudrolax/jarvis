@@ -195,6 +195,19 @@ class Arduino(JPrint):
     def ac_exist(self):
         return self._ac_exist
 
+    @property
+    def ac_exist_str(self, lang = 'ru'):
+        if self._ac_exist:
+            if lang == 'ru':
+                return 'есть'
+            elif lang == 'eng':
+                return 'yes'
+        else:
+            if lang == 'ru':
+                return 'НЕТ'
+            elif lang == 'eng':
+                return 'NO'
+
     def time_without_ac(self, in_str:bool = False):
         if in_str:
             return gf.difference_between_date(self._ac_non_exist_start_timer, datetime.now())

@@ -2,22 +2,6 @@ from datetime import datetime
 
 VERSION = "1.2"
 
-class Runned:
-    _RUNNED = False
-
-    @property
-    @staticmethod
-    def runned():
-        return Runned._RUNNED
-
-    @runned.setter
-    @staticmethod
-    def runned(val):
-        if isinstance(val, bool):
-            Runned._RUNNED = val
-        else:
-            raise Exception('Runned: runned val is not bool')
-
 def map_func(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
