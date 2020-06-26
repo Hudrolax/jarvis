@@ -14,6 +14,7 @@ from modules.class_command_processing import CommandProcessing
 from modules.class_jarvis_server import Jarvis_Satellite_Server
 from modules.laser_server import LaserTCPServer
 from modules.class_sensors import Sensors
+import logging
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
@@ -26,7 +27,7 @@ else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
 class Jarvis:
-    logger = logging.getLogger('main')
+    logger = logging.getLogger('jarvis')
     logger.setLevel(logging.INFO)
 
     def __init__(self):

@@ -19,8 +19,6 @@ else:
 if __name__ == '__main__':
 
     jarvis = Jarvis()
-    # ****** MAIN ******
-    jarvis.main_loop()
 
      # Telegram bot
     @jarvis.bot.message_handler(content_types=['text'])
@@ -102,3 +100,6 @@ if __name__ == '__main__':
                                      'Не знаю что за файл такой ты мне шлешь. Мне нужен config.txt.')
         else:
             jarvis.bot.reply_to(message, "Кто ты чудовище?")
+
+        # ****** MAIN ******
+        jarvis.main_loop()
