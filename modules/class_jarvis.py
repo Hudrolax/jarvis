@@ -64,12 +64,13 @@ class Jarvis:
         self.telegram_answer_queue = queue.Queue()
 
         # start satellite server
-        self.satellite_server = Jarvis_Satellite_Server(ip='0.0.0.0', port=SATELLITE_PORT)
-        self.satellite_server.add_miner('zeon', instant_off_by_powerof=True)
-        self.satellite_server.add_miner('serverx', instant_off_by_powerof=True)
-        self.satellite_server.add_miner('tekilla', instant_off_by_powerof=True)
-        self.satellite_server.add_miner('LK_rig1', instant_off_by_powerof=False)
-        self.satellite_server.add_miner('LK_rig2', instant_off_by_powerof=False)
+        self.satellite_server = Jarvis_Satellite_Server(self, ip='0.0.0.0', port=SATELLITE_PORT)
+        self.satellite_server.add_miner('zeon', instant_off_by_poweroff=True)
+        self.satellite_server.add_miner('serverx', instant_off_by_poweroff=True)
+        self.satellite_server.add_miner('tekilla', instant_off_by_poweroff=True)
+        self.satellite_server.add_miner('LK_rig1', instant_off_by_poweroff=False, shutdown_threshold=(160, 180))
+        self.satellite_server.add_miner('LK_rig2', instant_off_by_poweroff=False, shutdown_threshold=(180, 190))
+        self.satellite_server.add_miner('LK_rig4', instant_off_by_poweroff=False, shutdown_threshold=(170, 190))
         self.satellite_server.start()
         self.logger.info('start satellite server')
 
@@ -105,10 +106,7 @@ class Jarvis:
 
         # Сообщим, что пропало напряжение на входе
         if not self.arduino.ac_exist and not self.arduino.ac_alert_sended:
-            for user in self.bot.get_users():
-                if user.level == 0:
-                    # if True or user.level == 0 or user.level == 3:
-                    self.bot.add_to_queue(user.id, 'Отключилось напряжение на входе в дом!\n')
+            self.bot.send_message_to_admin('Отключилось напряжение на входе в дом!')
             self.arduino.ac_alert_sended = True
         elif self.arduino.ac_exist and self.arduino.ac_alert_sended:
             for user in self.bot.get_users():
@@ -154,6 +152,9 @@ class Jarvis:
                                 self.bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
             # Включаем майнеры, если мы их отключали
             self.satellite_server.start_miners(bcod_reaction=True, bot=self.bot)
+
+        # включение / отключение майнеров по входному напряжению
+        self.satellite_server.shutdown_threshold_action()
 
     def main_loop(self):
         # Main loop dunction

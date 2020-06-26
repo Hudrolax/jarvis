@@ -2,6 +2,7 @@ from .class_com import CommunicationServer
 import logging
 import threading
 from time import sleep
+from datetime import datetime
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
@@ -19,7 +20,7 @@ class Miner():
     logger.setLevel(logging.DEBUG)
     RESET_ONLINE_TIMER = 60
 
-    def __init__(self, name:str, instant_off_by_powerof):
+    def __init__(self, name:str, instant_off_by_poweroff, shutdown_threshold:tuple):
         if not isinstance(name, str):
             raise Exception('miner name is not "str"')
         self._name = name
@@ -31,7 +32,8 @@ class Miner():
         self._start_it = False
         self._stop_it = False
         self._bcod_reaction = False
-        self.instant_off_by_powerof = instant_off_by_powerof
+        self.instant_off_by_poweroff = instant_off_by_poweroff
+        self.shutdown_threshold = shutdown_threshold
         
     @property
     def online(self):
@@ -133,28 +135,42 @@ class Jarvis_Satellite_Server(CommunicationServer):
     logger = logging.getLogger('Jarvis_Satellite_Server')
     logger.setLevel(logging.INFO)
 
-    def __init__(self, ip:str ='127.0.0.1', port:int = 8585):
+    def __init__(self, jarvis, ip:str ='127.0.0.1', port:int = 8585):
         super().__init__(ip, port)
+        self.jarvis = jarvis
         self._name = 'satellite_server'
         self._miners = []
-
+        self.shutdown_thresold_action_timer = datetime.now()
 
     @property
     def miners(self):
         return self._miners
 
+    def shutdown_threshold_action(self):
+        info = Jarvis_Satellite_Server.logger.info
+        if (datetime.now() - self.shutdown_thresold_action_timer).total_seconds() > 300:
+            for miner in self.miners:
+                if miner.shutdown_threshold[0] > 0:
+                    if miner.runned and self.jarvis.sensors.ac_voltage_input < miner.shutdown_threshold[0]:
+                        info(f'miner {miner} stopped by shutdown_threshold')
+                        miner.stop()
+                        self.jarvis.bot.send_message_to_admin(f'miner {miner} stopped by shutdown_threshold')
+                    elif not miner.runned and self.jarvis.sensors.ac_voltage_input > miner.shutdown_threshold[1]:
+                        info(f'miner {miner} startded by shutdown_threshold')
+                        miner.start()
+                        self.jarvis.bot.send_message_to_admin(f'miner {miner} started by shutdown_threshold')
+            self.shutdown_thresold_action_timer = datetime.now()
+
     def stop_miners(self, bcod_reaction = False, bot=None):
         info = Jarvis_Satellite_Server.logger.info
         for miner in self.miners:
-            if miner.instant_off_by_powerof and miner.runned:
+            if miner.instant_off_by_poweroff and miner.runned:
                 miner.stop()
                 if bcod_reaction and not miner.bcod_reaction:
                     miner.bcod_reaction = True
                     info(f"miner {miner.name} (bcod_reaction = {bcod_reaction}) is runned. Let's stop it.")
                     if bot is not None:
-                        for user in bot.get_users():
-                            if user.level <= 0:
-                                bot.add_to_queue(user.id, f'Выключил miner "{miner.name}"\n')
+                        self.jarvis.bot.send_message_to_admin(f'Выключил miner "{miner.name}"')
 
     def start_miners(self, bcod_reaction = False, bot=None):
         info = Jarvis_Satellite_Server.logger.info
@@ -165,9 +181,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
                     miner.bcod_reaction = False
                     info(f"miner {miner.name} (bcod_reaction = {bcod_reaction}) is not runned. Let's start it.")
                     if bot is not None:
-                        for user in bot.get_users():
-                            if user.level <= 0:
-                                bot.add_to_queue(user.id, f'Включил miner "{miner.name}"\n')
+                        self.jarvis.bot.send_message_to_admin(f'Включил miner "{miner.name}"')
 
     def _find_miner(self, miner):
         for m in self._miners:
@@ -179,9 +193,9 @@ class Jarvis_Satellite_Server(CommunicationServer):
                     return m
         return None
 
-    def add_miner(self, name, instant_off_by_powerof):
+    def add_miner(self, name, instant_off_by_poweroff, shutdown_threshold = (0, 0)):
         if self._find_miner(name) is None:
-            self._miners.append(Miner(name, instant_off_by_powerof))
+            self._miners.append(Miner(name, instant_off_by_poweroff, shutdown_threshold))
 
     def handler(self, client_address, data):
         # client_address - адрес клиента

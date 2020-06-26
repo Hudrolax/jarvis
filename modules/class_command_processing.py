@@ -507,6 +507,17 @@ class CommandProcessing:
                     answer += f'Напряжение аккумулятора {self.jarvis.arduino.dc_value} V ({self.jarvis.arduino.dc_voltage_in_percent} %)'
                 else:
                     answer += get_access_error()
+            elif 'риги' in cmd_list or 'rigs' in cmd_list:
+                if telegramuser != None and telegramuser.level == 0 or telegramuser == None:
+                    answer += 'риги:\n'
+                    for miner in self.jarvis.satellite_server.miners:
+                        answer += miner.name + f'({miner.runned_text()}) st {miner.shutdown_threshold[0]}/{miner.shutdown_threshold[1]}V\n'
+
+                    answer += '\n'
+                    # инфа по напряжениям
+                    answer += f'Напряжение в сети {self.jarvis.arduino.ac_exist_str} ({self.jarvis.sensors.ac_voltage_input}V)'
+                else:
+                    answer += get_access_error()
             elif cmd == 'exit':
                 if telegramuser is None:  # выходить можно только из консоли
                     jprint('bye...')

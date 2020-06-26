@@ -121,6 +121,11 @@ class TelegramBot(telebot.TeleBot, JPrint):
     def users(self):
         return self._users
 
+    def send_message_to_admin(self, message):
+        for user in self.get_users():
+            if user.level <= 0:
+                self.add_to_queue(user.id, f'{message}\n')
+
     def get_users(self):
         return self._users
 
