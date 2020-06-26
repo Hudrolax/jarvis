@@ -34,14 +34,13 @@ class Jarvis:
     logger.setLevel(logging.INFO)
 
     # Function of input in thread
-    @staticmethod
-    def read_kbd_input():
-        while Jarvis.runned.runned:
+    def read_kbd_input(self):
+        while self.runned.runned:
             # Receive keyboard input from user.
             try:
                 input_str = input()
                 jprint('Enter command: ' + input_str)
-                Jarvis.input_queue.put((input_str, None, None))
+                self.input_queue.put((input_str, None, None))
             except:
                 continue
 
@@ -92,12 +91,11 @@ class Jarvis:
 
 
     # Telegram bot
-    @staticmethod
     @bot.message_handler(content_types=['text'])
     def get_text_messages(self, message):
 
         _user = None
-        for user in Jarvis.bot.users:
+        for user in self.bot.users:
             if str(message.from_user.id) == user.id:
                 _user = user
                 break
@@ -121,7 +119,7 @@ class Jarvis:
             Jarvis.bot.reply_to(message, "Ваш ID: %s" % message.from_user.id)
         elif message.text == 'getconfig':
             if _user != None:
-                doc = open(Jarvis.arduino.config_path, 'rb')
+                doc = open(self.arduino.config_path, 'rb')
                 Jarvis.bot.send_document(message.from_user.id, doc)
             else:
                 Jarvis.bot.reply_to(message, "Кто ты чудовище?")
@@ -145,7 +143,6 @@ class Jarvis:
             else:
                 Jarvis.bot.reply_to(message, "Кто ты чудовище?")
 
-    @staticmethod
     @bot.message_handler(content_types=["sticker", 'document'])
     def handle_docs_audio(message):
         _user = None
@@ -175,8 +172,7 @@ class Jarvis:
         else:
             Jarvis.bot.reply_to(message, "Кто ты чудовище?")
 
-    @staticmethod
-    def reglament_work():
+    def reglament_work(self):
         if (datetime.now().month >= 10 and datetime.now().month <= 4 and
             (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or \
                 (datetime.now().month < 10 and datetime.now().month > 4 and
