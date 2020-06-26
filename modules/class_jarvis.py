@@ -36,7 +36,7 @@ class Jarvis:
                           threaded=False)  # Конструктор бота
 
         self.runned = True
-        self.sensors = Sensors()
+        self.sensors = Sensors(self)
         self.logger.info('Start jarvis')
 
         # init watchdog
