@@ -10,6 +10,7 @@ import queue
 import modules.class_arduino as class_arduino
 import modules.class_watchdog as class_watchdog
 from modules.gfunctions import JPrint
+from modules.gfunctions import Runned
 from modules.telegram_bot import TelegramBot
 from modules.class_command_processing import CommandProcessing
 from modules.class_jarvis_server import Jarvis_Satellite_Server
@@ -261,5 +262,6 @@ def handle_docs_audio(message):
 
 # ****** MAIN ******
 if __name__ == "__main__":
+    Runned.runned = True
     jarvis = Jarvis()
     jarvis.main_loop()
