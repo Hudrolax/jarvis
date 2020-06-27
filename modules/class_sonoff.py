@@ -51,9 +51,17 @@ class Sonoff:
     def update_info(self):
         try:
             self.logger.debug(f'try to request to http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}')
-            content = requests.get(f'http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}').content.decode()
+            content = requests.get(f'http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}', timeout=3).content.decode()
+        except TimeoutError:
+            self.logger.error(f'request timeout error to http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}')
+            sleep(10)
+            return
+        except ConnectionError:
+            self.logger.error(f'connection error to http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}')
+            sleep(10)
+            return
         except:
-            self.logger.error(f'request error to http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}')
+            self.logger.error(f'other request error to http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}')
             sleep(10)
             return
 
