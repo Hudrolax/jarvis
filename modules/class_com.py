@@ -1,8 +1,9 @@
-from .gfunctions import *
-import socket
+import sys
+
+sys.path.append('../')
+from socket import *
 import logging
 import threading
-from config import *
 from time import sleep
 
 WRITE_LOG_TO_FILE = False
@@ -17,15 +18,28 @@ if WRITE_LOG_TO_FILE:
 else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
-class CommunicationServer():
+class CommunicationServer:
     logger = logging.getLogger(f'Comm server')
     logger.setLevel(logging.INFO)
 
-    def __init__(self, name:str='root', ip:str=SATELLITE_IP, port:int = SATELLITE_PORT):
+    @staticmethod
+    def set_debug():
+        CommunicationServer.logger.setLevel(logging.DEBUG)
+        print(f'set DEBUG level in {CommunicationServer.logger.name} logger')
+
+    @staticmethod
+    def set_warning():
+        CommunicationServer.logger.setLevel(logging.WARNING)
+        print(f'set WARNING level in {CommunicationServer.logger.name} logger')
+
+    @staticmethod
+    def set_info():
+        CommunicationServer.logger.setLevel(logging.INFO)
+        print(f'set INFO level in {CommunicationServer.logger.name} logger')
+
+    def __init__(self, ip:str, port):
         critical = CommunicationServer.logger.critical
-        if not isinstance(name, str):
-            raise Exception("CommunicationServer init error. 'name' is not 'str' type.")
-        self.name = name
+        self._name = 'class_com'
 
         if not isinstance(ip, str):
             critical("init error. 'ip' is not 'str' type.")
@@ -37,7 +51,12 @@ class CommunicationServer():
         self._own_server_adress = (ip, port)
         self._started = False
         self._thread = threading.Thread(target=self._tcp_server, args=(), daemon=True)
-        self.server_socket = socket.socket()
+        self.server_socket = socket(AF_INET, SOCK_STREAM)
+        self.server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+
+    @property
+    def name(self):
+        return self._name
 
     def __str__(self):
         return self.name
@@ -64,20 +83,37 @@ class CommunicationServer():
 
     def handler_wrapper(self, connection, client_address):
         debug = self.logger.debug
-        data = clear_str(connection.recv(1024).decode("utf-8"))
-        logging.debug(f"received data: {data}")
-        answer = 'None'
+        try:
+            while True:
+                data = connection.recv(1024)
+                if not data:
+                    break
+                else:
+                    data = data.decode()
+                    debug(f"received data: {data}")
+                    # << Оборачиваемая функция
+                    answer = self.handler(client_address, data)
+                    # >> Оборачиваемая функция
+                    debug(f'answer is "{answer}"')
+                    # connection.send(answer.encode('ascii'))
+                    connection.sendall(answer.encode())
+        except ConnectionResetError:
+            self.logger.warning(f'Error with recieve data from {client_address}')
+            return
+        except UnicodeDecodeError:
+            self.logger.warning(f'Error with decode data from {client_address}')
+            return
+        except TimeoutError:
+            self.logger.warning(f'Time out recieve from {client_address}')
+            return
+        except AttributeError:
+            self.logger.warning(f"Can't encode answer {answer}")
+            return
 
-        # << Оборачиваемая функция
-        answer = self.handler(client_address, data)
-        # >> Оборачиваемая функция
-
-        debug(f'answer is "{answer}"')
-        if answer is not None:
-            debug(f'send an answer to {client_address}')
-            connection.sendall(bytes(answer, encoding='utf-8'))
-        connection.close()
-        debug(f'connection from {client_address} closed')
+        finally:
+            pass
+            # connection.close()
+            # debug(f'connection from {client_address} closed')
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
@@ -98,29 +134,29 @@ class CommunicationServer():
                 self.server_socket.bind(self._own_server_adress)
                 break
             except:
-                try:
-                    self.server_socket.close()
-                except:
-                    pass
+                pass
                 error(f"Can't bind {self.ip}:{self.port}")
-                Runned.runned = False
-            sleep(1)
+            sleep(5)
         else:
             return None
-        self.server_socket.listen(1)
+        self.server_socket.listen(20)
         info(f'server "{self.name}" is started on {self.ip}:{self.port}')
         while self._started:
-            connection, client_address = self.server_socket.accept()
+            try:
+                connection, client_address = self.server_socket.accept()
+            except Exception:
+                debug(f'connection timeout')
+                continue
             debug(f"new connection from {client_address}")
             handle_thread = threading.Thread(target=self.handler_wrapper, args=(connection, client_address), daemon=True)
             handle_thread.start()
 
         self.server_socket.close()
 
-class CommunicationClient():
+class CommunicationClient:
     logger = logging.getLogger('Comm client')
 
-    def __init__(self, name:str, ip:str='127.0.0.1', port:int=8585):
+    def __init__(self, name:str, ip:str, port:int):
         critical = CommunicationClient.logger.critical
         if not isinstance(ip, str):
             critical("init error. 'ip' is not 'str' type.")
@@ -131,6 +167,8 @@ class CommunicationClient():
             raise Exception("init error. 'port' is not 'int' type.")
         self._port = port
         self._name = name
+        self.connect()
+        # self.sock.settimeout(5)
 
     @property
     def name(self):
@@ -144,22 +182,40 @@ class CommunicationClient():
     def port(self):
         return self._port
 
-    def send(self, message):
-        error = CommunicationClient.logger.error
-        answer = None
+    def connect(self):
         try:
-            sock = socket.create_connection((self._ip, self._port), 10)
-            sock.sendall(bytes(message, encoding='utf-8'))
-            #answer = sock.recv(1024)
-            answer = clear_str(sock.recv(1024).decode('utf-8'))
-        except:
-            error(f'error connection to {self._ip}:{self.port}')
-        finally:
+            self.sock = socket(AF_INET, SOCK_STREAM)
+            self.sock.connect((self.ip, self.port))
+        except OSError:
+            _sleeptime = 10
+            self.logger.error(f'connection error to {self._ip}:{self.port}. Sleep {_sleeptime} sec.')
+            sleep(_sleeptime)
+
+    def close(self):
+        self.sock.close()
+
+    def send(self, message):
+        answer = 'none'
+        attempt = 10
+        while attempt > 0:
             try:
-                sock.close()
-            except:
-                pass
+                self.logger.debug('try to send')
+                self.sock.sendall(str.encode(message))
+                self.logger.debug('try to get answer')
+                answer = self.sock.recv(1024).decode()
+                break
+            except OSError:
+                attempt -= 1
+                self.logger.warning(f'send error to {self._ip}:{self.port}. Try to reconnect to server.')
+                self.connect()
+
         return answer
 
     def send_with_name(self, message):
         return self.send(f'{self.name}:{message}')
+
+if __name__ == '__main__':
+    client = CommunicationClient('test', '192.168.18.3', 8586)
+    client.logger.setLevel(logging.DEBUG)
+    print(client.send('ping'))
+    print(client.send('ping'))

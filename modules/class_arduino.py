@@ -23,6 +23,7 @@ class Arduino(JPrint):
     logger.setLevel(LOG_LEVEL)
 
     def __init__(self, config_path: str, pinstate_file: str, not_important_words: str):
+        self._name = 'arduino'
         self.port = None
         self.initialized = False
         self.pins = []
@@ -38,6 +39,10 @@ class Arduino(JPrint):
         self.OutDoorLightPin = 0
         self.LastSetStateOutDoorLight = None
         self.__not_important_words = not_important_words
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def ac_alert_sended(self):
@@ -189,6 +194,19 @@ class Arduino(JPrint):
     @property
     def ac_exist(self):
         return self._ac_exist
+
+    @property
+    def ac_exist_str(self, lang = 'ru'):
+        if self._ac_exist:
+            if lang == 'ru':
+                return 'есть'
+            elif lang == 'eng':
+                return 'yes'
+        else:
+            if lang == 'ru':
+                return 'НЕТ'
+            elif lang == 'eng':
+                return 'NO'
 
     def time_without_ac(self, in_str:bool = False):
         if in_str:
@@ -388,7 +406,7 @@ class Arduino(JPrint):
         return answer
 
     def find_by_auction(self, cmd, allpins=False):
-        if str(type(cmd)) != "<class 'list'>":
+        if not isinstance(cmd, list):
             cmd = str(cmd)
             _wordlist = cmd.split(' ')
         else:

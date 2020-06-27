@@ -1,6 +1,7 @@
 import logging
 import copy
-from .gfunctions import Runned
+from builtins import isinstance
+
 from .gfunctions import JPrint
 from .gfunctions import difference_between_date
 from .gfunctions import VERSION
@@ -37,14 +38,23 @@ class CommandProcessing:
         CommandProcessing.logger.setLevel(logging.WARNING)
         jprint('set WARNING level in CommandProcessiong logger')
 
-    def __init__(self, arduino, telegram_answer_queue):
-        self._arduino = arduino
-        self._telegram_answer_queue = telegram_answer_queue
+    def __init__(self, jarvis):
+        self._name = 'command_processing'
+        self.jarvis = jarvis
         self.START_TIME = datetime.now()
+        self.modules = [self, jarvis.arduino, jarvis.bot, jarvis.satellite_server, jarvis.laser_turret, jarvis.laser_turret.laser, jarvis.sensors.sonoff1]
+        # set info logger level by default
+        for module in self.modules:
+            module.set_info()
+        self.logger.info('Set INFO logger level for all modules by default.')
 
-    def command_processing(self, cmd, telegramuser, message, bot, satellite_server):
+    @property
+    def name(self):
+        return self._name
+
+    def command_processing(self, cmd, telegramuser, message):
         def get_access_error():
-            return 'У вас нет доступа к этой команде\n'
+            return 'У вас нет доступа к этой команде'
         info = CommandProcessing.logger.info
         debug = CommandProcessing.logger.debug
         warning = CommandProcessing.logger.warning
@@ -79,40 +89,40 @@ class CommandProcessing:
             if 'включи' in cmd_list or 'on' in cmd_list:
                 if 'свет' in cmd_list and ('везде' in cmd_list or 'доме' in cmd_list or 'дома' in cmd_list):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                        for p in self._arduino.pins:
+                        for p in self.jarvis.arduino.pins:
                             if p.output and 'свет' in p.convertible_terms and 'дом' in p.convertible_terms:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                    self._arduino.set_pin(p, 1)
+                                    self.jarvis.arduino.set_pin(p, 1)
                                     jprint(f'Включил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Включил свет везде.\n'
+                        answer += 'Включил свет везде.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                        for p in self._arduino.pins:
+                        for p in self.jarvis.arduino.pins:
                             if 'свет' in p.convertible_terms and 'первый' in p.convertible_terms and (
                                     'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                    self._arduino.set_pin(p, 1)
+                                    self.jarvis.arduino.set_pin(p, 1)
                                     jprint(f'Включил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Включил свет на первом этаже.\n'
+                        answer += 'Включил свет на первом этаже.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                        for p in self._arduino.pins:
+                        for p in self.jarvis.arduino.pins:
                             if 'свет' in p.convertible_terms and 'втором' in p.convertible_terms and (
                                     'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                    self._arduino.set_pin(p, 1)
+                                    self.jarvis.arduino.set_pin(p, 1)
                                     jprint(f'Включил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Включил свет на втором этаже.\n'
+                        answer += 'Включил свет на втором этаже.'
                     else:
                         answer += get_access_error()
                 else:
@@ -122,21 +132,21 @@ class CommandProcessing:
                         findlist = copy.deepcopy(cmd_list)
                         if telegramuser != None:
                             findlist.append(telegramuser.name)
-                        WinnerPin = self._arduino.find_by_auction(findlist)
+                        WinnerPin = self.jarvis.arduino.find_by_auction(findlist)
                         if WinnerPin == None:
-                            answer += 'Не понятно, что нужно включить. Уточни команду.\n'
+                            answer += 'Не понятно, что нужно включить. Уточни команду.'
                         elif str(type(WinnerPin)) == "<class 'list'>":
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                                 for p in WinnerPin:
                                     if p.output:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                            a = self._arduino.set_pin(p, 1)
+                                            a = self.jarvis.arduino.set_pin(p, 1)
                                             if a == True:
-                                                answer += f'{p.description} включен\n'
+                                                answer += f'{p.description} включен'
                                             elif a == False:
-                                                answer += f'{p.description} выключен\n'
+                                                answer += f'{p.description} выключен'
                                             else:
-                                                answer += 'Ошибка передачи данных\n'
+                                                answer += 'Ошибка передачи данных'
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
                             else:
@@ -145,13 +155,13 @@ class CommandProcessing:
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
                                     telegramuser != None and telegramuser.name in WinnerPin.convertible_terms):
                                 if telegramuser != None and telegramuser.level <= 0 and WinnerPin.blocked or telegramuser == None or not WinnerPin.blocked:
-                                    a = self._arduino.set_pin(WinnerPin, 1)
+                                    a = self.jarvis.arduino.set_pin(WinnerPin, 1)
                                     if a == True:
-                                        answer += f'{WinnerPin.description} включен\n'
+                                        answer += f'{WinnerPin.description} включен'
                                     elif a == False:
-                                        answer += f'{WinnerPin.description} выключен\n'
+                                        answer += f'{WinnerPin.description} выключен'
                                     else:
-                                        answer += 'Ошибка передачи данных\n'
+                                        answer += 'Ошибка передачи данных'
                                 else:
                                     answer += f'{WinnerPin.description} заблокирован для вас'
                             else:
@@ -161,63 +171,67 @@ class CommandProcessing:
             elif 'выключи' in cmd_list or 'отключи' in cmd_list or 'off' in cmd_list:
                 if 'свет' in cmd_list and ('везде' in cmd_list or 'доме' in cmd_list or 'дома' in cmd_list):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                        for p in self._arduino.pins:
+                        for p in self.jarvis.arduino.pins:
                             if p.output and 'свет' in p.convertible_terms and 'дом' in p.convertible_terms:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                    self._arduino.set_pin(p, 0)
+                                    self.jarvis.arduino.set_pin(p, 0)
                                     jprint(f'Выключил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Выключил свет везде.\n'
+                        answer += 'Выключил свет везде.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('первом' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                        for p in self._arduino.pins:
+                        for p in self.jarvis.arduino.pins:
                             if 'свет' in p.convertible_terms and 'первом' in p.convertible_terms and (
                                     'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                    self._arduino.set_pin(p, 0)
+                                    self.jarvis.arduino.set_pin(p, 0)
                                     jprint(f'Выключил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Выключил свет на первом этаже.\n'
+                        answer += 'Выключил свет на первом этаже.'
                     else:
                         answer += get_access_error()
                 elif 'свет' in cmd_list and ('втором' in cmd_list and ('этаж' in cmd_list or 'этаже' in cmd_list)):
                     if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                        for p in self._arduino.pins:
+                        for p in self.jarvis.arduino.pins:
                             if 'свет' in p.convertible_terms and 'втором' in p.convertible_terms and (
                                     'этаж' in p.convertible_terms or 'этаже' in p.convertible_terms) and p.output:
                                 if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                    self._arduino.set_pin(p, 0)
+                                    self.jarvis.arduino.set_pin(p, 0)
                                     jprint(f'Выключил свет в {p.description}')
                                 else:
                                     answer += f'{p.description} заблокирован для вас'
-                        answer += 'Выключил свет на втором этаже.\n'
+                        answer += 'Выключил свет на втором этаже.'
                     else:
                         answer += get_access_error()
+                elif 'выключи' in cmd_list and 'лазер' in cmd_list:
+                    self.jarvis.laser_turret.laser.laser_on = False
+                    self.jarvis.laser_turret.laser.stop_game()
+                    answer = 'ок'
                 else:
                     # elif 'свет' in cmd_list:
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                         findlist = copy.deepcopy(cmd_list)
                         if telegramuser != None:
                             findlist.append(telegramuser.name)
-                        WinnerPin = self._arduino.find_by_auction(findlist)
+                        WinnerPin = self.jarvis.arduino.find_by_auction(findlist)
                         if WinnerPin == None:
-                            answer += 'Не понятно, что нужно выключить. Уточни команду.\n'
-                        elif str(type(WinnerPin)) == "<class 'list'>":
+                            answer += 'Не понятно, что нужно выключить. Уточни команду.'
+                        elif isinstance(WinnerPin, list):
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
                                 for p in WinnerPin:
                                     if p.output:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                            a = self._arduino.set_pin(p, 0)
+                                            a = self.jarvis.arduino.set_pin(p, 0)
                                             if a == True:
-                                                answer += f'{p.description} включен\n'
+                                                answer += f'{p.description} включен'
                                             elif a == False:
-                                                answer += f'{p.description} выключен\n'
+                                                answer += f'{p.description} выключен'
                                             else:
-                                                answer += 'Ошибка передачи данных\n'
+                                                answer += 'Ошибка передачи данных'
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
                             else:
@@ -226,13 +240,13 @@ class CommandProcessing:
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
                                     telegramuser != None and telegramuser.name in WinnerPin.convertible_terms):
                                 if telegramuser != None and telegramuser.level <= 0 and WinnerPin.blocked or telegramuser == None or not WinnerPin.blocked:
-                                    a = self._arduino.set_pin(WinnerPin, 0)
+                                    a = self.jarvis.arduino.set_pin(WinnerPin, 0)
                                     if a == True:
-                                        answer += f'{WinnerPin.description} включен\n'
+                                        answer += f'{WinnerPin.description} включен'
                                     elif a == False:
-                                        answer += f'{WinnerPin.description} выключен\n'
+                                        answer += f'{WinnerPin.description} выключен'
                                     else:
-                                        answer += 'Ошибка передачи данных\n'
+                                        answer += 'Ошибка передачи данных'
                                 else:
                                     answer += f'{WinnerPin.description} заблокирован для вас'
                             else:
@@ -242,104 +256,104 @@ class CommandProcessing:
             elif ('верни' in cmd_list and (
                     'было' in cmd_list or 'обратно' in cmd_list)) or 'пошутил' in cmd_list or 'шутка' in cmd_list:
                 if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                    for p in self._arduino.pins:
+                    for p in self.jarvis.arduino.pins:
                         if (datetime.now() - p.last_rev_time).total_seconds() <= 30:
                             if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                a = self._arduino.set_pin(p, p.prevstate)  # prev pin state
+                                a = self.jarvis.arduino.set_pin(p, p.prevstate)  # prev pin state
                                 jprint(f'pin {p.num} is {a}')
                             else:
                                 answer += f'{p.description} заблокирован для вас'
-                    answer += 'Вернул все как было\n'
+                    answer += 'Вернул все как было'
                 else:
                     answer += get_access_error()
             elif 'оставь' in cmd_list and 'свет' in cmd_list:
                 if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
-                    WinnerPin = self._arduino.find_by_auction(cmd_list)
+                    WinnerPin = self.jarvis.arduino.find_by_auction(cmd_list)
                     if WinnerPin == None:
-                        answer += 'Не понятно, что нужно оставить включенным. Уточни команду.\n'
+                        answer += 'Не понятно, что нужно оставить включенным. Уточни команду.'
                     elif str(type(WinnerPin)) == "<class 'list'>":
                         if ('кухне' in cmd_list or 'кухня' in cmd_list) and len(WinnerPin) == 2:
                             if telegramuser != None and telegramuser.level <= 1 or telegramuser == None:
-                                for p in self._arduino.pins:
+                                for p in self.jarvis.arduino.pins:
                                     if p.output and p in WinnerPin:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                            self._arduino.set_pin(p, 1)
+                                            self.jarvis.arduino.set_pin(p, 1)
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
                                     elif p.output and 'свет' in p.convertible_terms and 'первый' in p.convertible_terms and 'этаж' in p.convertible_terms:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                            self._arduino.set_pin(p, 0)
+                                            self.jarvis.arduino.set_pin(p, 0)
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
-                                answer += 'Оставил включенным только свет на кухне.\n'
+                                answer += 'Оставил включенным только свет на кухне.'
                             else:
                                 answer += get_access_error()
                         else:
-                            answer += 'Я нашел более одного объекта для оставления:\n'
+                            answer += 'Я нашел более одного объекта для оставления:'
                             for w in WinnerPin:
                                 answer += f'{w.description}\n'
-                            answer += 'Нужно уточнить, что конкретно оставить.\n'
+                            answer += 'Нужно уточнить, что конкретно оставить.'
                     else:
                         if telegramuser != None and telegramuser.level <= 1 or telegramuser == None or (
                                 telegramuser != None and telegramuser.name in WinnerPin.convertible_terms):
                             HouseLevel = 'первый'
                             if 'второй' in WinnerPin.convertible_terms:  # Определяем к какому этажу относится команда
                                 HouseLevel = 'второй'
-                            for p in self._arduino.pins:
+                            for p in self.jarvis.arduino.pins:
                                 if p.output and 'свет' in p.convertible_terms and HouseLevel in p.convertible_terms and 'этаж' in p.convertible_terms:
                                     if p == WinnerPin:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                            a = self._arduino.set_pin(p, 1)
+                                            a = self.jarvis.arduino.set_pin(p, 1)
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
                                     else:
                                         if telegramuser != None and telegramuser.level <= 0 and p.blocked or telegramuser == None or not p.blocked:
-                                            a = self._arduino.set_pin(p, 0)
+                                            a = self.jarvis.arduino.set_pin(p, 0)
                                         else:
                                             answer += f'{p.description} заблокирован для вас'
-                            answer += f'Оставил включенным только {WinnerPin.description}\n'
+                            answer += f'Оставил включенным только {WinnerPin.description}'
                         else:
                             answer += get_access_error()
                 else:
                     answer += get_access_error()
             elif 'заблокируй' in cmd_list or 'заблокирую' in cmd_list:
                 if "все" in cmd_list and "выключатели" in cmd_list:
-                    for p in self._arduino.pins:
+                    for p in self.jarvis.arduino.pins:
                         if not p.output:
                             p.blocked = True
-                    answer += f'Заблокировал все выключатели\n'
+                    answer += f'Заблокировал все выключатели'
                 elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    WinnerPin = self._arduino.find_by_auction(cmd_list, True)
+                    WinnerPin = self.jarvis.arduino.find_by_auction(cmd_list, True)
                     if WinnerPin == None:
-                        answer += 'Не понятно, что нужно заблокировать. Уточни команду.\n'
+                        answer += 'Не понятно, что нужно заблокировать. Уточни команду.'
                     elif str(type(WinnerPin)) == "<class 'list'>":
                         for p in WinnerPin:
                             p.blocked = True
-                            answer += f'Заблокировал {p.description}\n'
+                            answer += f'Заблокировал {p.description}'
                     else:
                         WinnerPin.blocked = True
-                        answer += f'Заблокировал {WinnerPin.description}\n'
-                    self._arduino.write_pinstate(None)
+                        answer += f'Заблокировал {WinnerPin.description}'
+                    self.jarvis.arduino.write_pinstate(None)
                 else:
                     answer += get_access_error()
             elif 'разблокируй' in cmd_list or 'разблокирую' in cmd_list:
                 if "все" in cmd_list and "выключатели" in cmd_list:
-                    for p in self._arduino.pins:
+                    for p in self.jarvis.arduino.pins:
                         if not p.output:
                             p.blocked = False
-                    answer += f'Заблокировал все выключатели\n'
+                    answer += f'Заблокировал все выключатели'
                 elif telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    WinnerPin = self._arduino.find_by_auction(cmd_list, True)
+                    WinnerPin = self.jarvis.arduino.find_by_auction(cmd_list, True)
                     if WinnerPin == None:
-                        answer += 'Не понятно, что нужно разблокировать. Уточни команду.\n'
+                        answer += 'Не понятно, что нужно разблокировать. Уточни команду.'
                     elif str(type(WinnerPin)) == "<class 'list'>":
                         for p in WinnerPin:
                             p.blocked = False
-                            answer += f'Разблокировал {p.description}\n'
+                            answer += f'Разблокировал {p.description}'
                     else:
                         WinnerPin.blocked = False
-                        answer += f'Разблокировал {WinnerPin.description}\n'
-                    self._arduino.write_pinstate(None)
+                        answer += f'Разблокировал {WinnerPin.description}'
+                    self.jarvis.arduino.write_pinstate(None)
                 else:
                     answer += get_access_error()
             elif cmd.find('pinstate') > -1:
@@ -348,27 +362,27 @@ class CommandProcessing:
                         val = cmd.split(' ')[1]
                     except:
                         val = -1
-                    pin = self._arduino.find_pin(val)
+                    pin = self.jarvis.arduino.find_pin(val)
                     if pin != None:
                         if pin.state:
-                            answer = f'pin {pin.num} is ON\n'
+                            answer = f'pin {pin.num} is ON'
                         else:
-                            answer = f'pin {pin.num} is OFF\n'
+                            answer = f'pin {pin.num} is OFF'
                     else:
-                        answer = f"Can't find the pin with number {val}\n"
+                        answer = f"Can't find the pin with number {val}"
                 else:
                     answer += get_access_error()
             elif cmd.find('loadconfig') > -1 or cmd.find('загрузи конфиг') > -1:
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    answer = self._arduino.load_config(bot)
+                    answer = self.jarvis.arduino.load_config(self.jarvis.bot)
                 else:
                     answer += get_access_error()
             elif cmd.find('pinlist') > -1 or cmd.find('list pins') > -1 or cmd.find('listpins') > -1 or cmd.find(
                     'список пинов') > -1 or cmd.find('пинлист') > -1:
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    answer += '*** Pin list: ***' + '\n'
-                    answer += 'Inputs:' + '\n'
-                    for p in self._arduino.pins:
+                    answer += '*** Pin list: ***\n'
+                    answer += 'Inputs:\n'
+                    for p in self.jarvis.arduino.pins:
                         if not p.output:
                             answer += f'   pin {p.num} ({p.name})'
                             if p.blocked:
@@ -381,70 +395,68 @@ class CommandProcessing:
                                         answer += ','
                                     answer += f' {b.num} ({b.description})'
                                     k += 1
-                            answer += '\n'
-                    answer += 'Outputs:' + '\n'
-                    for p in self._arduino.pins:
+                    answer += 'Outputs:\n'
+                    for p in self.jarvis.arduino.pins:
                         if p.output:
                             answer += f'   pin {p.num} ({p.name})'
                             if p.blocked:
                                 answer += '(blocked)'
-                            answer += '\n'
                 else:
                     answer += get_access_error()
             elif cmd.startswith('bind '):
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                     try:
                         val = cmd.split(' ')
-                        bindto = self._arduino.find_pin(val[1])
+                        bindto = self.jarvis.arduino.find_pin(val[1])
                         if not bindto.output:
                             for i in range(2, len(val)):
-                                addpin = self._arduino.find_pin(val[i])
+                                addpin = self.jarvis.arduino.find_pin(val[i])
                                 if addpin.output:
                                     if not addpin in bindto.binds:
                                         bindto.binds.append(addpin)
                                     else:
-                                        answer += f'pin {addpin.name} is already in {bindto.name}.binds' + '\n'
+                                        answer += f'pin {addpin.name} is already in {bindto.name}.binds'
                                 else:
-                                    answer += f'pin {addpin.name} is INPUT pin and connot binded to pin {bindto.name}\n'
-                            answer += 'pins is binded!\n'
-                            if self._arduino.save_config() == None:
-                                answer += 'config is saved\n'
+                                    answer += f'pin {addpin.name} is INPUT pin and connot binded to pin {bindto.name}'
+                            answer += 'pins is binded!'
+                            if self.jarvis.arduino.save_config() == None:
+                                answer += 'config is saved'
                             else:
-                                answer += 'error save config\n'
+                                answer += 'error save config'
                         else:
-                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.\n'
+                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.'
                     except:
-                        answer += 'error bind pins\n'
+                        answer += 'error bind pins'
                 else:
                     answer += get_access_error()
             elif cmd.startswith('unbind '):
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
                     try:
                         val = cmd.split(' ')
-                        bindto = self._arduino.find_pin(val[1])
+                        bindto = self.jarvis.arduino.find_pin(val[1])
                         if not bindto.output:
                             for i in range(2, len(val)):
-                                bindto.binds.remove(self._arduino.find_pin(val[i]))
-                            answer = 'pins is unbinded!\n'
-                            if self._arduino.save_config() == None:
-                                answer += 'config is saved\n'
+                                bindto.binds.remove(self.jarvis.arduino.find_pin(val[i]))
+                            answer = 'pins is unbinded!'
+                            if self.jarvis.arduino.save_config() == None:
+                                answer += 'config is saved'
                             else:
-                                answer += 'error save config\n'
+                                answer += 'error save config'
                         else:
-                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.\n'
+                            answer += f'pin {bindto.name} is OUTPUT pin and you cant bind to it.'
                     except:
-                        answer = 'error unbind pins\n'
+                        answer = 'error unbind pins'
                 else:
                     answer += get_access_error()
             elif (cmd.find('print') > -1 and cmd.find('config') > -1) or (
                     cmd.find('покажи') > -1 and cmd.find('конфиг') > -1):
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    f = open(self._arduino.config_path, 'r')
+                    f = open(self.jarvis.arduino.config_path, 'r')
                     try:
                         answer += f.read()
                         f.close()
                     except:
-                        answer += 'не могу прочесть конфиг\n'
+                        answer += 'не могу прочесть конфиг'
                 else:
                     answer += get_access_error()
             elif cmd == 'state' or cmd == 'status' or 'статус' in cmd_list:
@@ -455,7 +467,7 @@ class CommandProcessing:
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                         answer += 'Включенный свет:\n'
                         k = 0
-                        for p in self._arduino.pins:
+                        for p in self.jarvis.arduino.pins:
                             if p.output and 'свет' in p.convertible_terms and p.state:
                                 if k > 0:
                                     answer += ' ,'
@@ -464,25 +476,24 @@ class CommandProcessing:
                         if k == 0:
                             answer += 'весь свет выключен\n'
                         answer += '\n'
-                    answer += '\n'
 
                     # инфа по насосам
                     answer += "Насосы "
-                    pumpsPin = self._arduino.find_pin("насосы")
+                    pumpsPin = self.jarvis.arduino.find_pin("насосы")
                     if pumpsPin is not None:
                         if pumpsPin.state:
                             answer += "включены"
                         else:
                             answer += "ВЫКЛЮЧЕНЫ"
+                        answer += '\n'
                     else:
                         answer += "<не могу найти пин насосов  по description 'насосы'>"
-                    answer += '\n'
 
                     # инфа по майнерам
                     if telegramuser != None and telegramuser.level == 0 or telegramuser == None:
                         answer += 'майнеры: '
                         k=0
-                        for miner in satellite_server.miners:
+                        for miner in self.jarvis.satellite_server.miners:
                             if miner.online:
                                 if k>0:
                                     answer += ', '
@@ -490,41 +501,92 @@ class CommandProcessing:
                                 answer += miner.name + f'({miner.runned_text()})'
                         if k==0:
                             answer += 'все offline'
-                        answer += '\n'
-
+                    answer += '\n'
                     # инфа по напряжениям
-                    ACNet = 'есть'
-                    if not self._arduino.ac_exist:
-                        ACNet = 'НЕТ'
-                    answer += f'Напряжение в сети {ACNet}\n'
-                    answer += f'Напряжение аккумулятора {self._arduino.dc_value} V ({self._arduino.dc_voltage_in_percent} %)\n'
+                    answer += f'Напряжение в сети {self.jarvis.arduino.ac_exist_str} ({self.jarvis.sensors.ac_voltage_input}V)\n'
+                    answer += f'Напряжение аккумулятора {self.jarvis.arduino.dc_value} V ({self.jarvis.arduino.dc_voltage_in_percent} %)'
+                else:
+                    answer += get_access_error()
+            elif 'риги' in cmd_list or 'rigs' in cmd_list:
+                if telegramuser != None and telegramuser.level == 0 or telegramuser == None:
+                    answer += 'риги:\n'
+                    for miner in self.jarvis.satellite_server.miners:
+                        answer += miner.name + f'({miner.runned_text()}) st {miner.shutdown_threshold[0]}/{miner.shutdown_threshold[1]}V\n'
+
+                    answer += '\n'
+                    # инфа по напряжениям
+                    answer += f'Напряжение в сети {self.jarvis.arduino.ac_exist_str} ({self.jarvis.sensors.ac_voltage_input}V)'
                 else:
                     answer += get_access_error()
             elif cmd == 'exit':
                 if telegramuser is None:  # выходить можно только из консоли
                     jprint('bye...')
-                    Runned.runned = False
+                    self.jarvis.runned = False
                 else:
                     answer += get_access_error()
             elif cmd.find('запусти') > -1 and cmd.find('майнинг') > -1:
-                satellite_server.start_miners()
-                answer += 'запустил майнинг\n'
+                self.jarvis.satellite_server.start_miners()
+                answer += 'запустил майнинг'
             elif (cmd.find('останови') > -1 or cmd.find('заверши') > -1 or cmd.find('выключи') > -1 or
                   cmd.find('выруби') > -1) and cmd.find('майнинг') > -1:
-                satellite_server.stop_miners()
-                answer = 'остановил майнинг\n'
-            elif cmd == 'info':
-                self._arduino.set_info()
-                CommandProcessing.set_info()
-            elif cmd == 'debug':
-                self._arduino.set_debug()
-                CommandProcessing.set_debug()
-            elif cmd == 'warning':
-                self._arduino.warning()
-                CommandProcessing.set_warning()
+                self.jarvis.satellite_server.stop_miners()
+                answer = 'остановил майнинг'
+            elif 'info' in cmd_list:
+                if len(cmd_list) == 1:
+                    for module in self.modules:
+                        module.set_info()
+                elif len(cmd_list) == 2:
+                    for module in self.modules:
+                        if module.name == cmd_list[1]:
+                            module.set_info()
+                else:
+                    self.logger.error('DEBUG command is wrong format, <debug <modulename>')
+            elif 'debug' in cmd_list:
+                if len(cmd_list) == 1:
+                    for module in self.modules:
+                        module.set_debug()
+                elif len(cmd_list) == 2:
+                    for module in self.modules:
+                        if module.name == cmd_list[1]:
+                            module.set_debug()
+                else:
+                    self.logger.error('DEBUG command is wrong format, <debug <modulename>')
+            elif 'warning' in cmd_list:
+                if len(cmd_list) == 1:
+                    for module in self.modules:
+                        module.set_warning()
+                elif len(cmd_list) == 2:
+                    for module in self.modules:
+                        if module.name == cmd_list[1]:
+                            module.set_warning()
+                else:
+                    self.logger.error('WARNING command is wrong format, <debug <modulename>')
+            elif cmd == 'reload laser' or cmd == 'reload_laser':
+                answer += 'reload laser'
+            elif cmd == 'homing':
+                self.jarvis.laser_turret.laser.stop_game()
+                answer += 'ok'
+            elif cmd == 'coords':
+                print(f'{self.jarvis.laser_turret.laser.x}, {self.jarvis.laser_turret.laser.y}')
+                answer += 'ok'
+            elif (cmd.find('поигра') > -1 or cmd.find('развлек') > -1) and cmd.find('кот') > -1:
+                _game_time = 0
+                for _cm in cmd_list:
+                    try:
+                        _game_time = int(_cm)
+                    except:
+                        pass
+                _game_time = self.jarvis.laser_turret.laser.start_game(_game_time)
+                answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд'
+            elif 'стоп' in cmd_list or 'хватит' in cmd_list or 'остановись' in cmd_list:
+                if self.jarvis.laser_turret.laser.game_mode:
+                    self.jarvis.laser_turret.laser.stop_game()
+                    answer = 'ок'
+                else:
+                    answer = 'ок'
             else:
                 answer += 'неизвестная команда\n'
 
         if message != None:
-            self._telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
-        return answer
+            self.jarvis.telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
+        return answer + '\n'

@@ -17,8 +17,8 @@ String client_name = "wemos1";
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
-const char* host = "192.168.18.3";
-const uint16_t port = 8586;
+const char* host = "192.168.18.30";
+const uint16_t port = 8585;
 
 ESP8266WiFiMulti WiFiMulti;
 

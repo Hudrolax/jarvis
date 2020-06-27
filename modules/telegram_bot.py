@@ -9,7 +9,7 @@ import logging
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s - %(levelname)s - %(message)s'
 #LOG_LEVEL = logging.DEBUG
-LOG_LEVEL = logging.WARNING
+LOG_LEVEL = logging.INFO
 
 if WRITE_LOG_TO_FILE:
     logging.basicConfig(filename='jarvis_log.txt', filemode='w', format=LOG_FORMAT, level=LOG_LEVEL)
@@ -80,9 +80,31 @@ class TelegramBot(telebot.TeleBot, JPrint):
     PROXY_LIST_SITE_LIST.append('http://pubproxy.com/api/proxy?format=txt')
 
     logger = logging.getLogger('Telegram_bot')
+    logger.setLevel(logging.INFO)
 
-    def __init__(self, path, list_file, token, threaded=False):
+    @staticmethod
+    def set_info():
+        TelegramBot.logger.setLevel(logging.INFO)
+        print(f'set INFO level in {TelegramBot.logger.name} logger')
+
+    @staticmethod
+    def set_debug():
+        TelegramBot.logger.setLevel(logging.DEBUG)
+        print(f'set DEBUG level in {TelegramBot.logger.name} logger')
+
+    @staticmethod
+    def set_warning():
+        TelegramBot.logger.setLevel(logging.WARNING)
+        print(f'set WARNING level in {TelegramBot.logger.name} logger')
+
+    def __init__(self, jarvis, path, list_file, token, threaded=False, use_proxy = False):
         super().__init__(token, threaded)
+        if isinstance(use_proxy, bool):
+            self.use_proxy = use_proxy
+        else:
+            raise TypeError
+        self.jarvis = jarvis
+        self._name = 'bot'
         self._users = []
         self._prog_path = path
         self._good_proxy_list_file = list_file
@@ -92,8 +114,17 @@ class TelegramBot(telebot.TeleBot, JPrint):
         self._send_messages_thread = threading.Thread(target=self._send_messages_with_queue, args=(), daemon=True)
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def users(self):
         return self._users
+
+    def send_message_to_admin(self, message):
+        for user in self.get_users():
+            if user.level <= 0:
+                self.add_to_queue(user.id, f'{message}\n')
 
     def get_users(self):
         return self._users
@@ -203,49 +234,58 @@ class TelegramBot(telebot.TeleBot, JPrint):
         info = TelegramBot.logger.info
         warning = TelegramBot.logger.warning
         while self._started:
-            try:
-                for _proxy in TelegramBot.PROXY_LIST_SITE_LIST:
-                    try:
-                        content = str(requests.get(_proxy).content)
-                        content = content.replace(r'\r\n', ',')
-                        content = content.replace("b'", '')
-                        content = content.replace(",'", '')
-                        content = content.replace("'", '')
-                        if content == '':
-                            error(f'empty proxy list in {_proxy}')
+            if self.use_proxy:
+                try:
+                    for _proxy in TelegramBot.PROXY_LIST_SITE_LIST:
+                        try:
+                            content = str(requests.get(_proxy).content)
+                            content = content.replace(r'\r\n', ',')
+                            content = content.replace("b'", '')
+                            content = content.replace(",'", '')
+                            content = content.replace("'", '')
+                            if content == '':
+                                error(f'empty proxy list in {_proxy}')
+                                sleep(11)
+                                continue
+                            break
+                        except:
+                            warning(f"can't load {_proxy}")
                             sleep(11)
-                            continue
-                        break
-                    except:
-                        warning(f"can't load {_proxy}")
-                        sleep(11)
 
-                a = content.split(',')
-                self.jprint('Im try load good proxylist')
-                gp_list = self._load_good_proxylist()
-                contarr = []
-                if gp_list != None:
-                    contarr.extend(gp_list)
-                    self.jprint('Good proxylist is loaded')
-                else:
-                    error('Cant load good proxylist from file :(')
-                contarr.extend(a)
-            except:
-                error(f"error in parse proxy list content")
-                sleep(0.1)
-                continue
-            #self.jprint(contarr)
-            for prox in contarr:
-                if prox != '':
-                    try:
-                        telebot.apihelper.proxy = {'https': prox}
-                        self._append_goodproxy(prox)
-                        self.jprint(f'Try connect to Telegramm with proxy {prox}')
-                        self.polling(none_stop=True)
-                    except:
-                        error('I am have some problem with connect to Telegramm')
-                        self._remove_bad_proxy(prox)
-                        sleep(0.1)
+                    a = content.split(',')
+                    self.jprint('Im try load good proxylist')
+                    gp_list = self._load_good_proxylist()
+                    contarr = []
+                    if gp_list != None:
+                        contarr.extend(gp_list)
+                        self.jprint('Good proxylist is loaded')
+                    else:
+                        error('Cant load good proxylist from file :(')
+                    contarr.extend(a)
+                except:
+                    error(f"error in parse proxy list content")
+                    sleep(0.1)
+                    continue
+
+                for prox in contarr:
+                    if prox != '':
+                        try:
+                            telebot.apihelper.proxy = {'https': prox}
+                            self._append_goodproxy(prox)
+                            self.jprint(f'Try connect to Telegramm with proxy {prox}')
+                            self.polling(none_stop=True)
+                        except:
+                            error('I am have some problem with connect to Telegramm')
+                            self._remove_bad_proxy(prox)
+                            sleep(0.1)
+            else:
+                self.logger.info('Connect to telegram without proxy')
+                try:
+                    self.polling(none_stop=True)
+                except:
+                    error('I am have some problem with connect to Telegramm')
+                    sleep(0.1)
+
                         
     def start(self):
         # Start Telegram bot thread
