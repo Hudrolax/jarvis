@@ -98,16 +98,16 @@ class CommunicationServer:
                     # connection.send(answer.encode('ascii'))
                     connection.sendall(answer.encode())
         except ConnectionResetError:
-            self.logger.error(f'Error with recieve data from {client_address}')
+            self.logger.warning(f'Error with recieve data from {client_address}')
             return
         except UnicodeDecodeError:
-            self.logger.error(f'Error with decode UTF-8 data from {client_address}')
+            self.logger.warning(f'Error with decode data from {client_address}')
             return
         except TimeoutError:
-            self.logger.error(f'Time out recieve from {client_address}')
+            self.logger.warning(f'Time out recieve from {client_address}')
             return
         except AttributeError:
-            self.logger.error(f"Can't encode answer {answer}")
+            self.logger.warning(f"Can't encode answer {answer}")
             return
 
         finally:

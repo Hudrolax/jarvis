@@ -15,6 +15,22 @@ else:
 
 class Sonoff:
     logger = logging.getLogger('sonoff')
+
+    @staticmethod
+    def set_debug():
+        Sonoff.logger.setLevel(logging.DEBUG)
+        print(f'set DEBUG level in {Sonoff.logger.name} logger')
+
+    @staticmethod
+    def set_warning():
+        Sonoff.logger.setLevel(logging.WARNING)
+        print(f'set WARNING level in {Sonoff.logger.name} logger')
+
+    @staticmethod
+    def set_info():
+        Sonoff.logger.setLevel(logging.INFO)
+        print(f'set INFO level in {Sonoff.logger.name} logger')
+
     def __init__(self, name, password:str, ip, port:int = 80):
         self.name = name
         self.ip = ip
@@ -34,6 +50,7 @@ class Sonoff:
 
     def update_info(self):
         try:
+            self.logger.debug(f'try to request to http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}')
             content = requests.get(f'http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}').content.decode()
         except:
             self.logger.error(f'request error to http://{self.ip}:{self.port}/get_control?info=1&auth={self.password}')

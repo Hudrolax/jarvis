@@ -20,7 +20,7 @@ class Sensors:
     def _update_thread_func(self):
         while self.jarvis.runned:
             self.sonoff1.update_info()
-            sleep(1)
+            sleep(5)
 
 if __name__ == '__main__':
     class TestJarvis:

@@ -42,7 +42,7 @@ class CommandProcessing:
         self._name = 'command_processing'
         self.jarvis = jarvis
         self.START_TIME = datetime.now()
-        self.modules = [self, jarvis.arduino, jarvis.bot, jarvis.satellite_server, jarvis.laser_turret, jarvis.laser_turret.laser]
+        self.modules = [self, jarvis.arduino, jarvis.bot, jarvis.satellite_server, jarvis.laser_turret, jarvis.laser_turret.laser, jarvis.sensors.sonoff1]
         # set info logger level by default
         for module in self.modules:
             module.set_info()
