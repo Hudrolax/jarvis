@@ -8,7 +8,7 @@ from modules.class_sonoff import Sonoff
 class Sensors:
     def __init__(self, jarvis):
         self.jarvis = jarvis
-        self.sonoff1 = Sonoff('sonoff1', '7950295', '192.168.18.103')
+        self.sonoff1 = Sonoff('sonoff1', '7950295', '192.168.18.104')
         self._update_thread = threading.Thread(target=self._update_thread_func, args=(), daemon=True)
         self._update_thread.start()
         self._ac_voltage_input = 0

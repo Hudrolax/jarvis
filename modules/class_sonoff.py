@@ -91,6 +91,6 @@ class Sonoff:
         return f'({self.name}, rel {self.rel_str}, voltage {self.voltage}, current {self.currency}, power {self.power})'
 
 if __name__ == '__main__':
-    son1 = Sonoff('son1', '7950295', '192.168.18.102')
+    son1 = Sonoff('son1', '7950295', '192.168.18.104')
     son1.update_info()
     print(son1)
