@@ -489,18 +489,6 @@ class CommandProcessing:
                     else:
                         answer += "<не могу найти пин насосов  по description 'насосы'>"
 
-                    # инфа по майнерам
-                    if telegramuser != None and telegramuser.level == 0 or telegramuser == None:
-                        answer += 'майнеры: '
-                        k=0
-                        for miner in self.jarvis.satellite_server.miners:
-                            if miner.online:
-                                if k>0:
-                                    answer += ', '
-                                k += 1
-                                answer += miner.name + f'({miner.runned_text()})'
-                        if k==0:
-                            answer += 'все offline'
                     answer += '\n'
                     # инфа по напряжениям
                     answer += f'Напряжение в сети {self.jarvis.arduino.ac_exist_str} ({self.jarvis.sensors.ac_voltage_input}V)\n'
