@@ -148,20 +148,19 @@ class Jarvis_Satellite_Server(CommunicationServer):
 
     def shutdown_threshold_action(self):
         info = Jarvis_Satellite_Server.logger.info
-        if (datetime.now() - self.shutdown_thresold_action_timer).total_seconds() > 300:
-            for miner in self.miners:
-                if miner.shutdown_threshold[0] > 0:
-                    if miner.runned and self.jarvis.sensors.ac_voltage_input < miner.shutdown_threshold[0]:
-                        info(f'miner {miner} stopped by shutdown_threshold')
-                        miner.stop()
-                        if self.jarvis.sensors.sonoff1.logger.level == logging.DEBUG:
-                            self.jarvis.bot.send_message_to_admin(f'miner {miner} stopped by shutdown_threshold')
-                    elif not miner.runned and self.jarvis.sensors.ac_voltage_input > miner.shutdown_threshold[1]:
-                        info(f'miner {miner} startded by shutdown_threshold')
-                        miner.start()
-                        if self.jarvis.sensors.sonoff1.logger.level == logging.DEBUG:
-                            self.jarvis.bot.send_message_to_admin(f'miner {miner} started by shutdown_threshold')
-            self.shutdown_thresold_action_timer = datetime.now()
+        for miner in self.miners:
+            if miner.shutdown_threshold[0] > 0:
+                if miner.runned and self.jarvis.sensors.ac_voltage_input < miner.shutdown_threshold[0]:
+                    info(f'miner {miner} stopped by shutdown_threshold')
+                    miner.stop()
+                    if self.jarvis.sensors.sonoff1.logger.level == logging.DEBUG:
+                        self.jarvis.bot.send_message_to_admin(f'miner {miner} stopped by shutdown_threshold')
+                elif not miner.runned and self.jarvis.sensors.ac_voltage_input > miner.shutdown_threshold[1] and  (datetime.now() - self.shutdown_thresold_action_timer).total_seconds() > 300:
+                    info(f'miner {miner} startded by shutdown_threshold')
+                    miner.start()
+                    if self.jarvis.sensors.sonoff1.logger.level == logging.DEBUG:
+                        self.jarvis.bot.send_message_to_admin(f'miner {miner} started by shutdown_threshold')
+                    self.shutdown_thresold_action_timer = datetime.now()
 
     def stop_miners(self, bcod_reaction = False, bot=None):
         info = Jarvis_Satellite_Server.logger.info
