@@ -18,6 +18,8 @@ class Pins:
         self._binds = []
         self._blocked = False
         self._last_rev_time = datetime(2005, 7, 14, 12, 30)
+        self._time_on = datetime(2005, 7, 14, 12, 30)
+        self._time_off = datetime(2005, 7, 14, 12, 30)
         if isinstance(bcod, int):
             if bcod > 100:
                 bcod = 100
@@ -67,6 +69,28 @@ class Pins:
             self._last_rev_time = val
         else:
             raise Exception(f'Pins exaption: last_rev_time unexpected {type(val)}, expected "datetime"')
+
+    @property
+    def time_on(self):
+        return self._time_on
+
+    @time_on.setter
+    def time_on(self, val):
+        if isinstance(val, datetime):
+            self._time_on = val
+        else:
+            raise Exception(f'Pins exaption: time_on unexpected {type(val)}, expected "datetime"')
+
+    @property
+    def time_off(self):
+        return self._time_off
+
+    @time_off.setter
+    def time_off(self, val):
+        if isinstance(val, datetime):
+            self._time_off = val
+        else:
+            raise Exception(f'Pins exaption: time_off unexpected {type(val)}, expected "datetime"')
 
 
     @property

@@ -98,26 +98,26 @@ class Arduino(JPrint):
 
     def find_pin(self, __pin):
         for p in self.pins:
-            if str(type(__pin)) == "<class 'str'>":
+            if isinstance(__pin, str):
                 __pin = __pin.lower()
                 if p.name.lower() == __pin or str(p.num) == __pin or p.description.lower() == __pin:
                     return p
-            elif str(type(__pin)) == "<class 'int'>":
+            elif isinstance(__pin, int):
                 if p.num == __pin:
                     return p
         return None
 
     def set_pin(self, _pin, __state):
-        if str(type(_pin)) == "<class 'list'>":
+        if isinstance(_pin, list):
             self.jprint("Error (set_pin): _pin is <class 'list'>")
             return None
         if __state:
             __state = 1
         elif not __state:
             __state = 0
-        if str(type(_pin)) == "<class 'int'>":
+        if isinstance(_pin, int):
             p = self.find_pin(_pin)
-        elif str(type(_pin)) == "<class 'str'>":
+        elif isinstance(_pin, str):
             _pin = int(_pin)
             p = self.find_pin(_pin)
         else:
@@ -156,15 +156,22 @@ class Arduino(JPrint):
     def check_input_pins(self, allpins=False):
         for p in self.pins:
             if not p.output or allpins:
-                # if True:
-                p.prevstate = p.state
-                if self.write_to_port('S', p.num, 0) == 2001:
-                    p.state = True
-                else:
-                    p.state = False
+                _pin_state_answer = self.write_to_port('S', p.num, 0)
+                if _pin_state_answer == 2001:
+                    if (datetime.now() - p.time_on).total_seconds() > 0.3:
+                        p.prevstate = p.state
+                        p.state = True
+                        p.time_on = datetime.now()
+                        self.pin_reaction(p)
+                elif _pin_state_answer == 2000:
+                    if (datetime.now() - p.time_off).total_seconds() > 0.3:
+                        p.prevstate = p.state
+                        p.state = False
+                        p.time_off = datetime.now()
+                        self.pin_reaction(p)
+
                 if allpins:
                     p.prevstate = p.state
-                self.pin_reaction(p)
 
         val = self.write_to_port('A', 1, 0)
         voltage_now = round(gf.map_func(val, 0, 1023, 0, 40.1), 2)
