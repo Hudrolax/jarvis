@@ -158,16 +158,22 @@ class Arduino(JPrint):
             if not p.output or allpins:
                 _pin_state_answer = self.write_to_port('S', p.num, 0)
                 if _pin_state_answer == 2001:
-                    if (datetime.now() - p.time_on).total_seconds() > 0.3:
+                    if not p.start_count_reaction_time:
+                        p.last_rev_time = datetime.now()
+                        p.start_count_reaction_time = True
+                    if (datetime.now() - p.last_rev_time).total_seconds() > 0.5:
                         p.prevstate = p.state
                         p.state = True
-                        p.time_on = datetime.now()
+                        p.start_count_reaction_time = False
                         self.pin_reaction(p)
                 elif _pin_state_answer == 2000:
-                    if (datetime.now() - p.time_off).total_seconds() > 0.3:
+                    if not p.start_count_reaction_time:
+                        p.last_rev_time = datetime.now()
+                        p.start_count_reaction_time = True
+                    if (datetime.now() - p.last_rev_time).total_seconds() > 0.5:
                         p.prevstate = p.state
                         p.state = False
-                        p.time_off = datetime.now()
+                        p.start_count_reaction_time = False
                         self.pin_reaction(p)
 
                 if allpins:
