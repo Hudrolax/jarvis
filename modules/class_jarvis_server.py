@@ -15,30 +15,31 @@ if WRITE_LOG_TO_FILE:
 else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
-class Miner():
-    logger = logging.getLogger('Miner')
+class Satellite:
+    logger = logging.getLogger('Satellite')
     logger.setLevel(logging.DEBUG)
     RESET_ONLINE_TIMER = 60
 
-    def __init__(self, name:str, instant_off_by_poweroff, shutdown_threshold:tuple):
+    def __init__(self, name, shutdown_no_ac_sec:int = 0):
         if not isinstance(name, str):
             raise Exception('miner name is not "str"')
         self._name = name
-        self._runned = False
+        self.shutdown = False
+        self.shutdown_when_no_ac_sec = shutdown_no_ac_sec
+        self.power_off_by_shutdown = False
         self._online = False
         self._online_reset_timer = Miner.RESET_ONLINE_TIMER
         self._online_reset_thread = threading.Thread(target=self._reset_online_timer, args=(), daemon=True)
         self._online_reset_thread.start()
-        self._start_it = False
-        self._stop_it = False
-        self._bcod_reaction = False
-        self.instant_off_by_poweroff = instant_off_by_poweroff
-        self.shutdown_threshold = shutdown_threshold
-        
+
+    @property
+    def name(self):
+        return self._name
+
     @property
     def online(self):
         return self._online
-    
+
     @online.setter
     def online(self, val):
         if isinstance(val, bool):
@@ -46,11 +47,42 @@ class Miner():
         else:
             raise TypeError(f'Miner class ERROR: "online" is {type(val)}, but "bool" expected')
 
+    def power_off(self):
+        self.power_off_by_shutdown = True
+        self.shutdown = True
+
     def online_text(self):
         if self.online:
             return 'online'
         else:
             return 'offline'
+
+    def __str__(self):
+        return self._name
+
+    def it_is_online(self):
+        self.online = True
+        self._online_reset_timer = Miner.RESET_ONLINE_TIMER
+
+    def _reset_online_timer(self):
+        while True:
+            sleep(1)
+            if self._online_reset_timer > 0:
+                self._online_reset_timer -= 1
+            else:
+                self._online_reset_timer = Miner.RESET_ONLINE_TIMER
+                self.online = False
+
+
+class Miner(Satellite):
+    def __init__(self, name:str, instant_off_by_poweroff, shutdown_threshold:tuple, shutdown_no_ac_sec:int = 0):
+        super().__init__(name, shutdown_no_ac_sec)
+        self._runned = False
+        self._start_it = False
+        self._stop_it = False
+        self._bcod_reaction = False
+        self.instant_off_by_poweroff = instant_off_by_poweroff
+        self.shutdown_threshold = shutdown_threshold
 
     @property
     def bcod_reaction(self):
@@ -81,10 +113,6 @@ class Miner():
             return 'off'
 
     @property
-    def name(self):
-        return self._name
-
-    @property
     def start_it(self):
         return self._start_it
 
@@ -105,22 +133,6 @@ class Miner():
             self._stop_it = val
         else:
             raise TypeError('stop_it bool expected')
-
-    def __str__(self):
-        return self._name
-    
-    def _reset_online_timer(self):
-        while True:
-            sleep(1)
-            if self._online_reset_timer > 0:
-                self._online_reset_timer -= 1
-            else:
-                self._online_reset_timer = Miner.RESET_ONLINE_TIMER
-                self.online = False
-
-    def it_is_online(self):
-        self.online = True
-        self._online_reset_timer = Miner.RESET_ONLINE_TIMER
 
     def start(self):
         self._start_it = True
@@ -145,6 +157,14 @@ class Jarvis_Satellite_Server(CommunicationServer):
     @property
     def miners(self):
         return self._miners
+
+    def shutdown_by_ac_loss_timer(self):
+        for miner in self.miners:
+            if not self.jarvis.arduino.ac_exist:
+                if miner.online and 0 < miner.shutdown_when_no_ac_sec < self.jarvis.arduino.time_without_ac() and not miner.power_off_by_shutdown:
+                    miner.power_off()
+            else:
+                miner.power_off_by_shutdown = False
 
     def shutdown_threshold_action(self):
         info = Jarvis_Satellite_Server.logger.info
@@ -194,9 +214,9 @@ class Jarvis_Satellite_Server(CommunicationServer):
                     return m
         return None
 
-    def add_miner(self, name, instant_off_by_poweroff, shutdown_threshold = (0, 0)):
+    def add_miner(self, name, instant_off_by_poweroff, shutdown_threshold = (0, 0), shutdown_no_ac_sec:int = 0):
         if self._find_miner(name) is None:
-            self._miners.append(Miner(name, instant_off_by_poweroff, shutdown_threshold))
+            self._miners.append(Miner(name, instant_off_by_poweroff, shutdown_threshold, shutdown_no_ac_sec))
 
     def handler(self, client_address, data):
         # client_address - адрес клиента
@@ -211,30 +231,29 @@ class Jarvis_Satellite_Server(CommunicationServer):
         name = data[0]
         message = data[1]
         debug(f'get "{message}" from {name}')
-        if name.find('wemos') > -1: # подключается wemos
-            answer = 'ok'
-        else: # подключается satellite
-            if message == 'ping':
-                miner = self._find_miner(name)
-                if miner is not None:
-                    miner.it_is_online()
-                answer = 'ok'
-            elif message == 'miner_is_runned':
-                miner = self._find_miner(name)
-                if miner is not None:
-                    debug('miner is runned')
-                    miner.runned = True
-                    miner.start_it = False
-                    if miner.stop_it:
-                        answer = 'stop_miner'
-            elif message == 'miner_is_not_runned':
-                miner = self._find_miner(name)
-                if miner is not None:
-                    debug("miner is not runned")
-                    miner.runned = False
-                    miner.stop_it = False
-                    if miner.start_it:
-                        answer = 'start_miner'
+        answer = 'ok'
+        if message == 'ping':
+            miner = self._find_miner(name)
+            if miner is not None:
+                miner.it_is_online()
+                if miner.shutdown:
+                    answer = 'shutdown'
+        elif message == 'miner_is_runned':
+            miner = self._find_miner(name)
+            if miner is not None:
+                debug('miner is runned')
+                miner.runned = True
+                miner.start_it = False
+                if miner.stop_it:
+                    answer = 'stop_miner'
+        elif message == 'miner_is_not_runned':
+            miner = self._find_miner(name)
+            if miner is not None:
+                debug("miner is not runned")
+                miner.runned = False
+                miner.stop_it = False
+                if miner.start_it:
+                    answer = 'start_miner'
         return answer
 
 if __name__ == '__main__':

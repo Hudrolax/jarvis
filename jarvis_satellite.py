@@ -10,6 +10,7 @@ import logging
 import threading
 import psutil
 import subprocess
+import os
 
 list = JList
 jprint = JPrint.jprint
@@ -91,6 +92,10 @@ class Jarvis_Satellite_client(CommunicationClient):
                 return True
         return False
 
+    @staticmethod
+    def shutdown_self():
+        os.system('shutdown /s /t 5')
+
     def start(self):
         self._runned = True
         self._handler_thread.start()
@@ -104,6 +109,9 @@ class Jarvis_Satellite_client(CommunicationClient):
         debug = Jarvis_Satellite_client.logger.debug
         while self._runned:
             answer = self.send_with_name('ping')
+            if answer == 'shutdown':
+                self.shutdown_self()
+
             debug(f'answer is "{answer}"')
             sleep(2)
 
