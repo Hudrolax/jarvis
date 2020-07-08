@@ -3,7 +3,10 @@ from datetime import datetime
 VERSION = "1.2"
 
 def map_func(x, in_min, in_max, out_min, out_max):
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+    try:
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+    except:
+        return 0
 
 
 def array_ma(array):
