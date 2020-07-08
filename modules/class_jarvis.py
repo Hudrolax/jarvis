@@ -57,9 +57,9 @@ class Jarvis:
         self.inputThread.start()
         self.logger.info('start keyboard thread')
 
-        self.arduino_loop_thread = threading.Thread(target=self.arduino_loop, args=(), daemon=True)
-        self.arduino_loop_thread.start()
-        self.logger.info('start arduino_loop thread')
+        # self.arduino_loop_thread = threading.Thread(target=self.arduino_loop, args=(), daemon=True)
+        # self.arduino_loop_thread.start()
+        # self.logger.info('start arduino_loop thread')
 
         # Start Telegram bot
         self.bot.start()
@@ -98,7 +98,7 @@ class Jarvis:
 
     def reglament_work(self):
         """
-        Регламентные задания, выполняются по времени или по событию (поток)
+        Регламентные задания, выполняются по времени или по событию
         """
         if (datetime.now().month >= 10 and datetime.now().month <= 4 and
             (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or \
@@ -186,6 +186,8 @@ class Jarvis:
                     message = queue_typle[2]
                     answer = self.command_processing.command_processing(input_str, user, message)
                     jprint(answer)
+                self.check_inputs_pins()
+                self.reglament_work()
             else:
                 self.arduino.initialize()
             sleep(0.02)
