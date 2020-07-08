@@ -57,10 +57,6 @@ class Jarvis:
         self.inputThread.start()
         self.logger.info('start keyboard thread')
 
-        # self.arduino_loop_thread = threading.Thread(target=self.arduino_loop, args=(), daemon=True)
-        # self.arduino_loop_thread.start()
-        # self.logger.info('start arduino_loop thread')
-
         # Start Telegram bot
         self.bot.start()
         self.logger.info('start telegram bot')
@@ -84,6 +80,10 @@ class Jarvis:
         self.laser_turret.start()
 
         self.command_processing = CommandProcessing(self)
+
+        self.arduino_loop_thread = threading.Thread(target=self.arduino_loop, args=(), daemon=True)
+        self.arduino_loop_thread.start()
+        self.logger.info('start arduino_loop thread')
 
     # Function of input in thread
     def read_kbd_input(self):
@@ -174,6 +174,7 @@ class Jarvis:
             if self.arduino.initialized:
                 self.check_inputs_pins()
                 self.reglament_work()
+            sleep(0.01)
 
     def main_loop(self):
         # Main loop dunction
@@ -186,8 +187,8 @@ class Jarvis:
                     message = queue_typle[2]
                     answer = self.command_processing.command_processing(input_str, user, message)
                     jprint(answer)
-                self.check_inputs_pins()
-                self.reglament_work()
+                # self.check_inputs_pins()
+                # self.reglament_work()
             else:
                 self.arduino.initialize()
             sleep(0.02)
