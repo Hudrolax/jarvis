@@ -22,7 +22,6 @@ if __name__ == '__main__':
 
     jarvis = Jarvis()
 
-
     # Telegram bot
     @jarvis.bot.message_handler(content_types=['text'])
     def get_text_messages(message):
