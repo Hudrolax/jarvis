@@ -235,7 +235,7 @@ class Arduino(JPrint):
                     b.last_rev_time = datetime.now()
 
     def write_to_port(self, cmd, val1, val2):
-        answer = None
+        answer = 0
         try:
             self.port.write((222).to_bytes(1, 'big'))  # header byte
             self.port.write((ord(cmd)).to_bytes(1, "big"))

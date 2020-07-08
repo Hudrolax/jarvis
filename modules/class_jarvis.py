@@ -175,8 +175,10 @@ class Jarvis:
 
     def check_inputs_pins(self):
         """ threaded """
-        self.arduino.check_input_pins()
-        sleep(0.01)
+        while self.runned:
+            if self.arduino.initialized:
+                self.arduino.check_input_pins()
+            sleep(0.01)
 
     def main_loop(self):
         # Main loop dunction

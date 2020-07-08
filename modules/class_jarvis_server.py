@@ -163,6 +163,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
             if not self.jarvis.arduino.ac_exist:
                 if miner.online and 0 < miner.shutdown_when_no_ac_sec < self.jarvis.arduino.time_without_ac() and not miner.power_off_by_shutdown:
                     miner.power_off()
+                    self.logger.info(f'satellite {miner} shutdowned by shutdown_by_ac_loss_timer')
                     self.jarvis.bot.send_message_to_admin(f'satellite {miner} shutdowned by shutdown_by_ac_loss_timer')
             else:
                 miner.power_off_by_shutdown = False
