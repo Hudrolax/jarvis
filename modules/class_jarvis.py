@@ -57,13 +57,9 @@ class Jarvis:
         self.inputThread.start()
         self.logger.info('start keyboard thread')
 
-        self.reglament_work_thread = threading.Thread(target=self.reglament_work, args=(), daemon=True)
-        self.reglament_work_thread.start()
-        self.logger.info('start reglament_work_thread thread')
-
-        self.chek_input_pins_thread = threading.Thread(target=self.check_inputs_pins, args=(), daemon=True)
-        self.chek_input_pins_thread.start()
-        self.logger.info('start chek_input_pins_thread thread')
+        self.arduino_loop_thread = threading.Thread(target=self.arduino_loop, args=(), daemon=True)
+        self.arduino_loop_thread.start()
+        self.logger.info('start arduino_loop thread')
 
         # Start Telegram bot
         self.bot.start()
@@ -104,81 +100,80 @@ class Jarvis:
         """
         Регламентные задания, выполняются по времени или по событию (поток)
         """
-        while self.runned:
-            if self.arduino.initialized:
-                if (datetime.now().month >= 10 and datetime.now().month <= 4 and
-                    (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or \
-                        (datetime.now().month < 10 and datetime.now().month > 4 and
-                         (datetime.now().hour >= 20 or datetime.now().hour <= 5)):  # включим свет на улице
-                    if not self.arduino.LastSetStateOutDoorLight or self.arduino.LastSetStateOutDoorLight == None:
-                        self.arduino.set_pin(self.arduino.OutDoorLightPin, 1)
-                        self.arduino.LastSetStateOutDoorLight = True
-                else:
-                    if self.arduino.LastSetStateOutDoorLight or self.arduino.LastSetStateOutDoorLight == None:
-                        self.arduino.set_pin(self.arduino.OutDoorLightPin, 0)
-                        self.arduino.LastSetStateOutDoorLight = False
+        if (datetime.now().month >= 10 and datetime.now().month <= 4 and
+            (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or \
+                (datetime.now().month < 10 and datetime.now().month > 4 and
+                 (datetime.now().hour >= 20 or datetime.now().hour <= 5)):  # включим свет на улице
+            if not self.arduino.LastSetStateOutDoorLight or self.arduino.LastSetStateOutDoorLight == None:
+                self.arduino.set_pin(self.arduino.OutDoorLightPin, 1)
+                self.arduino.LastSetStateOutDoorLight = True
+        else:
+            if self.arduino.LastSetStateOutDoorLight or self.arduino.LastSetStateOutDoorLight == None:
+                self.arduino.set_pin(self.arduino.OutDoorLightPin, 0)
+                self.arduino.LastSetStateOutDoorLight = False
 
-                # Сообщим, что пропало напряжение на входе
-                if not self.arduino.ac_exist and not self.arduino.ac_alert_sended:
-                    self.bot.send_message_to_admin('Отключилось напряжение на входе в дом!')
-                    self.arduino.ac_alert_sended = True
-                elif self.arduino.ac_exist and self.arduino.ac_alert_sended:
+        # Сообщим, что пропало напряжение на входе
+        if not self.arduino.ac_exist and not self.arduino.ac_alert_sended:
+            self.bot.send_message_to_admin('Отключилось напряжение на входе в дом!')
+            self.arduino.ac_alert_sended = True
+        elif self.arduino.ac_exist and self.arduino.ac_alert_sended:
+            for user in self.bot.get_users():
+                # if True or user.level == 0 or user.level == 3:
+                if user.level == 0:
+                    _message = 'Ура! Появилось напряжение на входе в дом!\n'
+                    _message += f'Электричества не было {self.arduino.time_without_ac(in_str=True)}'
+
+                    self.bot.add_to_queue(user.id, _message)
+            self.arduino.ac_alert_sended = False
+
+        # Сообщить, что напряжение аккумулятора низкое
+        if self.arduino.dc_voltage_in_percent <= 20 and not self.arduino.dc_low_alert_sended:
+            for user in self.bot.get_users():
+                if True or user.level == 0 or user.level == 3:
+                    self.bot.add_to_queue(user.id,
+                                     'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
+            self.arduino.dc_low_alert_sended = True
+
+        # Реакция пинов на разряд аккумулятора без входного напряжения
+        if not self.arduino.ac_exist:
+            # Отключаем пины по уровню разряда, если они включены
+            for p in self.arduino.pins:
+                if p.output and p.state and not p.bcod_reaction and self.arduino.dc_voltage_in_percent <= p.bcod:
+                    self.arduino.set_pin(p, 0)
+                    jprint(f'Отключил {p.description} по разряду аккумулятора')
+                    p.bcod_reaction = True
                     for user in self.bot.get_users():
-                        # if True or user.level == 0 or user.level == 3:
-                        if user.level == 0:
-                            _message = 'Ура! Появилось напряжение на входе в дом!\n'
-                            _message += f'Электричества не было {self.arduino.time_without_ac(in_str=True)}'
+                        if user.level <= 1:
+                            self.bot.add_to_queue(user.id, f'Отключил {p.description} по разряду аккумулятора\n')
+            # Отключаем майнеры, если они включены
+            self.satellite_server.stop_miners(bcod_reaction=True, bot=self.bot)
+        else:
+            # Включаем пины, если отключали их по уровню разряда
+            for p in self.arduino.pins:
+                if p.output and p.bcod_reaction:
+                    p.bcod_reaction = False
+                    if not p.state:
+                        jprint(f'Включил {p.description} обратно')
+                        self.arduino.set_pin(p, 1)  # Вернем состояние пинов на последнее
+                        for user in self.bot.get_users():
+                            if user.level <= 1:
+                                self.bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
+            # Включаем майнеры, если мы их отключали
+            self.satellite_server.start_miners(bcod_reaction=True, bot=self.bot)
 
-                            self.bot.add_to_queue(user.id, _message)
-                    self.arduino.ac_alert_sended = False
-
-                # Сообщить, что напряжение аккумулятора низкое
-                if self.arduino.dc_voltage_in_percent <= 20 and not self.arduino.dc_low_alert_sended:
-                    for user in self.bot.get_users():
-                        if True or user.level == 0 or user.level == 3:
-                            self.bot.add_to_queue(user.id,
-                                             'Напряжение аккумулятора ниже 20% !!! Электричество скоро отключится.\n')
-                    self.arduino.dc_low_alert_sended = True
-
-                # Реакция пинов на разряд аккумулятора без входного напряжения
-                if not self.arduino.ac_exist:
-                    # Отключаем пины по уровню разряда, если они включены
-                    for p in self.arduino.pins:
-                        if p.output and p.state and not p.bcod_reaction and self.arduino.dc_voltage_in_percent <= p.bcod:
-                            self.arduino.set_pin(p, 0)
-                            jprint(f'Отключил {p.description} по разряду аккумулятора')
-                            p.bcod_reaction = True
-                            for user in self.bot.get_users():
-                                if user.level <= 1:
-                                    self.bot.add_to_queue(user.id, f'Отключил {p.description} по разряду аккумулятора\n')
-                    # Отключаем майнеры, если они включены
-                    self.satellite_server.stop_miners(bcod_reaction=True, bot=self.bot)
-                else:
-                    # Включаем пины, если отключали их по уровню разряда
-                    for p in self.arduino.pins:
-                        if p.output and p.bcod_reaction:
-                            p.bcod_reaction = False
-                            if not p.state:
-                                jprint(f'Включил {p.description} обратно')
-                                self.arduino.set_pin(p, 1)  # Вернем состояние пинов на последнее
-                                for user in self.bot.get_users():
-                                    if user.level <= 1:
-                                        self.bot.add_to_queue(user.id, f'Включил {p.description} обратно\n')
-                    # Включаем майнеры, если мы их отключали
-                    self.satellite_server.start_miners(bcod_reaction=True, bot=self.bot)
-
-                # включение / отключение майнеров по входному напряжению
-                self.satellite_server.shutdown_threshold_action()
-                # отключение питания сателлитов если нету электричества некоторое время
-                self.satellite_server.shutdown_by_ac_loss_timer()
-        sleep(0.02)
+        # включение / отключение майнеров по входному напряжению
+        self.satellite_server.shutdown_threshold_action()
+        # отключение питания сателлитов если нету электричества некоторое время
+        self.satellite_server.shutdown_by_ac_loss_timer()
 
     def check_inputs_pins(self):
-        """ threaded """
+        self.arduino.check_input_pins()
+
+    def arduino_loop(self):
         while self.runned:
             if self.arduino.initialized:
-                self.arduino.check_input_pins()
-            sleep(0.01)
+                self.check_inputs_pins()
+                self.reglament_work()
 
     def main_loop(self):
         # Main loop dunction
