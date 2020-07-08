@@ -81,9 +81,9 @@ class Jarvis:
 
         self.command_processing = CommandProcessing(self)
 
-        self.arduino_loop_thread = threading.Thread(target=self.arduino_loop, args=(), daemon=True)
-        self.arduino_loop_thread.start()
-        self.logger.info('start arduino_loop thread')
+        # self.arduino_loop_thread = threading.Thread(target=self.arduino_loop, args=(), daemon=True)
+        # self.arduino_loop_thread.start()
+        # self.logger.info('start arduino_loop thread')
 
     # Function of input in thread
     def read_kbd_input(self):
@@ -187,8 +187,8 @@ class Jarvis:
                     message = queue_typle[2]
                     answer = self.command_processing.command_processing(input_str, user, message)
                     jprint(answer)
-                # self.check_inputs_pins()
-                # self.reglament_work()
+                self.check_inputs_pins()
+                self.reglament_work()
             else:
                 self.arduino.initialize()
             sleep(0.02)
