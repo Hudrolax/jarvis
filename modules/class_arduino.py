@@ -157,7 +157,7 @@ class Arduino(JPrint):
         if not pin.start_count_reaction_time:
             pin.last_rev_time = datetime.now()
             pin.start_count_reaction_time = True
-        if (datetime.now() - pin.last_rev_time).total_seconds() > 0.1:
+        if (datetime.now() - pin.last_rev_time).total_seconds() > 0.2:
             pin.prevstate = pin.state
             pin.state = state
             pin.start_count_reaction_time = False
