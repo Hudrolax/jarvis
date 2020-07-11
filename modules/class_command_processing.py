@@ -558,14 +558,17 @@ class CommandProcessing:
                 print(f'{self.jarvis.laser_turret.laser.x}, {self.jarvis.laser_turret.laser.y}')
                 answer += 'ok'
             elif (cmd.find('поигра') > -1 or cmd.find('развлек') > -1) and cmd.find('кот') > -1:
-                _game_time = 0
-                for _cm in cmd_list:
-                    try:
-                        _game_time = int(_cm)
-                    except:
-                        pass
-                _game_time = self.jarvis.laser_turret.laser.start_game(_game_time)
-                answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд'
+                if not self.jarvis.laser_turret.laser.game_mode:
+                    _game_time = 0
+                    for _cm in cmd_list:
+                        try:
+                            _game_time = int(_cm)
+                        except:
+                            pass
+                    _game_time = self.jarvis.laser_turret.laser.start_game(_game_time)
+                    answer = f'сейчас развлечем шерстяную жопу на целых {_game_time} секунд'
+                else:
+                    answer = 'кажется шерстяная жопа уже развлекается...'
             elif 'стоп' in cmd_list or 'хватит' in cmd_list or 'остановись' in cmd_list:
                 if self.jarvis.laser_turret.laser.game_mode:
                     self.jarvis.laser_turret.laser.stop_game()
