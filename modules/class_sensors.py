@@ -3,7 +3,36 @@ sys.path.append('../')
 import threading
 from time import sleep
 from modules.class_sonoff import Sonoff
+from datetime import datetime
 
+class ArduinoSensor:
+    def __init__(self):
+        self.temp_outside = 0
+        self.moving_sensor = False
+        self.guard_mode = False
+        self.button_pressed = False
+        self._start_press_button = False
+        self._button_pressed_time = datetime.now()
+        self.light_sensor_outside = 0
+
+    def guard_mode_to_send(self):
+        if self.guard_mode:
+            return 'g'
+        else:
+            return 'n'
+
+    def button_handler(self, button_pressed:bool):
+        if button_pressed:
+            if not self._start_press_button:
+                self._start_press_button = True
+                self._button_pressed_time = datetime.now()
+            else:
+                if (datetime.now() - self._button_pressed_time).total_seconds() >= 5:
+                    self.guard_mode = not self.guard_mode
+                    self._button_pressed_time = datetime.now()
+
+        else:
+            self._start_press_button = False
 
 class Sensors:
     def __init__(self, jarvis):

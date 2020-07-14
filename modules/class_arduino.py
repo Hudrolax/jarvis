@@ -130,23 +130,23 @@ class Arduino(JPrint):
 
         answer = None
         if __state == 1:
-            while answer != 3001 or answer is None:
+            while answer != 3333 or answer is None:
                 answer = self.write_to_port('P', _pin, __state)
                 # self.jprint(f'set_pin get answer {answer}')
         elif __state == 0:
-            while answer != 3000 or answer is None:
+            while answer != 4444 or answer is None:
                 answer = self.write_to_port('P', _pin, __state)
                 # self.jprint(f'set_pin get answer {answer}')
         else:
-            while answer != 3001 and answer != 3000 or answer is None:
+            while answer != 3333 and answer != 4444 or answer is None:
                 answer = self.write_to_port('P', _pin, __state)
                 # self.jprint(f'set_pin get answer {answer}')
 
         if answer is not None:
             p.last_rev_time = datetime.now()
-            if answer == 3001:
+            if answer == 3333:
                 p.state = True
-            elif answer == 3000:
+            elif answer == 4444:
                 p.state = False
             self.write_pinstate(p)
             return p.state
@@ -157,7 +157,7 @@ class Arduino(JPrint):
         if not pin.start_count_reaction_time:
             pin.last_rev_time = datetime.now()
             pin.start_count_reaction_time = True
-        if (datetime.now() - pin.last_rev_time).total_seconds() > 0.2:
+        if (datetime.now() - pin.last_rev_time).total_seconds() > 0.01:
             pin.prevstate = pin.state
             pin.state = state
             pin.start_count_reaction_time = False
@@ -167,9 +167,9 @@ class Arduino(JPrint):
         for p in self.pins:
             if not p.output or allpins:
                 _pin_state_answer = self.write_to_port('S', p.num, 0)
-                if _pin_state_answer == 2001:
+                if _pin_state_answer == 1111:
                     self.change_pinstate(p, True)
-                elif _pin_state_answer == 2000:
+                elif _pin_state_answer == 2222:
                     self.change_pinstate(p, False)
 
                 if allpins:

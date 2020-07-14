@@ -42,6 +42,15 @@ def find_in_list(lst, value):
             return True
     return False
 
+def str_to_bool(_str):
+    if isinstance(_str, str):
+        if _str.lower() == 'true' or _str == '1':
+            return True
+        else:
+            return False
+    else:
+        raise TypeError()
+
 class JList(list):
     def find(self, value):
         for el in self:

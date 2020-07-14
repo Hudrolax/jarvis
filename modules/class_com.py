@@ -82,7 +82,6 @@ class CommunicationServer:
         self.server_socket.close()
 
     def handler_wrapper(self, connection, client_address):
-        debug = self.logger.debug
         try:
             while True:
                 data = connection.recv(1024)
@@ -90,11 +89,11 @@ class CommunicationServer:
                     break
                 else:
                     data = data.decode()
-                    debug(f"received data: {data}")
+                    self.logger.debug(f"received data: {data}")
                     # << Оборачиваемая функция
                     answer = self.handler(client_address, data)
                     # >> Оборачиваемая функция
-                    debug(f'answer is "{answer}"')
+                    self.logger.debug(f'answer is {answer}')
                     # connection.send(answer.encode('ascii'))
                     connection.sendall(answer.encode())
         except ConnectionResetError:
@@ -107,7 +106,7 @@ class CommunicationServer:
             self.logger.warning(f'Time out recieve from {client_address}')
             return
         except AttributeError:
-            self.logger.warning(f"Can't encode answer {answer}")
+            self.logger.critical(f"Can't encode answer {answer}")
             return
 
         finally:

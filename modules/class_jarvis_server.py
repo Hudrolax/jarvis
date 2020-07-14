@@ -1,8 +1,10 @@
-from .class_com import CommunicationServer
+from modules.class_com import  CommunicationServer
+from modules.gfunctions import *
 import logging
 import threading
 from time import sleep
 from datetime import datetime
+from modules.class_sensors import ArduinoSensor
 
 WRITE_LOG_TO_FILE = False
 LOG_FORMAT = '%(name)s (%(levelname)s) %(asctime)s: %(message)s'
@@ -147,12 +149,13 @@ class Jarvis_Satellite_Server(CommunicationServer):
     logger = logging.getLogger('Jarvis_Satellite_Server')
     logger.setLevel(logging.INFO)
 
-    def __init__(self, jarvis, ip:str ='127.0.0.1', port:int = 8585):
+    def __init__(self, jarvis, ip:str ='', port:int = 8585):
         super().__init__(ip, port)
         self.jarvis = jarvis
         self._name = 'satellite_server'
         self._miners = []
         self.shutdown_thresold_action_timer = datetime.now()
+        self.arduino_sensors = ArduinoSensor()
 
     @property
     def miners(self):
@@ -224,58 +227,66 @@ class Jarvis_Satellite_Server(CommunicationServer):
     def handler(self, client_address, data):
         # client_address - адрес клиента
         # data - очищенные данные - только строка
-        debug = Jarvis_Satellite_Server.logger.debug
-        info = Jarvis_Satellite_Server.logger.info
-        answer = 'none'
         # <<обработчик данных
         data = data.split(':')
         if len(data) != 2:
             return None
         name = data[0]
         message = data[1]
-        debug(f'get "{message}" from {name}')
+        self.logger.debug(f'get "{message}" from {name}')
         answer = 'ok'
-        if message == 'ping':
-            miner = self._find_miner(name)
-            if miner is not None:
-                miner.it_is_online()
-                if miner.shutdown:
-                    answer = 'shutdown'
-        elif message == 'miner_is_runned':
-            miner = self._find_miner(name)
-            if miner is not None:
-                debug('miner is runned')
-                miner.runned = True
-                miner.start_it = False
-                if miner.stop_it:
-                    answer = 'stop_miner'
-        elif message == 'miner_is_not_runned':
-            miner = self._find_miner(name)
-            if miner is not None:
-                debug("miner is not runned")
-                miner.runned = False
-                miner.stop_it = False
-                if miner.start_it:
-                    answer = 'start_miner'
+
+        if name == 'sensor_outside':
+            try:
+                parameters = message.split(";")
+                for param in parameters:
+                    _p = param.split("=")
+                    if _p[0] == 'move':
+                        self.arduino_sensors.moving_sensor = str_to_bool(_p[1])
+                    elif _p[0] == 'light':
+                        self.arduino_sensors.light_sensor_outside = int(_p[1])
+                    elif _p[0] == 'temp':
+                        self.arduino_sensors.temp_outside = float(_p[1])
+                    elif _p[0] == 'button':
+                        self.arduino_sensors.button_handler(str_to_bool(_p[1]))
+            except ValueError:
+                self.logger.critical(f'Value error with encode mesage from {name}. _p[0]={_p[0]}, _p[1]={_p[1]}')
+
+            answer = f"{datetime.now().strftime('%H:%M:%S')};{self.arduino_sensors.guard_mode_to_send()}\r"
+        else:
+            if message == 'ping':
+                miner = self._find_miner(name)
+                if miner is not None:
+                    miner.it_is_online()
+                    if miner.shutdown:
+                        answer = 'shutdown'
+            elif message == 'miner_is_runned':
+                miner = self._find_miner(name)
+                if miner is not None:
+                    self.logger.debug('miner is runned')
+                    miner.runned = True
+                    miner.start_it = False
+                    if miner.stop_it:
+                        answer = 'stop_miner'
+            elif message == 'miner_is_not_runned':
+                miner = self._find_miner(name)
+                if miner is not None:
+                    self.logger.debug("miner is not runned")
+                    miner.runned = False
+                    miner.stop_it = False
+                    if miner.start_it:
+                        answer = 'start_miner'
         return answer
 
 if __name__ == '__main__':
     pass
+    from time import sleep
 
-    print(isinstance(27.1, float))
+    server = Jarvis_Satellite_Server(jarvis=None)
+    # server.logger.setLevel(logging.DEBUG)
+    server.start()
+    server.arduino_sensors.guard_mode = True
 
-    # from time import sleep
-    #
-    # server = Jarvis_Satellite_Server(name='Jarvis')
-    # server.add_miner('serverx')
-    # server.add_miner('zeon')
-    # server.add_miner('tekilla')
-    #
-    # server.start()
-    #
-    # while True:
-    #     sleep(10)
-    #     server.stop_miners()
-    #     sleep(10)
-    #     server.start_miners()
-    # server.stop()
+    while True:
+        sleep(10)
+    server.stop()
