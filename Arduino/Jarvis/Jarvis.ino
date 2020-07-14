@@ -116,9 +116,9 @@ void loop() {
         seriaWrite(val);
       } 
     }else if (cname == 'S'){ // S command - return state of digital pin
-      int val1 = HIGH;
+      int val = HIGH;
       int val2 = LOW;
-      while (val1 != val2){
+      while (val != val2){
           val = digitalRead(cval);
           delay(10);
           val2 = digitalRead(cval);
