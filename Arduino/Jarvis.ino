@@ -105,23 +105,29 @@ void loop() {
       }
       digitalWrite(cval, pinstate);
       if (pinstate==HIGH){
-        seriaWrite(3001); // 'ON' answer
+        seriaWrite(3333); // 'ON' answer
       } else{
-        seriaWrite(3000); // 'OFF' answer
+        seriaWrite(4444); // 'OFF' answer
       }
-    }else if (cname == 'A'){ // P command - On, Off or invert digital pin
+    }else if (cname == 'A'){ // A command - return state analog pin
       // cval - pin number
       if (cval<16){
         int val = analogRead(cval);
         seriaWrite(val);
       } 
     }else if (cname == 'S'){ // S command - return state of digital pin
-      int val = digitalRead(cval);
+      int val1 = HIGH;
+      int val2 = LOW;
+      while (val1 != val2){
+          val = digitalRead(cval);
+          delay(10);
+          val2 = digitalRead(cval);
+      }
       
       if (val==HIGH){
-        seriaWrite(2001); // 'ON' answer
-      } else{
-        seriaWrite(2000); // 'OFF' answer
+        seriaWrite(1111); // 'ON' answer
+      } else {
+        seriaWrite(2222); // 'OFF' answer
       }  
     } else {
       while (Serial.available() > 0) int byte1 = Serial.read();
