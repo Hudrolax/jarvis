@@ -155,7 +155,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
         self._name = 'satellite_server'
         self._miners = []
         self.shutdown_thresold_action_timer = datetime.now()
-        self.arduino_sensors = ArduinoSensor()
+        self.arduino_sensors = ArduinoSensor(jarvis)
 
     @property
     def miners(self):

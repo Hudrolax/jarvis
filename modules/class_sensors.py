@@ -4,9 +4,13 @@ import threading
 from time import sleep
 from modules.class_sonoff import Sonoff
 from datetime import datetime
+import logging
 
 class ArduinoSensor:
-    def __init__(self):
+    logger = logging.getLogger('arduino_sensor')
+
+    def __init__(self, jarvis):
+        self.jarvis = jarvis
         self.temp_outside = 0
         self.moving_sensor = False
         self._last_moving_sensor_time = datetime.now()
@@ -15,6 +19,7 @@ class ArduinoSensor:
         self._start_press_button = False
         self._button_pressed_time = datetime.now()
         self.light_sensor_outside = 0
+        self._alert_sended = False
 
     @property
     def guard_mode(self):
@@ -52,7 +57,7 @@ class ArduinoSensor:
         return "Охранный режим включен."
 
     def off_guard_mode(self):
-        self.guard_mode = True
+        self.guard_mode = False
         return "Охранный режим отключен."
 
     def button_handler(self, button_pressed:bool):
@@ -67,6 +72,19 @@ class ArduinoSensor:
 
         else:
             self._start_press_button = False
+
+    def alert_func(self):
+        if self.guard_mode and (datetime.now() - self._last_moving_sensor_time).total_seconds() > 60 \
+            and (datetime.now() - self._last_moving_sensor_time).total_seconds() < 120:
+            if not self._alert_sended:
+                _message = 'Сработал датчик движения в коридоре!'
+                self.logger.info(_message)
+                bot = self.jarvis.bot
+                for user in bot.get_users():
+                    if user.level <= 1:
+                        bot.add_to_queue(user.id, _message)
+
+
 
 class Sensors:
     def __init__(self, jarvis):
