@@ -52,9 +52,11 @@ class CommandProcessing:
     def name(self):
         return self._name
 
+    def get_access_error(self):
+        return 'У вас нет доступа к этой команде'
+
     def command_processing(self, cmd, telegramuser, message):
-        def get_access_error():
-            return 'У вас нет доступа к этой команде'
+        get_access_error = self.get_access_error
         info = CommandProcessing.logger.info
         debug = CommandProcessing.logger.debug
         warning = CommandProcessing.logger.warning
@@ -470,46 +472,7 @@ class CommandProcessing:
                 else:
                     answer += get_access_error()
             elif cmd == 'state' or cmd == 'status' or 'статус' in cmd_list:
-                if telegramuser != None and telegramuser.level <= 3 or telegramuser == None:
-                    uptime = difference_between_date(self.START_TIME, datetime.now())
-                    answer += 'ver. ' + VERSION + '   '
-                    answer += f'uptime {uptime}\n'
-                    answer += f'outside temp. {self.jarvis.satellite_server.arduino_sensors.temp_outside}C\n'
-                    if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
-                        if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                            answer += f'move time {self.jarvis.satellite_server.arduino_sensors.last_move_time_str()}\n'
-                        if self.jarvis.satellite_server.arduino_sensors.guard_mode:
-                            answer += f'ОХРАННЫЙ РЕЖИМ включен\n'
-                        answer += 'Включенный свет:\n'
-                        k = 0
-                        for p in self.jarvis.arduino.pins:
-                            if p.output and 'свет' in p.convertible_terms and p.state:
-                                if k > 0:
-                                    answer += ' ,'
-                                answer += f'{p.description}'
-                                k += 1
-                        if k == 0:
-                            answer += 'весь свет выключен\n'
-                        answer += '\n'
-
-                    # инфа по насосам
-                    answer += "Насосы "
-                    pumpsPin = self.jarvis.arduino.find_pin("насосы")
-                    if pumpsPin is not None:
-                        if pumpsPin.state:
-                            answer += "включены"
-                        else:
-                            answer += "ВЫКЛЮЧЕНЫ"
-                        answer += '\n'
-                    else:
-                        answer += "<не могу найти пин насосов  по description 'насосы'>"
-
-                    answer += '\n'
-                    # инфа по напряжениям
-                    answer += f'Напряжение в сети {self.jarvis.arduino.ac_exist_str} ({self.jarvis.sensors.ac_voltage_input}V)\n'
-                    answer += f'Напряжение аккумулятора {self.jarvis.arduino.dc_value} V ({self.jarvis.arduino.dc_voltage_in_percent} %)'
-                else:
-                    answer += get_access_error()
+                answer += self.status_cmd(cmd_list, telegramuser, message)
             elif 'риги' in cmd_list or 'rigs' in cmd_list:
                 if telegramuser != None and telegramuser.level == 0 or telegramuser == None:
                     answer += 'риги:\n'
@@ -596,3 +559,47 @@ class CommandProcessing:
         if message != None:
             self.jarvis.telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
         return answer + '\n'
+
+    def status_cmd(self, cmd_list, telegramuser, message):
+        answer = ''
+        if telegramuser != None and telegramuser.level <= 3 or telegramuser == None:
+            uptime = difference_between_date(self.START_TIME, datetime.now())
+            answer += 'ver. ' + VERSION + '   '
+            answer += f'uptime {uptime}\n'
+            answer += f'outside temp. {self.jarvis.satellite_server.arduino_sensors.temp_outside}C\n'
+            if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
+                if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
+                    answer += f'move time {self.jarvis.satellite_server.arduino_sensors.last_move_time_str()} /' \
+                              f'({self.jarvis.satellite_server.arduino_sensors.last_move_time_sec()} sec. ago)\n'
+                if self.jarvis.satellite_server.arduino_sensors.guard_mode:
+                    answer += f'ОХРАННЫЙ РЕЖИМ включен\n'
+                answer += 'Включенный свет:\n'
+                k = 0
+                for p in self.jarvis.arduino.pins:
+                    if p.output and 'свет' in p.convertible_terms and p.state:
+                        if k > 0:
+                            answer += ' ,'
+                        answer += f'{p.description}'
+                        k += 1
+                if k == 0:
+                    answer += 'весь свет выключен\n'
+                answer += '\n'
+
+            # инфа по насосам
+            answer += "Насосы "
+            pumpsPin = self.jarvis.arduino.find_pin("насосы")
+            if pumpsPin is not None:
+                if pumpsPin.state:
+                    answer += "включены"
+                else:
+                    answer += "ВЫКЛЮЧЕНЫ"
+                answer += '\n'
+            else:
+                answer += "<не могу найти пин насосов  по description 'насосы'>"
+
+            answer += '\n'
+            # инфа по напряжениям
+            answer += f'Напряжение в сети {self.jarvis.arduino.ac_exist_str} ({self.jarvis.sensors.ac_voltage_input}V)\n'
+            answer += f'Напряжение аккумулятора {self.jarvis.arduino.dc_value} V ({self.jarvis.arduino.dc_voltage_in_percent} %)'
+        else:
+            answer += self.get_access_error()
