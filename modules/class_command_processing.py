@@ -569,7 +569,7 @@ class CommandProcessing:
             answer += f'outside temp. {self.jarvis.satellite_server.arduino_sensors.temp_outside}C\n'
             if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                 if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
-                    answer += f'move time {self.jarvis.satellite_server.arduino_sensors.last_move_time_str()} /' \
+                    answer += f'move time {self.jarvis.satellite_server.arduino_sensors.last_move_time_str()} ' \
                               f'({self.jarvis.satellite_server.arduino_sensors.last_move_time_sec()} sec. ago)\n'
                 if self.jarvis.satellite_server.arduino_sensors.guard_mode:
                     answer += f'ОХРАННЫЙ РЕЖИМ включен\n'
