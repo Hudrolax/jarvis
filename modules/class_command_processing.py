@@ -603,3 +603,4 @@ class CommandProcessing:
             answer += f'Напряжение аккумулятора {self.jarvis.arduino.dc_value} V ({self.jarvis.arduino.dc_voltage_in_percent} %)'
         else:
             answer += self.get_access_error()
+        return answer
