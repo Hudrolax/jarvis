@@ -39,7 +39,7 @@ class ArduinoSensor:
         return datetime.strftime(self._last_moving_sensor_time,"%d.%m.%y %H:%M:%S")
 
     def last_move_time_sec(self):
-        return round((datetime.now() - self._last_moving_sensor_time).total_seconds(),0)
+        return int((datetime.now() - self._last_moving_sensor_time).total_seconds())
 
     def set_moving_sensor(self, val):
         if isinstance(val, bool):
