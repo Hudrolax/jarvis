@@ -9,11 +9,37 @@ class ArduinoSensor:
     def __init__(self):
         self.temp_outside = 0
         self.moving_sensor = False
-        self.guard_mode = False
+        self._last_moving_sensor_time = datetime.now()
+        self._guard_mode = False
         self.button_pressed = False
         self._start_press_button = False
         self._button_pressed_time = datetime.now()
         self.light_sensor_outside = 0
+
+    @property
+    def guard_mode(self):
+        return self._guard_mode
+
+    @guard_mode.setter
+    def guard_mode(self, val):
+        if isinstance(val, bool):
+            self._guard_mode = val
+        else:
+            raise TypeError(f'ArduinoSensor:guard_mode type error. Need bool my got {type(val)}')
+
+    def last_move_time(self):
+        return self._last_moving_sensor_time
+
+    def last_move_time_str(self):
+        return datetime.strftime(datetime.now(),"%d.%m.%y %H:%M:%S")
+
+    def set_moving_sensor(self, val):
+        if isinstance(val, bool):
+            self.moving_sensor = val
+            if val:
+                self._last_moving_sensor_time = datetime.now()
+        else:
+            raise TypeError(f'set_moving_sensor type error')
 
     def guard_mode_to_send(self):
         if self.guard_mode:
@@ -21,13 +47,21 @@ class ArduinoSensor:
         else:
             return 'n'
 
+    def on_guard_mode(self):
+        self.guard_mode = True
+        return "Охранный режим включен."
+
+    def off_guard_mode(self):
+        self.guard_mode = True
+        return "Охранный режим отключен."
+
     def button_handler(self, button_pressed:bool):
         if button_pressed:
             if not self._start_press_button:
                 self._start_press_button = True
                 self._button_pressed_time = datetime.now()
             else:
-                if (datetime.now() - self._button_pressed_time).total_seconds() >= 5:
+                if (datetime.now() - self._button_pressed_time).total_seconds() >= 3:
                     self.guard_mode = not self.guard_mode
                     self._button_pressed_time = datetime.now()
 
@@ -52,8 +86,4 @@ class Sensors:
             sleep(1)
 
 if __name__ == '__main__':
-    class TestJarvis:
-        runned = True
-    sens1 = Sensors(TestJarvis())
-    sleep(1)
-    print(sens1.sonoff1.voltage)
+    print(datetime.strftime(datetime.now(),"%d.%m.%y %H:%M:%S"))

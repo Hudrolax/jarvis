@@ -1,6 +1,6 @@
 from datetime import datetime
 
-VERSION = "1.2"
+VERSION = "1.3"
 
 def map_func(x, in_min, in_max, out_min, out_max):
     try:

@@ -242,7 +242,7 @@ class Jarvis_Satellite_Server(CommunicationServer):
                 for param in parameters:
                     _p = param.split("=")
                     if _p[0] == 'move':
-                        self.arduino_sensors.moving_sensor = str_to_bool(_p[1])
+                        self.arduino_sensors.set_moving_sensor(str_to_bool(_p[1]))
                     elif _p[0] == 'light':
                         self.arduino_sensors.light_sensor_outside = int(_p[1])
                     elif _p[0] == 'temp':
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     from time import sleep
 
     server = Jarvis_Satellite_Server(jarvis=None)
-    # server.logger.setLevel(logging.DEBUG)
+    server.logger.setLevel(logging.DEBUG)
     server.start()
     server.arduino_sensors.guard_mode = True
 

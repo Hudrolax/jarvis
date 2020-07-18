@@ -125,6 +125,11 @@ class CommandProcessing:
                         answer += 'Включил свет на втором этаже.'
                     else:
                         answer += get_access_error()
+                elif 'охранный' in cmd_list and 'режим' in cmd_list:
+                    if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
+                        answer += self.jarvis.satellite_server.arduino_sensors.on_guard_mode()
+                    else:
+                        answer += get_access_error()
                 else:
                     # elif 'свет' in cmd_list:
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
@@ -207,10 +212,15 @@ class CommandProcessing:
                         answer += 'Выключил свет на втором этаже.'
                     else:
                         answer += get_access_error()
-                elif 'выключи' in cmd_list and 'лазер' in cmd_list:
+                elif 'лазер' in cmd_list:
                     self.jarvis.laser_turret.laser.laser_on = False
                     self.jarvis.laser_turret.laser.stop_game()
                     answer = 'ок'
+                elif 'охранный' in cmd_list and 'режим' in cmd_list:
+                    if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
+                        answer += self.jarvis.satellite_server.arduino_sensors.off_guard_mode()
+                    else:
+                        answer += get_access_error()
                 else:
                     # elif 'свет' in cmd_list:
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
@@ -464,7 +474,12 @@ class CommandProcessing:
                     uptime = difference_between_date(self.START_TIME, datetime.now())
                     answer += 'ver. ' + VERSION + '   '
                     answer += f'uptime {uptime}\n'
+                    answer += f'outside temp. {self.jarvis.satellite_server.arduino_sensors.temp_outside}C\n'
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
+                        if telegramuser != None and telegramuser.level <= 0 or telegramuser == None:
+                            answer += f'move time {self.jarvis.satellite_server.arduino_sensors.last_move_time_str()}\n'
+                        if self.jarvis.satellite_server.arduino_sensors.guard_mode:
+                            answer += f'ОХРАННЫЙ РЕЖИМ включен\n'
                         answer += 'Включенный свет:\n'
                         k = 0
                         for p in self.jarvis.arduino.pins:
