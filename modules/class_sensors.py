@@ -14,6 +14,7 @@ class ArduinoSensor:
         self.temp_outside = 0
         self.moving_sensor = False
         self._last_moving_sensor_time = datetime.now()
+        self._guard_mode_on_time = datetime.now()
         self._guard_mode = False
         self.button_pressed = False
         self._start_press_button = False
@@ -29,6 +30,9 @@ class ArduinoSensor:
     def guard_mode(self, val):
         if isinstance(val, bool):
             self._guard_mode = val
+            if val:
+                self._guard_mode_on_time = datetime.now()
+            self._alert_sended = False
         else:
             raise TypeError(f'ArduinoSensor:guard_mode type error. Need bool my got {type(val)}')
 
@@ -40,6 +44,9 @@ class ArduinoSensor:
 
     def last_move_time_sec(self):
         return int((datetime.now() - self._last_moving_sensor_time).total_seconds())
+
+    def last_move_time_min(self):
+        return int((datetime.now() - self._last_moving_sensor_time).total_seconds()/60)
 
     def set_moving_sensor(self, val):
         if isinstance(val, bool):
@@ -77,17 +84,16 @@ class ArduinoSensor:
             self._start_press_button = False
 
     def alert_func(self):
-        if self.guard_mode and (datetime.now() - self._last_moving_sensor_time).total_seconds() > 60 \
-            and (datetime.now() - self._last_moving_sensor_time).total_seconds() < 120:
-            if not self._alert_sended:
-                _message = 'Сработал датчик движения в коридоре!'
-                self.logger.info(_message)
-                bot = self.jarvis.bot
-                for user in bot.get_users():
-                    if user.level <= 1:
-                        bot.add_to_queue(user.id, _message)
-
-
+        if self.guard_mode and (datetime.now() - self._guard_mode_on_time).total_seconds() > 60:
+            if (datetime.now() - self._last_moving_sensor_time).total_seconds() > 60 < (self._last_moving_sensor_time - self._guard_mode_on_time).total_seconds():
+                if not self._alert_sended:
+                    self._alert_sended = True
+                    _message = 'Сработал датчик движения в коридоре!'
+                    self.logger.info(_message)
+                    bot = self.jarvis.bot
+                    for user in bot.get_users():
+                        if user.level <= 0:
+                            bot.add_to_queue(user.id, _message)
 
 class Sensors:
     def __init__(self, jarvis):

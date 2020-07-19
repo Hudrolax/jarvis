@@ -165,6 +165,8 @@ class Jarvis:
         self.satellite_server.shutdown_threshold_action()
         # отключение питания сателлитов если нету электричества некоторое время
         self.satellite_server.shutdown_by_ac_loss_timer()
+        # сигнализация в коридоре
+        self.satellite_server.arduino_sensors.alert_func()
 
     def check_inputs_pins(self):
         self.arduino.check_input_pins()
