@@ -8,3 +8,4 @@ serial.pickle
 config.py
 *.lnk
 *.log
+.venv/
