@@ -4,8 +4,8 @@
 !game.txt
 .idea/
 __pycache__/
-serial.pickle
 config.py
 *.lnk
 *.log
-.venv/
+venv/
+.env
