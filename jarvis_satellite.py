@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys
 sys.path.append('../')
 
@@ -76,6 +77,7 @@ class Jarvis_Satellite_client(CommunicationClient):
             error_message += 'PROGRAMMS_TO_INSTANT_KILL = []\n'
             error_message += 'PROGRAMMS_TO_INSTANT_KILL.append(<имя программы>)\n'
             critical(error_message)
+            return
 
         for proc in psutil.process_iter():
             for miner_exe in list_to_kill:
@@ -88,13 +90,19 @@ class Jarvis_Satellite_client(CommunicationClient):
     @staticmethod
     def miner_is_runned():
         for proc in psutil.process_iter():
-            if proc.name() == MINER_EXE_LIST[0]:
-                return True
+            try:
+                if proc.name() == MINER_EXE_LIST[0]:
+                    return True
+            except:
+                pass
         return False
 
     @staticmethod
     def shutdown_self():
-        os.system('shutdown /s /t 5')
+        try:
+            os.system('shutdown /s /t 5')
+        except:
+            Jarvis_Satellite_client.logger.error('Не хватает прав на shutdown')
 
     def start(self):
         self._runned = True
@@ -120,30 +128,27 @@ class Jarvis_Satellite_client(CommunicationClient):
         info = Jarvis_Satellite_client.logger.info
         error = Jarvis_Satellite_client.logger.error
         while self._runned:
-            try:
-                if self.miner_is_runned():
-                    if not self._miner_is_runned:
-                        self._miner_is_runned = True
-                        jprint('Miner was runned')
-                    debug(f'send "miner_is_runned"')
-                    answer = self.send_with_name('miner_is_runned')
-                    debug(f'answer is "{answer}"')
-                    if answer == 'stop_miner':
-                        info('get stop_miner command')
-                        self.kill_miner()
-                else:
-                    if self._miner_is_runned:
-                        self._miner_is_runned = False
-                        jprint('Miner was stopped')
-                    debug(f'send "miner_is_not_runned"')
-                    answer = self.send_with_name('miner_is_not_runned')
-                    debug(f'answer is "{answer}"')
-                    if answer == 'start_miner':
-                        info('get start_miner command')
-                        self.start_miner()
-                self.kill_programms_to_instant_kill()
-            except:
-                error('i get some error in thread')
+            if self.miner_is_runned():
+                if not self._miner_is_runned:
+                    self._miner_is_runned = True
+                    jprint('Miner was runned')
+                debug(f'send "miner_is_runned"')
+                answer = self.send_with_name('miner_is_runned')
+                debug(f'answer is "{answer}"')
+                if answer == 'stop_miner':
+                    info('get stop_miner command')
+                    self.kill_miner()
+            else:
+                if self._miner_is_runned:
+                    self._miner_is_runned = False
+                    jprint('Miner was stopped')
+                debug(f'send "miner_is_not_runned"')
+                answer = self.send_with_name('miner_is_not_runned')
+                debug(f'answer is "{answer}"')
+                if answer == 'start_miner':
+                    info('get start_miner command')
+                    self.start_miner()
+            self.kill_programms_to_instant_kill()
             sleep(1)
 
 

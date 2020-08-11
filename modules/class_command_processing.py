@@ -1,3 +1,4 @@
+# coding=utf-8
 import logging
 import copy
 from builtins import isinstance
@@ -127,7 +128,7 @@ class CommandProcessing:
                         answer += 'Включил свет на втором этаже.'
                     else:
                         answer += get_access_error()
-                elif 'охранный' in cmd_list and 'режим' in cmd_list:
+                elif (cmd.find('охран') > -1 and ('режим' in cmd_list or 'систему' in cmd_list)) or ('датчик' in cmd_list or 'движения' in cmd_list):
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                         answer += self.jarvis.satellite_server.arduino_sensors.on_guard_mode()
                     else:
@@ -218,7 +219,7 @@ class CommandProcessing:
                     self.jarvis.laser_turret.laser.laser_on = False
                     self.jarvis.laser_turret.laser.stop_game()
                     answer = 'ок'
-                elif 'охранный' in cmd_list and 'режим' in cmd_list:
+                elif (cmd.find('охран') > -1 and ('режим' in cmd_list or 'систему' in cmd_list)) or ('датчик' in cmd_list or 'движения' in cmd_list):
                     if telegramuser != None and telegramuser.level <= 2 or telegramuser == None:
                         answer += self.jarvis.satellite_server.arduino_sensors.off_guard_mode()
                     else:
