@@ -564,7 +564,7 @@ class CommandProcessing:
         return answer + '\n'
 
     def _lightsensor(self):
-        return f'lightlevel is {self.jarvis.sensors.light_sensor_outside}'
+        return f'lightlevel is {self.jarvis.satellite_server.arduino_sensors.light_sensor_outside}'
 
     def status_cmd(self, cmd_list, telegramuser, message):
         answer = ''
