@@ -9,8 +9,8 @@ import logging
 class ArduinoSensor:
     logger = logging.getLogger('arduino_sensor')
 
-    LAMP_ON = 500
-    LAMP_OFF = 600
+    LAMP_ON = 437
+    LAMP_OFF = 350
     def __init__(self, jarvis):
         self.jarvis = jarvis
         self.temp_outside = 0

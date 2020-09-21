@@ -153,7 +153,7 @@ class Jarvis:
             self.satellite_server.start_miners(bcod_reaction=True, bot=self.bot)
 
         # включение / отключение майнеров по входному напряжению
-        self.satellite_server.shutdown_threshold_action()
+        #self.satellite_server.shutdown_threshold_action()
         # отключение питания сателлитов если нету электричества некоторое время
         self.satellite_server.shutdown_by_ac_loss_timer()
         # сигнализация в коридоре
