@@ -554,12 +554,17 @@ class CommandProcessing:
                     answer = 'ок'
                 else:
                     answer = 'ок'
+            elif 'lightsensor' in cmd_list:
+                answer = self._lightsensor()
             else:
                 answer += 'неизвестная команда\n'
 
         if message != None:
             self.jarvis.telegram_answer_queue.put((message, answer))  # Поместили сообщение в оцередь на обработку
         return answer + '\n'
+
+    def _lightsensor(self):
+        return f'lightlevel is {self.jarvis.sensors.light_sensor_outside}'
 
     def status_cmd(self, cmd_list, telegramuser, message):
         answer = ''
