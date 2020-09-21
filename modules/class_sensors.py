@@ -9,6 +9,8 @@ import logging
 class ArduinoSensor:
     logger = logging.getLogger('arduino_sensor')
 
+    LAMP_ON = 500
+    LAMP_OFF = 600
     def __init__(self, jarvis):
         self.jarvis = jarvis
         self.temp_outside = 0
@@ -21,6 +23,18 @@ class ArduinoSensor:
         self._button_pressed_time = datetime.now()
         self.light_sensor_outside = 0
         self._alert_sended = False
+
+    def outside_lamp_on(self):
+        if self.light_sensor_outside <= self.LAMP_ON:
+            return True
+        else:
+            return False
+
+    def outside_lamp_off(self):
+        if self.light_sensor_outside >= self.LAMP_OFF:
+            return True
+        else:
+            return False
 
     @property
     def guard_mode(self):

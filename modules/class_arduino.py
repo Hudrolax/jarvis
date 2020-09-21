@@ -36,8 +36,8 @@ class Arduino(JPrint):
         self._ac_exist = True
         self._ac_alert_sended = False
         self._ac_non_exist_start_timer = datetime.now()
-        self.OutDoorLightPin = 0
-        self.LastSetStateOutDoorLight = None
+        self.outdoor_light_pin = 0
+        self.last_set_status_outdoor_light = None
         self.__not_important_words = not_important_words
 
     @property
@@ -369,7 +369,7 @@ class Arduino(JPrint):
             __answer = 'config loaded!'
             lightpin = self.find_by_auction('свет на улице')
             if str(type(lightpin)) != "<class 'list'>" and lightpin is not None:
-                self.OutDoorLightPin = self.find_by_auction('свет на улице')
+                self.outdoor_light_pin = self.find_by_auction('свет на улице')
             else:
                 pass
                 # self.jprint('Не могу подобрать пин уличного освещения!')

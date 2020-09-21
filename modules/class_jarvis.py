@@ -100,17 +100,8 @@ class Jarvis:
         """
         Регламентные задания, выполняются по времени или по событию
         """
-        if (datetime.now().month >= 10 and datetime.now().month <= 4 and
-            (datetime.now().hour >= 19 or datetime.now().hour <= 6)) or \
-                (datetime.now().month < 10 and datetime.now().month > 4 and
-                 (datetime.now().hour >= 20 or datetime.now().hour <= 5)):  # включим свет на улице
-            if not self.arduino.LastSetStateOutDoorLight or self.arduino.LastSetStateOutDoorLight == None:
-                self.arduino.set_pin(self.arduino.OutDoorLightPin, 1)
-                self.arduino.LastSetStateOutDoorLight = True
-        else:
-            if self.arduino.LastSetStateOutDoorLight or self.arduino.LastSetStateOutDoorLight == None:
-                self.arduino.set_pin(self.arduino.OutDoorLightPin, 0)
-                self.arduino.LastSetStateOutDoorLight = False
+        #управление освещением на улице
+        self._outdoor_light_work()
 
         # Сообщим, что пропало напряжение на входе
         if not self.arduino.ac_exist and not self.arduino.ac_alert_sended:
@@ -167,6 +158,19 @@ class Jarvis:
         self.satellite_server.shutdown_by_ac_loss_timer()
         # сигнализация в коридоре
         self.satellite_server.arduino_sensors.alert_func()
+
+    def _outdoor_light_work(self):
+        """
+        управление освещением на улице
+        """
+        if self.satellite_server.arduino_sensors.outside_lamp_on():  # включим свет на улице
+            if not self.arduino.last_set_status_outdoor_light or self.arduino.last_set_status_outdoor_light == None:
+                self.arduino.set_pin(self.arduino.outdoor_light_pin, 1)
+                self.arduino.last_set_status_outdoor_light = True
+        elif self.satellite_server.arduino_sensors.outside_lamp_off():
+            if self.arduino.last_set_status_outdoor_light or self.arduino.last_set_status_outdoor_light == None:
+                self.arduino.set_pin(self.arduino.outdoor_light_pin, 0)
+                self.arduino.last_set_status_outdoor_light = False
 
     def check_inputs_pins(self):
         self.arduino.check_input_pins()
