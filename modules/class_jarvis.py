@@ -69,8 +69,8 @@ class Jarvis:
                                         shutdown_no_ac_hour_star=1,
                                         shutdown_no_ac_hour_end=8)
         self.satellite_server.add_miner('serverx', instant_off_by_poweroff=True, shutdown_no_ac_sec=300,
-                                        shutdown_no_ac_hour_star=1,
-                                        shutdown_no_ac_hour_end=8)
+                                        shutdown_no_ac_hour_star=0,
+                                        shutdown_no_ac_hour_end=0)
         self.satellite_server.add_miner('tekilla', instant_off_by_poweroff=True, shutdown_no_ac_sec=300,
                                         shutdown_no_ac_hour_star=1,
                                         shutdown_no_ac_hour_end=8)
