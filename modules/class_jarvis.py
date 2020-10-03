@@ -65,10 +65,16 @@ class Jarvis:
 
         # start satellite server
         self.satellite_server = Jarvis_Satellite_Server(self, ip='0.0.0.0', port=SATELLITE_PORT)
-        self.satellite_server.add_miner('zeon', instant_off_by_poweroff=True, shutdown_threshold=(160, 180))
-        self.satellite_server.add_miner('serverx', instant_off_by_poweroff=True, shutdown_threshold=(160, 170), shutdown_no_ac_sec=600)
-        self.satellite_server.add_miner('tekilla', instant_off_by_poweroff=True)
-        self.satellite_server.add_miner('LK_rig1', instant_off_by_poweroff=False, shutdown_threshold=(160, 170))
+        self.satellite_server.add_miner('zeon', instant_off_by_poweroff=True, shutdown_no_ac_sec=300,
+                                        shutdown_no_ac_hour_star=1,
+                                        shutdown_no_ac_hour_end=8)
+        self.satellite_server.add_miner('serverx', instant_off_by_poweroff=True, shutdown_no_ac_sec=300,
+                                        shutdown_no_ac_hour_star=1,
+                                        shutdown_no_ac_hour_end=8)
+        self.satellite_server.add_miner('tekilla', instant_off_by_poweroff=True, shutdown_no_ac_sec=300,
+                                        shutdown_no_ac_hour_star=1,
+                                        shutdown_no_ac_hour_end=8)
+        self.satellite_server.add_miner('LK_rig1', instant_off_by_poweroff=False, shutdown_threshold=(160, 170),)
         self.satellite_server.add_miner('LK_rig2', instant_off_by_poweroff=False, shutdown_threshold=(160, 170))
         self.satellite_server.add_miner('LK_rig4', instant_off_by_poweroff=False, shutdown_threshold=(160, 170))
         self.satellite_server.add_miner('LK_rig10', instant_off_by_poweroff=False, shutdown_threshold=(160, 170))

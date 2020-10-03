@@ -22,12 +22,14 @@ class Satellite:
     logger.setLevel(logging.DEBUG)
     RESET_ONLINE_TIMER = 60
 
-    def __init__(self, name, shutdown_no_ac_sec:int = 0):
+    def __init__(self, name, shutdown_no_ac_sec:int = 0, shutdown_no_ac_hour_star = 0, shutdown_no_ac_hour_end = 0):
         if not isinstance(name, str):
             raise Exception('miner name is not "str"')
         self._name = name
         self.shutdown = False
         self.shutdown_when_no_ac_sec = shutdown_no_ac_sec
+        self.shutdown_no_ac_hour_star = shutdown_no_ac_hour_star
+        self.shutdown_no_ac_hour_end = shutdown_no_ac_hour_end
         self.power_off_by_shutdown = False
         self._online = False
         self._online_reset_timer = Miner.RESET_ONLINE_TIMER
@@ -77,8 +79,8 @@ class Satellite:
 
 
 class Miner(Satellite):
-    def __init__(self, name:str, instant_off_by_poweroff, shutdown_threshold:tuple, shutdown_no_ac_sec:int = 0):
-        super().__init__(name, shutdown_no_ac_sec)
+    def __init__(self, name:str, instant_off_by_poweroff, shutdown_threshold:tuple, shutdown_no_ac_sec:int = 0, shutdown_no_ac_hour_star = 0, shutdown_no_ac_hour_end = 0):
+        super().__init__(name, shutdown_no_ac_sec, shutdown_no_ac_hour_star, shutdown_no_ac_hour_end)
         self._runned = False
         self._start_it = False
         self._stop_it = False
@@ -165,9 +167,11 @@ class Jarvis_Satellite_Server(CommunicationServer):
         for miner in self.miners:
             if not self.jarvis.arduino.ac_exist:
                 if miner.online and 0 < miner.shutdown_when_no_ac_sec < self.jarvis.arduino.time_without_ac() and not miner.power_off_by_shutdown:
-                    miner.power_off()
-                    self.logger.info(f'satellite {miner} shutdowned by shutdown_by_ac_loss_timer')
-                    self.jarvis.bot.send_message_to_admin(f'satellite {miner} shutdowned by shutdown_by_ac_loss_timer')
+                    if (miner.shutdown_no_ac_hour_star == 0 and miner.shutdown_no_ac_hour_end == 0)\
+                        or (miner.shutdown_no_ac_hour_star >= datetime.now().hour <= miner.shutdown_no_ac_hour_end):
+                        miner.power_off()
+                        self.logger.info(f'satellite {miner} shutdowned by shutdown_by_ac_loss_timer')
+                        self.jarvis.bot.send_message_to_admin(f'satellite {miner} shutdowned by shutdown_by_ac_loss_timer')
             else:
                 miner.power_off_by_shutdown = False
                 miner.shutdown = False
@@ -220,9 +224,11 @@ class Jarvis_Satellite_Server(CommunicationServer):
                     return m
         return None
 
-    def add_miner(self, name, instant_off_by_poweroff, shutdown_threshold = (0, 0), shutdown_no_ac_sec:int = 0):
+    def add_miner(self, name, instant_off_by_poweroff, shutdown_threshold = (0, 0), shutdown_no_ac_sec:int = 0,
+                  shutdown_no_ac_hour_star = 0, shutdown_no_ac_hour_end = 0):
         if self._find_miner(name) is None:
-            self._miners.append(Miner(name, instant_off_by_poweroff, shutdown_threshold, shutdown_no_ac_sec))
+            self._miners.append(Miner(name, instant_off_by_poweroff, shutdown_threshold, shutdown_no_ac_sec,
+                                      shutdown_no_ac_hour_star, shutdown_no_ac_hour_end))
 
     def handler(self, client_address, data):
         # client_address - адрес клиента

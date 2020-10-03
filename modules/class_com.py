@@ -205,7 +205,7 @@ class CommunicationClient:
                 break
             except OSError:
                 attempt -= 1
-                self.logger.warning(f'send error to {self._ip}:{self.port}. Try to reconnect to server.')
+                self.logger.warning(f'send error to {self._ip}:{self.port}. Try reconnect to server.')
                 self.connect()
 
         return answer
