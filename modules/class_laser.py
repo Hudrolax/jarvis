@@ -207,7 +207,7 @@ class Laser(Rectangle):
                 lines = file.readlines()
                 file.close()
             except FileNotFoundError:
-                raise FileNotFoundError(f'file {GAME_FILE_PATH}{GAME_FILE_NAME}i{GAME_FILE_EXTENSION} not found')
+                raise FileNotFoundError(f'file {GAME_FILE_PATH}{GAME_FILE_NAME}{i}{GAME_FILE_EXTENSION} not found')
             except IOError:
                 raise IOError('IOError')
 
