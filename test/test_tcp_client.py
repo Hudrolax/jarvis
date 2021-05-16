@@ -19,10 +19,9 @@ else:
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL, datefmt='%d.%m.%y %H:%M:%S')
 
 def send():
-    client = CommunicationClient('test', '192.168.18.3', 8586)
-    answer = client.send_with_name('test_message')
+    client = CommunicationClient('test', '192.168.18.37', 3333)
+    answer = client.send('@')
     print(answer)
 
 if __name__ == '__main__':
-    for k in range(10):
-        send()
+    send()

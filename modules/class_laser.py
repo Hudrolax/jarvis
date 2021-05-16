@@ -63,7 +63,7 @@ class Laser(Rectangle):
         self._game_coords_loaded = False
         self.game_runned = False
         self.games_amount = 2
-        self._game_time_range_sec = [20, 60]
+        self._game_time_range_sec = [90, 200]
         self._game_stop_time = datetime.now()
         self._game_thread = threading.Thread(target=self.game, args=(), daemon=True)
         self._game_thread.start()
@@ -150,7 +150,10 @@ class Laser(Rectangle):
         if game_time == 0:
             _game_time = random.randint(self.game_time_range_sec[0], self.game_time_range_sec[1])
         else:
-            _game_time = game_time
+            if game_time > 300:
+                _game_time = 300
+            else:
+                _game_time = game_time
         self.logger.info(f'Game time is {_game_time} sec.')
         self._game_stop_time = datetime.now() + timedelta(seconds=_game_time)
         self.load_game_coordinates()
